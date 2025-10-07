@@ -3,20 +3,8 @@
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
-
-    float camX = tankX + sinf(tankAngle * 3.14159 / 180.0) * 5.0f;  
-    float camZ = tankZ + cosf(tankAngle * 3.14159 / 180.0) * 5.0f;
-    gluLookAt(camX, 3.0f, camZ, tankX, 0.5f, tankZ, 0.0f, 1.0f, 0.0f);
-
-
-    glColor3f(0.2f, 0.8f, 0.2f);
-    glBegin(GL_QUADS);
-        glVertex3f(-20.0f, 0.0f, -20.0f);
-        glVertex3f(-20.0f, 0.0f, 20.0f);
-        glVertex3f(20.0f, 0.0f, 20.0f);
-        glVertex3f(20.0f, 0.0f, -20.0f);
-    glEnd();
-
+    updateCamera();
+    drawMap();
     // Desenha tanque
     drawTank();
 

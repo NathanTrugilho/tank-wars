@@ -6,6 +6,8 @@
 #include <enemy.h>
 #include <projectile.h>
 #include <math.h>
+#include <map.h>
+#include <camera.h>
 
 void display();
 
