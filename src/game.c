@@ -34,11 +34,10 @@ void display() {
     glutSwapBuffers();
 }
 
-// Reshape
+// Não mudar
 void reshape(int w, int h) {
     if (h == 0) h = 1;
     float ratio = (float)w / (float)h;
-
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60, ratio, 0.1, 100);

@@ -11,6 +11,8 @@ float tankAngle = 0.0f;
 float moveSpeed = 0.2f;
 float rotSpeed = 2.0f;
 
+const double RADIAN_FACTOR = 3.14159 / 180.0; // Pra converter de graus pra radiano
+
 void drawTank() {
     glPushMatrix();
         glTranslatef(tankX, 0.5f, tankZ);
@@ -39,12 +41,12 @@ void updateTank() {
     float nextZ = tankZ;
 
     if (keyStates['w'] || keyStates['W']) {
-        nextX -= sinf(tankAngle * 3.14159 / 180.0) * moveSpeed;
-        nextZ -= cosf(tankAngle * 3.14159 / 180.0) * moveSpeed;
+        nextX -= sinf(tankAngle * RADIAN_FACTOR) * moveSpeed;
+        nextZ -= cosf(tankAngle * RADIAN_FACTOR) * moveSpeed;
     }
     if (keyStates['s'] || keyStates['S']) {
-        nextX += sinf(tankAngle * 3.14159 / 180.0) * moveSpeed;
-        nextZ += cosf(tankAngle * 3.14159 / 180.0) * moveSpeed;
+        nextX += sinf(tankAngle * RADIAN_FACTOR) * moveSpeed;
+        nextZ += cosf(tankAngle * RADIAN_FACTOR) * moveSpeed;
     }
     if (keyStates['a'] || keyStates['A']) tankAngle += rotSpeed;
     if (keyStates['d'] || keyStates['D']) tankAngle -= rotSpeed;
