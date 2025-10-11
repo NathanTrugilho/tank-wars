@@ -2,7 +2,7 @@
 
 square mapCells[MAP_SIZE][MAP_SIZE];
 
-int heightMatrix[MAP_SIZE][MAP_SIZE];
+float heightMatrix[MAP_SIZE][MAP_SIZE];
 
 void initHeightMatrix(){
 
@@ -63,7 +63,7 @@ void initMapCells(){
     }
 
     // Mesma coisa pro B
-    for (int z = 0; z < MAP_SIZE - 1; z++) {
+    for (int z = 0; z < MAP_SIZE; z++) {
         for (int x = 0; x < MAP_SIZE; x++){
             mapCells[z][x].B.y = heightMatrix[z + 1][x];
         }
@@ -77,7 +77,7 @@ void initMapCells(){
     }
 
     // Mesma coisa pro D
-    for (int z = 0; z < MAP_SIZE - 1; z++) {
+    for (int z = 0; z < MAP_SIZE; z++) {
         for (int x = 0; x < MAP_SIZE - 1; x++){
             mapCells[z][x].D.y = heightMatrix[z + 1][x + 1];
         }
@@ -93,8 +93,8 @@ void drawMap() {
         glBegin(GL_TRIANGLE_STRIP);
 
         // Loop para percorrer cada coluna do mapa no eixo X
-        for (int x = 0; x <= MAP_SIZE; x++) {
-            
+        for (int x = 0; x < MAP_SIZE; x++) {
+            //glNormal3f(0,-1,0);
             glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
             glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);;
         }

@@ -22,7 +22,7 @@ extern square mapCells[MAP_SIZE][MAP_SIZE]; // A --- C
                                             // |     |
                                             // B --- D
 
-extern int heightMatrix[MAP_SIZE][MAP_SIZE];
+extern float heightMatrix[MAP_SIZE][MAP_SIZE];
 
 void drawMap();
 

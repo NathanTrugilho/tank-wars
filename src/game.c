@@ -2,9 +2,11 @@
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     updateCamera();
-    
+    // Desenha o sol
+    drawSun();
     // Desenha mapa
     drawMap();
     // Desenha tanque
@@ -57,6 +59,7 @@ void idle() {
 // Inicialização
 void init() {
     glEnable(GL_DEPTH_TEST);
+    setupLighting();
     glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
     initBulletsAndEnemies();
     initMapCells();
