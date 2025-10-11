@@ -94,7 +94,7 @@ void drawMap() {
 
         // Loop para percorrer cada coluna do mapa no eixo X
         for (int x = 0; x < MAP_SIZE; x++) {
-            //glNormal3f(0,-1,0);
+            glNormal3f(0,-1,0); // A normal tá zoada!!!!
             glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
             glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);;
         }
