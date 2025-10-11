@@ -18,6 +18,16 @@ typedef struct square {
     vertex D;
 } square;
 
+extern square mapCells[MAP_SIZE][MAP_SIZE]; // A --- C
+                                            // |     |
+                                            // B --- D
+
+extern int heightMatrix[MAP_SIZE][MAP_SIZE];
+
 void drawMap();
+
+void initHeightMatrix();
+
+void initMapCells();
 
 #endif
