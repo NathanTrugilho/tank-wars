@@ -1,6 +1,7 @@
 #include <projectile.h>
 #include <enemy.h>
 #include <tank.h>
+#include <map.h>
 
 Bullet bullets[MAX_BULLETS];
 
@@ -12,7 +13,7 @@ void updateBullets() {
             bullets[i].z -= cosf(bullets[i].angle * 3.14159 / 180.0) * 0.4f;
 
             // Limites do mapa
-            if (bullets[i].x < -20 || bullets[i].x > 20 || bullets[i].z < -20 || bullets[i].z > 20)
+            if (bullets[i].x < -MAP_SIZE/2 || bullets[i].x > MAP_SIZE/2 || bullets[i].z < -MAP_SIZE/2 || bullets[i].z > MAP_SIZE/2)
                 bullets[i].active = 0;
 
             // Colisão com inimigos

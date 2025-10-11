@@ -52,7 +52,10 @@ void updateTank() {
     if (keyStates['d'] || keyStates['D']) tankAngle -= rotSpeed;
 
     // Limites do mapa
-    if (nextX > -20 && nextX < 20) tankX = nextX;
-    if (nextZ > -20 && nextZ < 20) tankZ = nextZ;
+    //if (nextX > -20 && nextX < 20) tankX = nextX;
+    //if (nextZ > -20 && nextZ < 20) tankZ = nextZ;
+
+    tankX = nextX;
+    tankZ = nextZ;
 }
 
