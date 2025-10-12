@@ -1,61 +1,71 @@
-# Makefile Cross-Platform (Windows e Linux)
-
-# Compilador padrão
+# Compilador e flags
 CC = gcc
-# Flags de compilação (comuns para ambos os sistemas)
 CFLAGS = -Iinclude -Wall -g
 
-# --- Detecção Automática do Sistema Operacional ---
-ifeq ($(OS),Windows_NT)
-    # Configurações para WINDOWS
-    TARGET      = tankwars.exe
-    LIBS        = -lfreeglut -lopengl32 -lglu32
-    RM          = del /Q
-    MKDIR_P     = if not exist $(1) mkdir $(1)
-    SLASH       = \\
-else
-    # Configurações para LINUX (e outros Unix-like)
-    TARGET      = tankwars
-    # ADICIONADO -lm PARA A BIBLIOTECA MATEMÁTICA
-    LIBS        = -lglut -lGL -lGLU -lm
-    RM          = rm -f
-    MKDIR_P     = mkdir -p
-    SLASH       = /
-endif
-# --- Fim da Detecção ---
-
-# Diretórios
+# --- Diretórios ---
 OBJDIR = obj
 SRCDIR = src
 
-# Lista todos os arquivos .c em SRCDIR
+# --- Fontes e Objetos ---
 SRCS = $(wildcard $(SRCDIR)/*.c)
-# Converte a lista de fontes (.c) para uma lista de objetos (.o)
 OBJS = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-# Regra padrão
-all: $(OBJDIR) $(TARGET)
+# --- Detecção de SO Aprimorada ---
+IS_WINDOWS :=
+ifeq ($(OS),Windows_NT)
+    IS_WINDOWS := 1
+else
+    UNAME_S := $(shell uname -s)
+    ifneq (,$(findstring MINGW,$(UNAME_S)))
+        IS_WINDOWS := 1
+    endif
+    ifneq (,$(findstring MSYS,$(UNAME_S)))
+        IS_WINDOWS := 1
+    endif
+endif
 
-# Linka todos os arquivos objeto para criar o executável final
-$(TARGET): $(OBJS)
-	@echo "Ligando os arquivos objeto para criar [$(TARGET)]..."
+# --- Configuração Específica do Sistema Operacional ---
+ifdef IS_WINDOWS
+    # Configurações para Windows
+    TARGET      := tankwars.exe
+    LIBS        := -lfreeglut -lopengl32 -lglu32 -lm
+    RM          := del /Q /F
+    # Comando para remover diretório recursivamente no Windows
+    RM_DIR      := rmdir /S /Q
+    MKDIR_CMD   := if not exist $(OBJDIR) mkdir $(OBJDIR)
+else
+    # Configurações para Linux/Unix
+    TARGET      := tankwars
+    LIBS        := -lGL -lGLU -lglut -lm
+    RM          := rm -f
+    # Comando para remover diretório recursivamente no Linux
+    RM_DIR      := rm -rf
+    MKDIR_CMD   := mkdir -p $(OBJDIR)
+endif
+
+
+# --- Regras de Compilação ---
+
+# Regra padrão: compila o alvo e depois limpa o diretório de objetos.
+all: $(TARGET)
+	@echo "Compilacao concluida. Limpando arquivos temporarios..."
+	$(RM_DIR) $(OBJDIR)
+
+# Cria a pasta obj se não existir (necessário para os arquivos .o)
+$(OBJDIR):
+	$(MKDIR_CMD)
+
+# Linka os objetos para gerar o executável.
+# A dependência $(OBJDIR) garante que a pasta seja criada antes de compilar.
+$(TARGET): $(OBJDIR) $(OBJS)
 	$(CC) $(OBJS) -o $(TARGET) $(LIBS)
-	@echo "Compilação finalizada com sucesso!"
 
-# Regra para compilar cada arquivo .c em um arquivo .o
+# Regra para criar cada objeto em obj/
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
-	@echo "Compilando $<..."
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Regra para criar o diretório de objetos
-$(OBJDIR):
-	@echo "Verificando diretório de objetos [$(OBJDIR)]..."
-	$(call MKDIR_P,$(OBJDIR))
-
-# Regra para limpar o projeto
+# Regra 'clean' agora apaga apenas o executável,
+# pois os objetos já são apagados no processo 'all'.
 clean:
-	@echo "Limpando arquivos de compilação..."
-	$(RM) $(OBJDIR)$(SLASH)*.o
+	@echo "Limpando o executavel..."
 	$(RM) $(TARGET)
-
-.PHONY: all clean
