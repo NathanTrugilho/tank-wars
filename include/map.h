@@ -24,6 +24,8 @@ extern square mapCells[MAP_SIZE][MAP_SIZE]; // A --- C
 
 extern float heightMatrix[MAP_SIZE][MAP_SIZE];
 
+extern vertex vertexNormals[MAP_SIZE][MAP_SIZE];
+
 void drawMap();
 
 void initHeightMatrix();

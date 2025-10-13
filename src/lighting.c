@@ -60,6 +60,7 @@ void setupLighting() {
 }
 
 void drawSun(){
-    GLfloat light_position[] = { 1.0f, -0.5f, 0.5f, 0.0f };   
+    GLfloat light_position[] = { 1.0f, 1.0f, 2.0f, 0.0f };  
+    //GLfloat light_position[] = { 0.0f, -1.0f, 0.0f, 0.0f };   
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 }

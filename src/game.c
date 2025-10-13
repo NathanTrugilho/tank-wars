@@ -4,8 +4,8 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    updateCamera();
     // Desenha o sol
+    updateCamera();
     drawSun();
     // Desenha mapa
     drawMap();
@@ -63,4 +63,5 @@ void init() {
     glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
     initBulletsAndEnemies();
     initMapCells();
+    calcularNormaisDoMapa();
 }

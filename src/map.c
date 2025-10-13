@@ -4,6 +4,8 @@ square mapCells[MAP_SIZE][MAP_SIZE];
 
 float heightMatrix[MAP_SIZE][MAP_SIZE];
 
+vertex vertexNormals[MAP_SIZE][MAP_SIZE];
+
 void initHeightMatrix(){
 
     for (int z = 0; z < MAP_SIZE; z++) {
@@ -13,9 +15,9 @@ void initHeightMatrix(){
     }
 
     for (int x = 0; x < MAP_SIZE; x++) {
-        heightMatrix[0][x] = 1.0f;
-        heightMatrix[1][x] = 1.0f;
-        heightMatrix[2][x] = 1.0f;
+        heightMatrix[0][x] = 20.0f;
+        heightMatrix[1][x] = 20.0f;
+        /*heightMatrix[2][x] = 1.0f;
         heightMatrix[3][x] = 1.0f;
         heightMatrix[4][x] = 0.8f;
         heightMatrix[5][x] = 0.7f;
@@ -24,7 +26,7 @@ void initHeightMatrix(){
         heightMatrix[8][x] = 0.4f;
         heightMatrix[9][x] = 0.3f;
         heightMatrix[10][x] = 0.2f;
-        heightMatrix[11][x] = 0.1f;
+        heightMatrix[11][x] = 0.1f;*/
     }
 }
 
@@ -94,9 +96,16 @@ void drawMap() {
 
         // Loop para percorrer cada coluna do mapa no eixo X
         for (int x = 0; x < MAP_SIZE; x++) {
-            glNormal3f(0,-1,0); // A normal tá zoada!!!!
+            
+            vertex normalA = vertexNormals[z][x];
+            glNormal3f(normalA.x, normalA.y, normalA.z);
+            //glNormal3f(0.0f,-1.0f,0.0f);
             glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
-            glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);;
+
+            vertex normalB = vertexNormals[z+1][x];
+            glNormal3f(normalB.x, normalB.y, normalB.z);
+            //glNormal3f(0.0f,1.0f,0.0f);
+            glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);
         }
 
         glEnd();
