@@ -1,25 +1,21 @@
-#include <lighting.h>
+#include <GL/glut.h> // Usar o header padrão do GLUT
 
-// Arquivo: [Teu arquivo de inicialização, e.g., game.c]
-
+// ---------------------------------------------------------------------------------
+// FUNÇÃO DE ILUMINAÇÃO CORRIGIDA
 // Documentação:
-// Configura todo o sistema de iluminação do OpenGL para simular um nascer do sol.
+// Configura as PROPRIEDADES da iluminação (cores, etc.).
+// A POSIÇÃO será definida na função de desenho, pois depende da câmera.
 // Deve ser chamada APENAS UMA VEZ na função de inicialização (init()).
+// ---------------------------------------------------------------------------------
 void setupLighting() {
     // ----------------------------------------------------
     // 1. HABILITAR SISTEMAS GLOBAIS
     // ----------------------------------------------------
-    
-    // Ligar o sistema de iluminação principal do OpenGL.
-    glEnable(GL_LIGHTING);
-    
-    // Ligar a primeira fonte de luz (GL_LIGHT0).
-    glEnable(GL_LIGHT0);
-    
-    // Habilitar o rastreamento de cor do material.
-    // Isto permite que glColor3f() defina a cor dos objetos.
-    glEnable(GL_COLOR_MATERIAL);
-    
+    glEnable(GL_LIGHTING);         // Ligar o sistema de iluminação principal.
+    glEnable(GL_LIGHT0);           // Ligar a primeira fonte de luz (GL_LIGHT0).
+    glEnable(GL_COLOR_MATERIAL);   // Habilitar o rastreamento de cor do material.
+    glEnable(GL_DEPTH_TEST);       // Habilitar teste de profundidade para renderização 3D correta.
+
     // Associar as cores definidas com glColor3f() às propriedades
     // AMBIENTE e DIFUSA do material.
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
@@ -31,36 +27,23 @@ void setupLighting() {
     // Cores: Tons quentes para simular o nascer do sol
     
     // Luz Ambiente (Geral): Uma luz suave e quente que preenche todas as áreas.
-    // (Amarelo/Laranja suave)
-    GLfloat light_ambient[] = { 0.4f, 0.3f, 0.1f, 1.0f }; 
+    GLfloat light_ambient[] = { 0.4f, 0.3f, 0.1f, 1.0f };
     glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
 
     // Luz Difusa (Direcional): A cor principal do Sol a atingir a superfície.
-    // (Amarelo/Laranja claro)
-    GLfloat light_diffuse[] = { 0.8f, 0.6f, 0.3f, 1.0f }; 
+    GLfloat light_diffuse[] = { 0.8f, 0.6f, 0.3f, 1.0f };
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
 
-    // Luz Especular (Brilho): O reflexo na superfície, geralmente branco.
-    // (Branco/Amarelo)
+    // Luz Especular (Brilho): O reflexo na superfície.
     GLfloat light_specular[] = { 0.9f, 0.8f, 0.6f, 1.0f };
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-
-    // ----------------------------------------------------
-    // 3. POSIÇÃO DA LUZ
-    // ----------------------------------------------------
-
-    // Posição da Luz: Luz Direcional (w=0.0) vinda de um ângulo de nascer do sol.
-    // Documentação: 
-    // - O vetor define a direção da luz.
-    // - Vamos apontar para baixo (Y negativo) e ligeiramente para a frente (Z negativo).
-    // - w=0.0 torna-a uma luz direcional (infinita), como o Sol.
-    
-    // Nota: Ajusta estes valores (X e Z) para definir o ângulo exato do "nascer".
-    // { 1.0f (X), -0.5f (Y), 0.5f (Z), 0.0f (Direcional) }
 }
 
 void drawSun(){
-    GLfloat light_position[] = { 1.0f, 1.0f, 2.0f, 0.0f };  
-    //GLfloat light_position[] = { 0.0f, -1.0f, 0.0f, 0.0f };   
+    GLfloat light_position[] = { 5.0f, 2.0f, 3.0f, 0.0f }; // ultimo param diz se é posicional (1) ou direcional (0). 
+                                                           // por ser direcional, ele simula uma fonte muito distante que manda raios de luz
+                                                           // na direção (5, 2, 1) que são os outros parâmetros
+
+    //GLfloat light_position[] = { 0.0f, 1.0f, 0.0f, 0.0f }; // Sol de meio dia pra testar
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 }

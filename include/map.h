@@ -3,7 +3,7 @@
 
 #include <GL/glut.h>
 
-#define MAP_SIZE 2
+#define MAP_SIZE 50
 #define VERTEX_NUM MAP_SIZE + 1 // Tem que ser um a mais que o tamanho do mapa
 
 typedef struct vertex {
