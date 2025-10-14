@@ -1,6 +1,4 @@
 #include <tank.h>
-#include <projectile.h>
-#include <input.h>
 
 // Posição e orientação do tanque
 float tankX = 0.0f;

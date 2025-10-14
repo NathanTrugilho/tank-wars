@@ -1,5 +1,5 @@
 #include <utils.h>
-#include <stdio.h>
+//#include <stdio.h>
 
 vertex calcularNormalTriangulo(vertex p1, vertex p2, vertex p3) {
     vertex v, w, normal;

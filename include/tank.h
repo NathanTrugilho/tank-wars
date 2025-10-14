@@ -1,4 +1,6 @@
 #include <GL/glut.h>
+#include <projectile.h>
+#include <input.h>
 
 // Posição e orientação do tanque
 extern float tankX;

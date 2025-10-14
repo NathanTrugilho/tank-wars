@@ -1,12 +1,5 @@
 #include <GL/glut.h> // Usar o header padrão do GLUT
 
-// ---------------------------------------------------------------------------------
-// FUNÇÃO DE ILUMINAÇÃO CORRIGIDA
-// Documentação:
-// Configura as PROPRIEDADES da iluminação (cores, etc.).
-// A POSIÇÃO será definida na função de desenho, pois depende da câmera.
-// Deve ser chamada APENAS UMA VEZ na função de inicialização (init()).
-// ---------------------------------------------------------------------------------
 void setupLighting() {
     // ----------------------------------------------------
     // 1. HABILITAR SISTEMAS GLOBAIS
@@ -16,16 +9,8 @@ void setupLighting() {
     glEnable(GL_COLOR_MATERIAL);   // Habilitar o rastreamento de cor do material.
     glEnable(GL_DEPTH_TEST);       // Habilitar teste de profundidade para renderização 3D correta.
 
-    // Associar as cores definidas com glColor3f() às propriedades
-    // AMBIENTE e DIFUSA do material.
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
-    // ----------------------------------------------------
-    // 2. PROPRIEDADES DA LUZ (NASCER DO SOL)
-    // ----------------------------------------------------
-
-    // Cores: Tons quentes para simular o nascer do sol
-    
     // Luz Ambiente (Geral): Uma luz suave e quente que preenche todas as áreas.
     GLfloat light_ambient[] = { 0.4f, 0.3f, 0.1f, 1.0f };
     glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
@@ -40,7 +25,7 @@ void setupLighting() {
 }
 
 void drawSun(){
-    GLfloat light_position[] = { 5.0f, 2.0f, 3.0f, 0.0f }; // ultimo param diz se é posicional (1) ou direcional (0). 
+    GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 0.0f }; // ultimo param diz se é posicional (1) ou direcional (0). 
                                                            // por ser direcional, ele simula uma fonte muito distante que manda raios de luz
                                                            // na direção (5, 2, 1) que são os outros parâmetros
 

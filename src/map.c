@@ -1,5 +1,5 @@
 #include <map.h>
-#include <stdio.h>
+//#include <stdio.h>
 
 square mapCells[MAP_SIZE][MAP_SIZE];
 
