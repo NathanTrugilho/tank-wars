@@ -8,6 +8,8 @@
 #include <math.h>
 #include <map.h>
 #include <camera.h>
+#include <lighting.h>
+#include <utils.h>
 
 void display();
 

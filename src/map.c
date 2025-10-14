@@ -1,30 +1,35 @@
 #include <map.h>
+//#include <stdio.h>
 
 square mapCells[MAP_SIZE][MAP_SIZE];
 
-int heightMatrix[MAP_SIZE][MAP_SIZE];
+float heightMatrix[VERTEX_NUM][VERTEX_NUM];
+
+vertex vertexNormals[VERTEX_NUM][VERTEX_NUM];
 
 void initHeightMatrix(){
 
-    for (int z = 0; z < MAP_SIZE; z++) {
-        for (int x = 0; x < MAP_SIZE; x++) {
-            heightMatrix[z][x] = 0.0f;
+    for (int z = 0; z < VERTEX_NUM; z++) {
+        for (int x = 0; x < VERTEX_NUM; x++) {
+            heightMatrix[z][x] = 0;
         }
     }
 
-    for (int x = 0; x < MAP_SIZE; x++) {
-        heightMatrix[0][x] = 1.0f;
-        heightMatrix[1][x] = 1.0f;
-        heightMatrix[2][x] = 1.0f;
-        heightMatrix[3][x] = 1.0f;
-        heightMatrix[4][x] = 0.8f;
-        heightMatrix[5][x] = 0.7f;
-        heightMatrix[6][x] = 0.6f;
-        heightMatrix[7][x] = 0.5f;
-        heightMatrix[8][x] = 0.4f;
-        heightMatrix[9][x] = 0.3f;
-        heightMatrix[10][x] = 0.2f;
-        heightMatrix[11][x] = 0.1f;
+    // Simulando alguma altura
+    for (int x = 0; x < VERTEX_NUM; x++) {
+        heightMatrix[0][x] = 5.0f;
+    }
+
+    for (int x = 0; x < VERTEX_NUM; x++) {
+        heightMatrix[50][x] = 5.0f;
+    }
+
+    for (int z = 0; z < VERTEX_NUM; z++) {
+        heightMatrix[z][0] = 5.0f;
+    }
+
+    for (int z = 0; z < VERTEX_NUM; z++) {
+        heightMatrix[z][50] = 5.0f;
     }
 }
 
@@ -63,7 +68,7 @@ void initMapCells(){
     }
 
     // Mesma coisa pro B
-    for (int z = 0; z < MAP_SIZE - 1; z++) {
+    for (int z = 0; z < MAP_SIZE; z++) {
         for (int x = 0; x < MAP_SIZE; x++){
             mapCells[z][x].B.y = heightMatrix[z + 1][x];
         }
@@ -71,14 +76,14 @@ void initMapCells(){
 
     // Mesma coisa pro C
     for (int z = 0; z < MAP_SIZE; z++) {
-        for (int x = 0; x < MAP_SIZE - 1; x++){
+        for (int x = 0; x < MAP_SIZE; x++){
             mapCells[z][x].C.y = heightMatrix[z][x + 1];
         }
     }
 
     // Mesma coisa pro D
-    for (int z = 0; z < MAP_SIZE - 1; z++) {
-        for (int x = 0; x < MAP_SIZE - 1; x++){
+    for (int z = 0; z < MAP_SIZE; z++) {
+        for (int x = 0; x < MAP_SIZE; x++){
             mapCells[z][x].D.y = heightMatrix[z + 1][x + 1];
         }
     }
@@ -90,15 +95,36 @@ void drawMap() {
     // Loop para percorrer cada linha do mapa no eixo Z
     for (int z = 0; z < MAP_SIZE; z++) {
         
-        glBegin(GL_TRIANGLE_STRIP);
-
         // Loop para percorrer cada coluna do mapa no eixo X
-        for (int x = 0; x <= MAP_SIZE; x++) {
+        for (int x = 0; x < MAP_SIZE; x++) {
             
-            glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
-            glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);;
-        }
+            glBegin(GL_TRIANGLE_STRIP);
 
-        glEnd();
+            // Vértice A
+            vertex normalA = vertexNormals[z][x];
+            glNormal3f(normalA.x, normalA.y, normalA.z);
+            glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
+            //printf("A: %f, %f, %f \n ", normalA.x, normalA.y, normalA.z);
+        
+            // Vértice B
+            vertex normalB = vertexNormals[z+1][x];
+            glNormal3f(normalB.x, normalB.y, normalB.z);
+            glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);
+            //printf("B: %f, %f, %f \n ", normalB.x, normalB.y, normalB.z);
+
+            // Vértice C
+            vertex normalC = vertexNormals[z][x+1];
+            glNormal3f(normalC.x, normalC.y, normalC.z);
+            glVertex3f(mapCells[z][x].C.x, mapCells[z][x].C.y, mapCells[z][x].C.z);
+            //printf("C: %f, %f, %f \n ", normalC.x, normalC.y, normalC.z);
+
+            // Vértice D
+            vertex normalD = vertexNormals[z+1][x+1];
+            glNormal3f(normalD.x, normalD.y, normalD.z);
+            glVertex3f(mapCells[z][x].D.x, mapCells[z][x].D.y, mapCells[z][x].D.z);
+            //printf("D: %f, %f, %f \n ", normalD.x, normalD.y, normalD.z);
+
+            glEnd();
+        }
     }
 }
