@@ -13,8 +13,8 @@ void updateBullets() {
             bullets[i].z -= cosf(bullets[i].angle * 3.14159 / 180.0) * 0.4f;
 
             // Limites do mapa
-            if (bullets[i].x < -MAP_SIZE/2 || bullets[i].x > MAP_SIZE/2 || bullets[i].z < -MAP_SIZE/2 || bullets[i].z > MAP_SIZE/2)
-                bullets[i].active = 0;
+            //if (bullets[i].x < -MAP_SIZE/2 || bullets[i].x > MAP_SIZE/2 || bullets[i].z < -MAP_SIZE/2 || bullets[i].z > MAP_SIZE/2)
+                //bullets[i].active = 0;
 
             // Colisão com inimigos
             for (int j = 0; j < MAX_ENEMIES; j++) {
@@ -39,8 +39,8 @@ void initBulletsAndEnemies() {
     srand(time(NULL));
     for (int i = 0; i < MAX_ENEMIES; i++) {
         enemies[i].alive = 1;
-        enemies[i].x = -18 + rand() % 36; // entre -18 e 18
-        enemies[i].z = -18 + rand() % 36; // entre -18 e 18
+        enemies[i].x = rand() % 50; // entre -18 e 18
+        enemies[i].z = rand() % 50; // entre -18 e 18
     }
 }
 
