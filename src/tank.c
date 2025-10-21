@@ -1,8 +1,13 @@
 #include <tank.h>
 
+int mapCellX = INITIAL_TANK_CELL_X;
+int mapCellZ = INITIAL_TANK_CELL_Z;
+
 // Posição e orientação do tanque
-float tankX = 0.0f;
-float tankZ = 0.0f;
+float tankX;
+float tankY;
+float tankZ;
+
 float tankAngle = 0.0f;
 
 // Velocidade do tanque
@@ -13,7 +18,7 @@ const double RADIAN_FACTOR = 3.14159 / 180.0; // Pra converter de graus pra radi
 
 void drawTank() {
     glPushMatrix();
-        glTranslatef(tankX, 0.5f, tankZ);
+        glTranslatef(tankX, tankY, tankZ);
         glRotatef(tankAngle, 0.0f, 1.0f, 0.0f);
 
         glColor3f(0.7f, 0.1f, 0.1f);
@@ -49,11 +54,33 @@ void updateTank() {
     if (keyStates['a'] || keyStates['A']) tankAngle += rotSpeed;
     if (keyStates['d'] || keyStates['D']) tankAngle -= rotSpeed;
 
-    // Limites do mapa
-    //if (nextX > -20 && nextX < 20) tankX = nextX;
-    //if (nextZ > -20 && nextZ < 20) tankZ = nextZ;
-
     tankX = nextX;
     tankZ = nextZ;
+
+    updateMapCellPos();
+}
+
+void updateMapCellPos(){
+
+    int posX_A = mapCells[mapCellZ][mapCellX].A.x;
+    int posZ_A = mapCells[mapCellZ][mapCellX].A.z;
+    int posX_D = mapCells[mapCellZ][mapCellX].D.x;
+    int posZ_D = mapCells[mapCellZ][mapCellX].D.z;
+
+    if(tankX < posX_A && mapCellX > 0) mapCellX--;
+    else if(tankX > posX_D && mapCellX < 49) mapCellX++;
+
+    if(tankZ < posZ_A && mapCellZ > 0) mapCellZ--;
+    else if(tankX > posZ_D && mapCellZ < 49) mapCellZ++;
+
+    // Para fazer debug
+    //printf("Celula %d %d \n", mapCellZ, mapCellX);
+
+}
+
+void initTank(){
+    tankX = mapCells[mapCellZ][mapCellX].C.x;
+    tankZ = mapCells[mapCellZ][mapCellX].C.z;
+    tankY = 0.5f;
 }
 

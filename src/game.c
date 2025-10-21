@@ -66,4 +66,5 @@ void init() {
     initBulletsAndEnemies();
     initMapCells();
     calcularNormaisDoMapa();
+    initTank();
 }

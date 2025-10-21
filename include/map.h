@@ -19,11 +19,11 @@ typedef struct square {
     vertex D;
 } square;
 
-extern square mapCells[MAP_SIZE][MAP_SIZE]; // A --- C
-                                            // |     |
-                                            // B --- D
+// A --- C
+// |     |
+// B --- D
 
-
+extern square mapCells[MAP_SIZE][MAP_SIZE]; // [z][x]
 
 extern float heightMatrix[VERTEX_NUM][VERTEX_NUM];
 

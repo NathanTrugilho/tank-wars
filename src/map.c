@@ -37,8 +37,8 @@ void initMapCells(){
 
     initHeightMatrix();
 
-    float coordZ = -MAP_SIZE / 2;
-    float coordX = -MAP_SIZE / 2;
+    float coordZ = 0;
+    float coordX = 0;
 
     for (int z = 0; z < MAP_SIZE; z++) {
         for (int x = 0; x < MAP_SIZE; x++) {
@@ -57,7 +57,7 @@ void initMapCells(){
             coordX += 1;
         }
         coordZ += 1;
-        coordX = -MAP_SIZE / 2;
+        coordX = 0;
     }
 
     // Bota as coordenadas y nos pontos A's.
