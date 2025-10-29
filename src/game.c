@@ -10,13 +10,13 @@ void display() {
     // Desenha mapa
     drawMap();
     // Desenha tanque
-    drawTank();
+    drawTank(&playerTank);
 
     // Desenha inimigos
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (enemies[i].alive) {
             glPushMatrix();
-                glTranslatef(enemies[i].x, 0.5f, enemies[i].z);
+                glTranslatef(enemies[i].hitbox.position.x, enemies[i].hitbox.position.y, enemies[i].hitbox.position.z);
                 glColor3f(0.1f, 0.1f, 0.7f);
                 glScalef(1.0f, 0.5f, 2.0f);
                 glutSolidCube(1.0f);
@@ -28,7 +28,7 @@ void display() {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].active) {
             glPushMatrix();
-                glTranslatef(bullets[i].x, 0.3f, bullets[i].z);
+                glTranslatef(bullets[i].hitbox.position.x, bullets[i].hitbox.position.y, bullets[i].hitbox.position.z);
                 glColor3f(1.0f, 1.0f, 0.0f);
                 glutSolidSphere(0.2, 10, 10);
             glPopMatrix();
@@ -51,7 +51,7 @@ void reshape(int w, int h) {
 
 // Animação
 void idle() {
-    updateTank();
+    updateTank(&playerTank);
     updateBullets();
     glutPostRedisplay();
 }
@@ -63,8 +63,9 @@ void init() {
     glShadeModel(GL_SMOOTH);
     glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
     setupLighting();
-    initBulletsAndEnemies();
+    initBullets();
+    initEnemies();
     initMapCells();
     calcularNormaisDoMapa();
-    initTank();
+    initTank(&playerTank);
 }

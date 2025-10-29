@@ -3,12 +3,13 @@
 
 #include <math.h>
 #include <time.h>
+#include <collision.h>
 
 #define MAX_BULLETS 100
 
 // Estrutura bullets
 typedef struct {
-    float x, z;
+    Box hitbox; //Talvez possa ser Vector3
     float angle;
     int active;
 } Bullet;
@@ -19,7 +20,7 @@ extern Bullet bullets[MAX_BULLETS];
 void updateBullets();
 
 // Inicializa bullets e inimigos
-void initBulletsAndEnemies();
+void initBullets();
 // Dispara bullet
 void shootBullet();
 
