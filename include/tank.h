@@ -11,24 +11,29 @@
 #define INITIAL_TANK_CELL_Z 25
 #define INITIAL_TANK_CELL_X 25
 
-typedef struct Tank{
-    Box hitbox;
+typedef struct {
+    Vector3f position;
     float tankAngle;
     float moveSpeed;
     float rotSpeed;
     int mapCellX;
-    int mapCellY;
     int mapCellZ;
+    int alive;
+    AABB hitbox;
 } Tank;
 
-extern Tank playerTank;
+extern Tank player;
 
-void initTank(Tank *tank);
+void drawTank();
 
-void updateTank(Tank *tank);
+void updateTank();
 
-void drawTank(const Tank *tank);
+void initTank();
 
-void updateMapCellPos(Tank *tank);
+void updateMapCellPos();
+
+AABB getTankAABB(Vector3f position);
+
+int checkPlayerCollision(AABB testBox);
 
 #endif

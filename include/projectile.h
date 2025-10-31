@@ -9,19 +9,21 @@
 
 // Estrutura bullets
 typedef struct {
-    Box hitbox; //Talvez possa ser Vector3
+    Vector3f position;
     float angle;
     int active;
+    AABB hitbox;
 } Bullet;
 
 extern Bullet bullets[MAX_BULLETS];
 
 // Atualiza bullets
 void updateBullets();
-
-// Inicializa bullets e inimigos
+// Inicializa bullets
 void initBullets();
 // Dispara bullet
 void shootBullet();
+// Desenha bullets
+void drawBullets();
 
 #endif
