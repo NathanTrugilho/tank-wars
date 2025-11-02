@@ -15,7 +15,7 @@ void initHeightMatrix(){
         }
     }
 
-    // Simulando alguma altura
+    // Simulando a altura das paredes
     for (int x = 0; x < VERTEX_NUM; x++) {
         heightMatrix[0][x] = 5.0f;
     }
@@ -31,6 +31,15 @@ void initHeightMatrix(){
     for (int z = 0; z < VERTEX_NUM; z++) {
         heightMatrix[z][50] = 5.0f;
     }
+
+    // faço um morrinho ao redor do centro do mapa
+    heightMatrix[25][25] = 0.5f;
+    heightMatrix[25][26] = 0.5f;
+    heightMatrix[26][25] = 0.5f;
+    heightMatrix[26][26] = 0.5f;
+    heightMatrix[26][27] = 0.5f;
+    heightMatrix[27][26] = 0.5f;
+    heightMatrix[27][27] = 0.5f;
 }
 
 void initMapCells(){
