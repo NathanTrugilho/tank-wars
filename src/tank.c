@@ -10,6 +10,8 @@ float tankZ;
 
 float tankAngle = 0.0f;
 
+ObjModel tankModel;
+
 // Velocidade do tanque
 float moveSpeed = 0.2f;
 float rotSpeed = 2.0f;
@@ -20,21 +22,8 @@ void drawTank() {
     glPushMatrix();
         glTranslatef(tankX, tankY, tankZ);
         glRotatef(tankAngle, 0.0f, 1.0f, 0.0f);
-
-        glColor3f(0.7f, 0.1f, 0.1f);
-        glPushMatrix();
-            glScalef(1.0f, 0.5f, 2.0f);
-            glutSolidCube(1.0f);
-        glPopMatrix();
-
-        glColor3f(0.3f, 0.3f, 0.3f);
-        glPushMatrix();
-            glTranslatef(0.f, 0.3f, -0.8f); 
-            glRotatef(-180, 1, 0, 0);
-            GLUquadric* quad = gluNewQuadric();
-            gluCylinder(quad, 0.1, 0.1, 1.0, 8, 2);
-            gluDeleteQuadric(quad);
-        glPopMatrix();
+        glColor3f(1.0f,0.0f,0.0f);
+        drawModel(&tankModel);
     glPopMatrix();
 }
 
@@ -79,6 +68,14 @@ void updateMapCellPos(){
 }
 
 void initTank(){
+
+    if (loadOBJ("tank_test.obj", "tank_test.mtl", &tankModel)) {
+    printf("Modelo carregado com sucesso!\n");
+    //listObject(&tankModel);
+    } else {
+        printf("ERRO: Nao foi possivel carregar o modelo.\n");
+    }
+
     tankX = mapCells[mapCellZ][mapCellX].C.x;
     tankZ = mapCells[mapCellZ][mapCellX].C.z;
     tankY = 0.5f;

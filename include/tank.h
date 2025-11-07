@@ -3,6 +3,7 @@
 #include <input.h>
 #include <map.h>
 #include <stdio.h>
+#include <mybib.h>
 
 #define INITIAL_TANK_CELL_Z 25
 #define INITIAL_TANK_CELL_X 25
@@ -18,6 +19,8 @@ extern float rotSpeed;
 
 extern int mapCellX;
 extern int mapCellZ;
+
+extern ObjModel tankModel;
 
 void drawTank();
 

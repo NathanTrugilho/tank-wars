@@ -49,11 +49,12 @@ void reshape(int w, int h) {
     glViewport(0, 0, w, h);
 }
 
-// Animação
-void idle() {
+void timer(int value) {
+
     updateTank();
     updateBullets();
     glutPostRedisplay();
+    glutTimerFunc(16, timer, 0); 
 }
 
 // Inicialização
