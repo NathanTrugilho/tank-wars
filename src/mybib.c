@@ -727,8 +727,6 @@ void drawNormals(ObjModel *model) {   // Vertex *normal, *v1, *v2, *v3) {
 
 }
 
-// Função para desenhar o modelo
-// Função para desenhar o modelo (VERSÃO CORRIGIDA)
 void drawModel(ObjModel *model) {
 
     if (!model->vertices || !model->faces) {
