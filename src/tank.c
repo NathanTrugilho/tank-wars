@@ -10,7 +10,7 @@ float tankZ;
 
 float tankAngle = 0.0f;
 
-ObjModel tankModel;
+ObjModel turretModel, cannonModel, hullModel;
 
 // Velocidade do tanque
 float moveSpeed = 0.2f;
@@ -23,7 +23,9 @@ void drawTank() {
         glTranslatef(tankX, tankY, tankZ);
         glRotatef(tankAngle, 0.0f, 1.0f, 0.0f);
         glColor3f(1.0f,0.0f,0.0f);
-        drawModel(&tankModel);
+        drawModel(&hullModel);
+        drawModel(&cannonModel);
+        drawModel(&turretModel);
     glPopMatrix();
 }
 
@@ -69,11 +71,19 @@ void updateMapCellPos(){
 
 void initTank(){
 
-    if (loadOBJ("tank_test.obj", "tank_test.mtl", &tankModel)) {
-    printf("Modelo carregado com sucesso!\n");
-    //listObject(&tankModel);
+    if (loadOBJ("objects/turret.obj", "objects/turret.mtl", &turretModel)) {
     } else {
-        printf("ERRO: Nao foi possivel carregar o modelo.\n");
+        printf("ERRO: Nao foi possivel carregar o modelo da torreta.\n");
+    }
+
+    if (loadOBJ("objects/cannon.obj", "objects/cannon.mtl", &cannonModel)) {
+    } else {
+        printf("ERRO: Nao foi possivel carregar o modelo do canhão.\n");
+    }
+
+    if (loadOBJ("objects/hull.obj", "objects/hull.mtl", &hullModel)) {
+    } else {
+        printf("ERRO: Nao foi possivel carregar o modelo da base.\n");
     }
 
     tankX = mapCells[mapCellZ][mapCellX].C.x;

@@ -20,7 +20,7 @@ extern float rotSpeed;
 extern int mapCellX;
 extern int mapCellZ;
 
-extern ObjModel tankModel;
+extern ObjModel turretModel, cannonModel, hullModel;
 
 void drawTank();
 
