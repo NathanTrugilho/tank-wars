@@ -75,8 +75,15 @@ void updateTank() {
     }
     
     // 2. Colisão Rotacional (Sempre permitida, a rotação não muda a AABB se não houver movimento)
-    if (keyStates['a'] || keyStates['A']) player.tankAngle += player.rotSpeed;
-    if (keyStates['d'] || keyStates['D']) player.tankAngle -= player.rotSpeed;
+    if (keyStates['a'] || keyStates['A']) {
+        player.tankAngle += player.rotSpeed;
+        moved = 1;
+    }
+
+    if (keyStates['d'] || keyStates['D']) {
+        player.tankAngle -= player.rotSpeed;
+        moved = 1;
+    }
 
     // 3. Checagem de Colisão (apenas se houve tentativa de movimento)
     if (moved) {
@@ -88,7 +95,7 @@ void updateTank() {
             player.position.x = nextX;
             player.position.z = nextZ;
         } 
-        // Se houver colisão, player.position.x e .z MANTÊM o valor antigo.
+        // Se houver colisão, player.position.x e .z MANTÊM o valor antigo && não deixa rotacionar
     }
 
     updateMapCellPos();
