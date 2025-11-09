@@ -15,9 +15,13 @@ extern float tankZ;
 
 extern float hullAngle;
 extern float turretAngle;
+extern float pipeAngle;
+
 extern float moveSpeed;
 
 extern float rotSpeed;
+extern float turretRotSpeed;
+extern float pipeInclSpeed;
 
 extern int mapCellX;
 extern int mapCellZ;

@@ -3,19 +3,22 @@
 int mapCellX = INITIAL_TANK_CELL_X;
 int mapCellZ = INITIAL_TANK_CELL_Z;
 
-// Posição e orientação do tanque
+ObjModel turretModel, pipeModel, hullModel;
+
 float tankX;
 float tankY;
 float tankZ;
 
 float hullAngle = 0.0f;
 float turretAngle = 0.0f;
+float pipeAngle = 0.0f;
 
-ObjModel turretModel, pipeModel, hullModel;
-
-// Velocidade do tanque
 float moveSpeed = 0.2f;
+
 float rotSpeed = 2.0f;
+float turretRotSpeed = 1.0f;
+
+float pipeInclSpeed = 0.5f;
 
 const double RADIAN_FACTOR = 3.14159 / 180.0; // Pra converter de graus pra radiano
 
@@ -33,6 +36,8 @@ void drawTank() {
         glPushMatrix();
             glRotatef(turretAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&turretModel);
+
+            glRotatef(pipeAngle, 1.0f, 0.0f, 0.0f); // Em x
             drawModel(&pipeModel);
         glPopMatrix();
 
@@ -58,6 +63,15 @@ void updateTank() {
 
     if (specialKeyStates[GLUT_KEY_LEFT]) turretAngle += rotSpeed;
     if (specialKeyStates[GLUT_KEY_RIGHT]) turretAngle -= rotSpeed;
+
+    if (specialKeyStates[GLUT_KEY_UP]) {
+        pipeAngle += pipeInclSpeed;
+        if (pipeAngle > 25.0f) pipeAngle = 25.0f; // limite superior
+    }
+    if (specialKeyStates[GLUT_KEY_DOWN]) {
+        pipeAngle -= pipeInclSpeed;
+        if (pipeAngle < -5.0f) pipeAngle = -5.0f; // limite inferior
+    }
 
     tankX = nextX;
     tankZ = nextZ;

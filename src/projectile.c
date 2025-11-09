@@ -51,7 +51,7 @@ void shootBullet() {
             bullets[i].active = 1;
             bullets[i].x = tankX;
             bullets[i].z = tankZ;
-            bullets[i].angle = hullAngle;
+            bullets[i].angle = turretAngle;
             break;
         }
     }
