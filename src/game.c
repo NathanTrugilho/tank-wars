@@ -41,7 +41,7 @@ void idle() {
 }
 
 // Inicialização
-void init() {
+void startGame() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);
     glShadeModel(GL_SMOOTH);

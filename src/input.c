@@ -9,3 +9,7 @@ void keyDown(unsigned char key, int x, int y) {
     if (key == ' ') shootBullet();
 }
 void keyUp(unsigned char key, int x, int y) { keyStates[key] = 0; }
+
+void menuKeys() {
+    
+}

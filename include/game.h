@@ -20,6 +20,6 @@ void reshape(int w, int h);
 void idle();
 
 // Inicialização
-void init();
+void startGame();
 
 #endif
