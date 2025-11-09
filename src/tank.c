@@ -8,9 +8,10 @@ float tankX;
 float tankY;
 float tankZ;
 
-float tankAngle = 0.0f;
+float hullAngle = 0.0f;
+float turretAngle = 0.0f;
 
-ObjModel turretModel, cannonModel, hullModel;
+ObjModel turretModel, pipeModel, hullModel;
 
 // Velocidade do tanque
 float moveSpeed = 0.2f;
@@ -21,31 +22,42 @@ const double RADIAN_FACTOR = 3.14159 / 180.0; // Pra converter de graus pra radi
 void drawTank() {
 
     glEnable(GL_TEXTURE_2D);
+
     glPushMatrix();
         glTranslatef(tankX, tankY, tankZ);
-        glRotatef(tankAngle, 0.0f, 1.0f, 0.0f);
-        drawModel(&hullModel);
-        drawModel(&cannonModel);
-        drawModel(&turretModel);
+        glPushMatrix();
+            glRotatef(hullAngle, 0.0f, 1.0f, 0.0f);
+            drawModel(&hullModel);
+        glPopMatrix();
+
+        glPushMatrix();
+            glRotatef(turretAngle, 0.0f, 1.0f, 0.0f);
+            drawModel(&turretModel);
+            drawModel(&pipeModel);
+        glPopMatrix();
+
     glPopMatrix();
+
     glDisable(GL_TEXTURE_2D);
 }
 
-// Atualiza tanque
 void updateTank() {
     float nextX = tankX;
     float nextZ = tankZ;
 
     if (keyStates['w'] || keyStates['W']) {
-        nextX -= sinf(tankAngle * RADIAN_FACTOR) * moveSpeed;
-        nextZ -= cosf(tankAngle * RADIAN_FACTOR) * moveSpeed;
+        nextX -= sinf(hullAngle * RADIAN_FACTOR) * moveSpeed;
+        nextZ -= cosf(hullAngle * RADIAN_FACTOR) * moveSpeed;
     }
     if (keyStates['s'] || keyStates['S']) {
-        nextX += sinf(tankAngle * RADIAN_FACTOR) * moveSpeed;
-        nextZ += cosf(tankAngle * RADIAN_FACTOR) * moveSpeed;
+        nextX += sinf(hullAngle * RADIAN_FACTOR) * moveSpeed;
+        nextZ += cosf(hullAngle * RADIAN_FACTOR) * moveSpeed;
     }
-    if (keyStates['a'] || keyStates['A']) tankAngle += rotSpeed;
-    if (keyStates['d'] || keyStates['D']) tankAngle -= rotSpeed;
+    if (keyStates['a'] || keyStates['A']) hullAngle += rotSpeed;
+    if (keyStates['d'] || keyStates['D']) hullAngle -= rotSpeed;
+
+    if (specialKeyStates[GLUT_KEY_LEFT]) turretAngle += rotSpeed;
+    if (specialKeyStates[GLUT_KEY_RIGHT]) turretAngle -= rotSpeed;
 
     tankX = nextX;
     tankZ = nextZ;
@@ -77,7 +89,7 @@ void initTank(){
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo da torreta.\n");
     }
-    if (loadOBJ("objects/cannon.obj", "objects/cannon.mtl", &cannonModel)) {
+    if (loadOBJ("objects/cannon.obj", "objects/cannon.mtl", &pipeModel)) {
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo do canhão.\n");
     }

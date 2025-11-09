@@ -13,14 +13,16 @@ extern float tankX;
 extern float tankY;
 extern float tankZ;
 
-extern float tankAngle;
+extern float hullAngle;
+extern float turretAngle;
 extern float moveSpeed;
+
 extern float rotSpeed;
 
 extern int mapCellX;
 extern int mapCellZ;
 
-extern ObjModel turretModel, cannonModel, hullModel;
+extern ObjModel turretModel, pipeModel, hullModel;
 
 void drawTank();
 
