@@ -741,6 +741,10 @@ void drawModel(ObjModel *model) {
         return;
     }
 
+    // --- NOVA LINHA ---
+    // Define um material difuso (Kd) branco genérico
+    GLfloat whiteDiffuse[] = { 1.0f, 1.0f, 1.0f };
+
     glBegin(GL_TRIANGLES);
 
     for (int i = 0; i < model->faceCount; i++) {
@@ -751,6 +755,7 @@ void drawModel(ObjModel *model) {
             continue; // Pula esta face
         }
         
+        char hasTexture = 0; // <-- Vamos usar isto para saber se a textura foi ligada
 
         for (int m = 0; m < model->materialCount; m++) {
             if (strcmp(face.material, model->materials[m].name) == 0) {
@@ -759,16 +764,20 @@ void drawModel(ObjModel *model) {
                     int materialTextureIndex = model->materials[m].textureID; 
                     if (materialTextureIndex > 0 && materialTextureIndex <= model->textureCount) {
                         
-                        // CORREÇÃO: Usar o ID real do OpenGL
                         GLuint realOpenGLTextureID = model->textures[materialTextureIndex - 1].textureID;
                         glBindTexture(GL_TEXTURE_2D, realOpenGLTextureID);
+                        
+                        hasTexture = 1; // Marcamos que há textura
                     } else {
                         glBindTexture(GL_TEXTURE_2D, 0); // Sem textura
                     }
                 } 
                 
                 setMaterial(model->materials[m].Ka,
-                            model->materials[m].Kd,
+                            // --- ALTERAÇÃO AQUI ---
+                            // Se 'hasTexture' for verdadeiro, usa 'whiteDiffuse'.
+                            // Senão, usa o Kd normal do material.
+                            hasTexture ? whiteDiffuse : model->materials[m].Kd,
                             model->materials[m].Ks,
                             model->materials[m].Ke,
                             model->materials[m].Ns,

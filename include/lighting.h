@@ -7,4 +7,6 @@ void drawSun();
 
 void setupLighting();
 
+void setupDebugLighting();
+
 #endif

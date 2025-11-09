@@ -19,14 +19,16 @@ float rotSpeed = 2.0f;
 const double RADIAN_FACTOR = 3.14159 / 180.0; // Pra converter de graus pra radiano
 
 void drawTank() {
+
+    glEnable(GL_TEXTURE_2D);
     glPushMatrix();
         glTranslatef(tankX, tankY, tankZ);
         glRotatef(tankAngle, 0.0f, 1.0f, 0.0f);
-        glColor3f(1.0f,0.0f,0.0f);
         drawModel(&hullModel);
         drawModel(&cannonModel);
         drawModel(&turretModel);
     glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
 }
 
 // Atualiza tanque
@@ -75,12 +77,11 @@ void initTank(){
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo da torreta.\n");
     }
-
     if (loadOBJ("objects/cannon.obj", "objects/cannon.mtl", &cannonModel)) {
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo do canhão.\n");
     }
-
+    
     if (loadOBJ("objects/hull.obj", "objects/hull.mtl", &hullModel)) {
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo da base.\n");

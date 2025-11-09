@@ -9,8 +9,11 @@ void display() {
     
     // Desenha mapa
     drawMap();
+
     // Desenha tanque
+    glEnable(GL_TEXTURE_2D);
     drawTank();
+    glDisable(GL_TEXTURE_2D);
 
     // Desenha inimigos
     for (int i = 0; i < MAX_ENEMIES; i++) {
