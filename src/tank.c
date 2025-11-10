@@ -3,45 +3,74 @@
 int mapCellX = INITIAL_TANK_CELL_X;
 int mapCellZ = INITIAL_TANK_CELL_Z;
 
-// Posição e orientação do tanque
+ObjModel turretModel, pipeModel, hullModel;
+
 float tankX;
 float tankY;
 float tankZ;
 
-float tankAngle = 0.0f;
+float hullAngle = 0.0f;
+float turretAngle = 0.0f;
+float pipeAngle = 0.0f;
 
-ObjModel tankModel;
+float moveSpeed = 0.1f;
 
-// Velocidade do tanque
-float moveSpeed = 0.2f;
 float rotSpeed = 2.0f;
+float turretRotSpeed = 1.0f;
+
+float pipeInclSpeed = 0.5f;
 
 const double RADIAN_FACTOR = 3.14159 / 180.0; // Pra converter de graus pra radiano
 
 void drawTank() {
+    glEnable(GL_TEXTURE_2D);
     glPushMatrix();
         glTranslatef(tankX, tankY, tankZ);
-        glRotatef(tankAngle, 0.0f, 1.0f, 0.0f);
-        glColor3f(1.0f,0.0f,0.0f);
-        drawModel(&tankModel);
+        glPushMatrix();
+            glRotatef(hullAngle, 0.0f, 1.0f, 0.0f);
+            drawModel(&hullModel); 
+            drawBox(hullModel.box); // Hitbox da base
+        glPopMatrix();
+
+        glPushMatrix();
+            glRotatef(turretAngle, 0.0f, 1.0f, 0.0f);
+            drawModel(&turretModel);
+            drawBox(turretModel.box); //Hitbox da torreta
+            glRotatef(pipeAngle, 1.0f, 0.0f, 0.0f); // Em x
+            drawModel(&pipeModel);
+            drawBox(pipeModel.box); //Hitbox do cano
+        glPopMatrix();
+
     glPopMatrix();
+    glDisable(GL_TEXTURE_2D); // Tem que desativar se não fica tudo escuro pq as outras coisas n têm textura
 }
 
-// Atualiza tanque
 void updateTank() {
     float nextX = tankX;
     float nextZ = tankZ;
 
     if (keyStates['w'] || keyStates['W']) {
-        nextX -= sinf(tankAngle * RADIAN_FACTOR) * moveSpeed;
-        nextZ -= cosf(tankAngle * RADIAN_FACTOR) * moveSpeed;
+        nextX -= sinf(hullAngle * RADIAN_FACTOR) * moveSpeed;
+        nextZ -= cosf(hullAngle * RADIAN_FACTOR) * moveSpeed;
     }
     if (keyStates['s'] || keyStates['S']) {
-        nextX += sinf(tankAngle * RADIAN_FACTOR) * moveSpeed;
-        nextZ += cosf(tankAngle * RADIAN_FACTOR) * moveSpeed;
+        nextX += sinf(hullAngle * RADIAN_FACTOR) * moveSpeed;
+        nextZ += cosf(hullAngle * RADIAN_FACTOR) * moveSpeed;
     }
-    if (keyStates['a'] || keyStates['A']) tankAngle += rotSpeed;
-    if (keyStates['d'] || keyStates['D']) tankAngle -= rotSpeed;
+    if (keyStates['a'] || keyStates['A']) hullAngle += rotSpeed;
+    if (keyStates['d'] || keyStates['D']) hullAngle -= rotSpeed;
+
+    if (specialKeyStates[GLUT_KEY_LEFT]) turretAngle += rotSpeed;
+    if (specialKeyStates[GLUT_KEY_RIGHT]) turretAngle -= rotSpeed;
+
+    if (specialKeyStates[GLUT_KEY_UP]) {
+        pipeAngle += pipeInclSpeed;
+        if (pipeAngle > MAX_PIPE_ANGLE) pipeAngle = MAX_PIPE_ANGLE; // limite superior
+    }
+    if (specialKeyStates[GLUT_KEY_DOWN]) {
+        pipeAngle -= pipeInclSpeed;
+        if (pipeAngle < MIN_PIPE_ANGLE) pipeAngle = MIN_PIPE_ANGLE; // limite inferior
+    }
 
     tankX = nextX;
     tankZ = nextZ;
@@ -69,11 +98,18 @@ void updateMapCellPos(){
 
 void initTank(){
 
-    if (loadOBJ("tank_test.obj", "tank_test.mtl", &tankModel)) {
-    printf("Modelo carregado com sucesso!\n");
-    //listObject(&tankModel);
+    if (loadOBJ("objects/turret.obj", "objects/turret.mtl", &turretModel)) {
     } else {
-        printf("ERRO: Nao foi possivel carregar o modelo.\n");
+        printf("ERRO: Nao foi possivel carregar o modelo da torreta.\n");
+    }
+    if (loadOBJ("objects/pipe.obj", "objects/pipe.mtl", &pipeModel)) {
+    } else {
+        printf("ERRO: Nao foi possivel carregar o modelo do canhão.\n");
+    }
+    
+    if (loadOBJ("objects/hull.obj", "objects/hull.mtl", &hullModel)) {
+    } else {
+        printf("ERRO: Nao foi possivel carregar o modelo da base.\n");
     }
 
     tankX = mapCells[mapCellZ][mapCellX].C.x;

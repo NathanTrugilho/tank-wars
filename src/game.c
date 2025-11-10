@@ -6,10 +6,7 @@ void display() {
     glLoadIdentity();
     updateCamera();
     drawSun();
-    
-    // Desenha mapa
     drawMap();
-    // Desenha tanque
     drawTank();
 
     // Desenha inimigos

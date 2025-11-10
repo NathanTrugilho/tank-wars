@@ -10,8 +10,10 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutTimerFunc(16, timer, 0);
-    glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);
+    glutKeyboardFunc(keyDown);
+    glutSpecialFunc(specialKeyDown);
+    glutSpecialUpFunc(specialKeyUp);
     glutMainLoop();
     return 0;
 }

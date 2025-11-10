@@ -1,4 +1,4 @@
-#include <mybib.h>
+#include "mybib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,8 +7,8 @@
 #include <math.h>
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h" // Adicione o arquivo stb_image.h ao mesmo diretório do código.
 
-#include <stb_image.h> // Tem q vir dps do define 
 
 #define MAX_FILENAME_LENGTH 256 // Tamanho máximo esperado para os nomes dos arquivos
 
@@ -283,12 +283,18 @@ void setMaterial(
 }
 
 // Função para carregar texturas usando stb_image
+// Função para carregar texturas usando stb_image
 void loadTextures(Texture **textures, int *textureIDCount) {
 
     if (*textureIDCount == 0) return;
     glEnable(GL_TEXTURE_2D); // Habilita uso de texturas
+
+    // !!! CORREÇÃO 3 (da 1ª resposta): Inverter a imagem no carregamento !!!
+    stbi_set_flip_vertically_on_load(1); 
+
     GLuint textureIds[*textureIDCount]; // Um array para armazenar os identificadores das texturas.
     glGenTextures(*textureIDCount, textureIds); // Gera os identificadores de textura.
+    
     for (int i = 0; i < *textureIDCount; i++) {
 
         Texture *tex = &(*textures)[i];
@@ -296,8 +302,8 @@ void loadTextures(Texture **textures, int *textureIDCount) {
         int width, height, channels;
         unsigned char *data = stbi_load(tex->name, &width, &height, &channels, 0);
         if (!data) {
-            printf("Erro ao carregar a imagem de textura. \n");
-            return;
+            printf("Erro ao carregar a imagem de textura: %s\n", tex->name); // Mostra o nome
+            continue; // Tenta carregar as próximas, em vez de parar tudo
         }
 
         glBindTexture(GL_TEXTURE_2D, textureIds[i]); // Vincula o identificador atual.
@@ -305,20 +311,29 @@ void loadTextures(Texture **textures, int *textureIDCount) {
         if (!glIsTexture(textureIds[i])) {
             printf("Falha ao gerar textura. Verifique o contexto OpenGL.\n");
             stbi_image_free(data);
-            return;
+            continue;
         }
+
+        // !!! NOVA CORREÇÃO: Problema de Alinhamento de Píxeis !!!
+        // Diz ao OpenGL para ler os dados byte-a-byte, sem assumir preenchimento de 4 bytes
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     
         // Configura os parâmetros da textura, como filtro e modo de repetição.
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        // Carrega dados para a textura (exemplo com glTexImage2D).   
+        // Carrega dados para a textura (usando a lógica de canais que já estava correta)
         glTexImage2D(GL_TEXTURE_2D, 0, (channels == 4) ? GL_RGBA : GL_RGB, width, height, 0, 
                     (channels == 4) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, data);
 
         stbi_image_free(data);
-    }
 
+        // !!! CORREÇÃO 2 (da 1ª resposta): Armazenar o ID real do OpenGL !!!
+        (*textures)[i].textureID = textureIds[i];
+    }
+    
+    // Opcional: Retornar o alinhamento ao padrão depois de terminar
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 }
 
 
@@ -712,46 +727,70 @@ void drawNormals(ObjModel *model) {   // Vertex *normal, *v1, *v2, *v3) {
 
 }
 
-// Função para desenhar o modelo
 void drawModel(ObjModel *model) {
 
-    if (!model->vertices || !model->texCoords || !model->faces) {
+    if (!model->vertices || !model->faces) {
         printf("Dados do modelo estão incompletos.\n");
         return;
     }
+    
+    // Assegura que temos texturas (mesmo que não as usemos)
+    // para evitar erros se texCoords for NULL mas faces.t1 > 0
+    if (model->textureCount > 0 && !model->texCoords) {
+        printf("Modelo tem texturas mas não tem coordenadas de textura.\n");
+        return;
+    }
+
+    // --- NOVA LINHA ---
+    // Define um material difuso (Kd) branco genérico
+    GLfloat whiteDiffuse[] = { 1.0f, 1.0f, 1.0f };
 
     glBegin(GL_TRIANGLES);
 
     for (int i = 0; i < model->faceCount; i++) {
         Face face = model->faces[i];
 
-        if (face.v1 > model->vertexCount || face.t1 > model->texCoordCount) {
-            printf("Índice de face fora do intervalo.\n");
-            exit(EXIT_FAILURE);
+        if (face.v1 > model->vertexCount || face.v2 > model->vertexCount || face.v3 > model->vertexCount) {
+            printf("Índice de vértice inválido.\n");
+            continue; // Pula esta face
         }
+        
+        char hasTexture = 0; // <-- Vamos usar isto para saber se a textura foi ligada
 
-        // Ativar textura, se existir, e configurar o material
         for (int m = 0; m < model->materialCount; m++) {
-            if (strcmp(face.material,model->materials[m].name)) {
+            if (strcmp(face.material, model->materials[m].name) == 0) {
+                
                 if (model->textures) {
-                    //glBindTexture(GL_TEXTURE_2D, proceduralTexture); // Substituir conforme necessário
-                    glBindTexture(GL_TEXTURE_2D, model->materials[m].textureID);
+                    int materialTextureIndex = model->materials[m].textureID; 
+                    if (materialTextureIndex > 0 && materialTextureIndex <= model->textureCount) {
+                        
+                        GLuint realOpenGLTextureID = model->textures[materialTextureIndex - 1].textureID;
+                        glBindTexture(GL_TEXTURE_2D, realOpenGLTextureID);
+                        
+                        hasTexture = 1; // Marcamos que há textura
+                    } else {
+                        glBindTexture(GL_TEXTURE_2D, 0); // Sem textura
+                    }
                 } 
+                
                 setMaterial(model->materials[m].Ka,
-                                model->materials[m].Kd,
-                                model->materials[m].Ks,
-                                model->materials[m].Ke,
-                                model->materials[m].Ns,
-                                model->materials[m].d,
-                                model->materials[m].illum);
-                break;
+                            // --- ALTERAÇÃO AQUI ---
+                            // Se 'hasTexture' for verdadeiro, usa 'whiteDiffuse'.
+                            // Senão, usa o Kd normal do material.
+                            hasTexture ? whiteDiffuse : model->materials[m].Kd,
+                            model->materials[m].Ks,
+                            model->materials[m].Ke,
+                            model->materials[m].Ns,
+                            model->materials[m].d,
+                            model->materials[m].illum);
+                break; // Encontramos o material
             }
         }
 
-        if (face.n1 > 0) {  //tem normais
-            glNormal3f(model->normals[face.n1 - 1].x, model->normals[face.n2 - 1].y, model->normals[face.n3 - 1].z);
-        } else {  //calcula as normais, considerando os vetores da face:
-            // Calcular os vetores da face
+        Vertex faceNormal = {0.0f, 0.0f, 0.0f};; // Para o caso de não termos normais de vértice
+
+        // Passo 1: Calcula a normal da face se o modelo não tiver (n1 == 0)
+        if (face.n1 == 0) {
             Vertex edge1 = {model->vertices[face.v2 - 1].x  -  model->vertices[face.v1 - 1].x, 
                             model->vertices[face.v2 - 1].y  -  model->vertices[face.v1 - 1].y,
                             model->vertices[face.v2 - 1].z  -  model->vertices[face.v1 - 1].z};
@@ -759,26 +798,49 @@ void drawModel(ObjModel *model) {
                             model->vertices[face.v3 - 1].y  -  model->vertices[face.v1 - 1].y,
                             model->vertices[face.v3 - 1].z  -  model->vertices[face.v1 - 1].z};
 
-            // Calcular a normal
-            Vertex normal;
-            crossProduct(edge1, edge2, &normal);
-
-            // Normalizar a normal
-            normalize(&normal);
-
-            glNormal3f(normal.x, normal.y, normal.z);
+            // CORREÇÃO DA NORMAL INVERTIDA: Invertemos a ordem (edge2, edge1)
+            // Isto corrige o modelo preto/escuro
+            crossProduct(edge2, edge1, &faceNormal);
+            normalize(&faceNormal);
         }
 
-
-        if (model->textures) glTexCoord2f(model->texCoords[face.t1 - 1].u, model->texCoords[face.t1 - 1].v);
+        // --- VÉRTICE 1 ---
+        if (face.n1 > 0) { // Usa a normal do vértice (suave)
+            glNormal3f(model->normals[face.n1 - 1].x, model->normals[face.n1 - 1].y, model->normals[face.n1 - 1].z);
+        } else { // Usa a normal da face (plana)
+            glNormal3f(faceNormal.x, faceNormal.y, faceNormal.z);
+        }
+        if (model->textures && face.t1 > 0) {
+            glTexCoord2f(model->texCoords[face.t1 - 1].u, model->texCoords[face.t1 - 1].v);
+        }
         glVertex3f(model->vertices[face.v1 - 1].x, model->vertices[face.v1 - 1].y, model->vertices[face.v1 - 1].z);
-        if (model->textures) glTexCoord2f(model->texCoords[face.t2 - 1].u, model->texCoords[face.t2 - 1].v);
+
+
+        // --- VÉRTICE 2 ---
+        if (face.n2 > 0) { // Usa a normal do vértice (suave)
+            glNormal3f(model->normals[face.n2 - 1].x, model->normals[face.n2 - 1].y, model->normals[face.n2 - 1].z);
+        } else { // Usa a normal da face (plana)
+            glNormal3f(faceNormal.x, faceNormal.y, faceNormal.z);
+        }
+        if (model->textures && face.t2 > 0) {
+            glTexCoord2f(model->texCoords[face.t2 - 1].u, model->texCoords[face.t2 - 1].v);
+        }
         glVertex3f(model->vertices[face.v2 - 1].x, model->vertices[face.v2 - 1].y, model->vertices[face.v2 - 1].z);
-        if (model->textures) glTexCoord2f(model->texCoords[face.t3 - 1].u, model->texCoords[face.t3 - 1].v);
+
+
+        // --- VÉRTICE 3 ---
+        if (face.n3 > 0) { // Usa a normal do vértice (suave)
+            glNormal3f(model->normals[face.n3 - 1].x, model->normals[face.n3 - 1].y, model->normals[face.n3 - 1].z);
+        } else { // Usa a normal da face (plana)
+            glNormal3f(faceNormal.x, faceNormal.y, faceNormal.z);
+        }
+        if (model->textures && face.t3 > 0) {
+            glTexCoord2f(model->texCoords[face.t3 - 1].u, model->texCoords[face.t3 - 1].v);
+        }
         glVertex3f(model->vertices[face.v3 - 1].x, model->vertices[face.v3 - 1].y, model->vertices[face.v3 - 1].z);
     }
+    
     glEnd();  //GL_TRIANGLES
-
 }
 
 void drawBox(Box b) {
