@@ -13,7 +13,7 @@ float hullAngle = 0.0f;
 float turretAngle = 0.0f;
 float pipeAngle = 0.0f;
 
-float moveSpeed = 0.2f;
+float moveSpeed = 0.1f;
 
 float rotSpeed = 2.0f;
 float turretRotSpeed = 1.0f;
@@ -23,27 +23,26 @@ float pipeInclSpeed = 0.5f;
 const double RADIAN_FACTOR = 3.14159 / 180.0; // Pra converter de graus pra radiano
 
 void drawTank() {
-
     glEnable(GL_TEXTURE_2D);
-
     glPushMatrix();
         glTranslatef(tankX, tankY, tankZ);
         glPushMatrix();
             glRotatef(hullAngle, 0.0f, 1.0f, 0.0f);
-            drawModel(&hullModel);
+            drawModel(&hullModel); 
+            drawBox(hullModel.box); // Hitbox da base
         glPopMatrix();
 
         glPushMatrix();
             glRotatef(turretAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&turretModel);
-
+            drawBox(turretModel.box); //Hitbox da torreta
             glRotatef(pipeAngle, 1.0f, 0.0f, 0.0f); // Em x
             drawModel(&pipeModel);
+            drawBox(pipeModel.box); //Hitbox do cano
         glPopMatrix();
 
     glPopMatrix();
-
-    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_2D); // Tem que desativar se não fica tudo escuro pq as outras coisas n têm textura
 }
 
 void updateTank() {
@@ -66,11 +65,11 @@ void updateTank() {
 
     if (specialKeyStates[GLUT_KEY_UP]) {
         pipeAngle += pipeInclSpeed;
-        if (pipeAngle > 25.0f) pipeAngle = 25.0f; // limite superior
+        if (pipeAngle > MAX_PIPE_ANGLE) pipeAngle = MAX_PIPE_ANGLE; // limite superior
     }
     if (specialKeyStates[GLUT_KEY_DOWN]) {
         pipeAngle -= pipeInclSpeed;
-        if (pipeAngle < -5.0f) pipeAngle = -5.0f; // limite inferior
+        if (pipeAngle < MIN_PIPE_ANGLE) pipeAngle = MIN_PIPE_ANGLE; // limite inferior
     }
 
     tankX = nextX;
@@ -103,7 +102,7 @@ void initTank(){
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo da torreta.\n");
     }
-    if (loadOBJ("objects/cannon.obj", "objects/cannon.mtl", &pipeModel)) {
+    if (loadOBJ("objects/pipe.obj", "objects/pipe.mtl", &pipeModel)) {
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo do canhão.\n");
     }

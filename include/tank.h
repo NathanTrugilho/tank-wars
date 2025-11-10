@@ -8,6 +8,9 @@
 #define INITIAL_TANK_CELL_Z 25
 #define INITIAL_TANK_CELL_X 25
 
+#define MAX_PIPE_ANGLE 5
+#define MIN_PIPE_ANGLE -2
+
 // Posição e orientação do tanque
 extern float tankX;
 extern float tankY;

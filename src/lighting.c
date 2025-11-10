@@ -25,7 +25,7 @@ void setupLighting() {
 }
 
 void drawSun(){
-    GLfloat light_position[] = { 0.0f, 1.0f, 0.0f, 0.0f }; // ultimo param diz se é posicional (1) ou direcional (0). 
+    GLfloat light_position[] = { 1.0f, 0.5f, 1.0f, 0.0f }; // ultimo param diz se é posicional (1) ou direcional (0). 
                                                            // por ser direcional, ele simula uma fonte muito distante que manda raios de luz
                                                            // na direção (5, 2, 1) que são os outros parâmetros
 
