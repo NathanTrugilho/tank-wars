@@ -8,18 +8,8 @@ void display() {
     drawSun();
     drawMap();
     drawTank();
+    drawEnemies();
 
-    // Desenha inimigos
-    for (int i = 0; i < MAX_ENEMIES; i++) {
-        if (enemies[i].alive) {
-            glPushMatrix();
-                glTranslatef(enemies[i].x, 0.5f, enemies[i].z);
-                glColor3f(0.1f, 0.1f, 0.7f);
-                glScalef(1.0f, 0.5f, 2.0f);
-                glutSolidCube(1.0f);
-            glPopMatrix();
-        }
-    }
 
     // Desenha bullets
     for (int i = 0; i < MAX_BULLETS; i++) {
@@ -49,6 +39,7 @@ void reshape(int w, int h) {
 void timer(int value) {
 
     updateTank();
+    updateEnemies(tankX, tankZ);
     updateBullets();
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0); 
@@ -61,7 +52,8 @@ void init() {
     glShadeModel(GL_SMOOTH);
     glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
     setupLighting();
-    initBulletsAndEnemies();
+    //initBullets();
+    initEnemies();
     initMapCells();
     calcularNormaisDoMapa();
     initTank();
