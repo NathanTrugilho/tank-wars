@@ -4,7 +4,7 @@
 #include <map.h>
 #include <stdio.h>
 #include <mybib.h>
-
+#include <collision.h>
 #define INITIAL_TANK_CELL_Z 25
 #define INITIAL_TANK_CELL_X 25
 

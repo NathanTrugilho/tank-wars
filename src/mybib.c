@@ -13,6 +13,59 @@
 #define MAX_FILENAME_LENGTH 256 // Tamanho máximo esperado para os nomes dos arquivos
 
 
+
+void transformBox(const Box *local, Box *out, float tx, float ty, float tz, float rotYDeg) {
+// Converte graus para radianos
+float rad = rotYDeg * 3.14159265358979323846f / 180.0f;
+float c = cosf(rad);
+float s = sinf(rad);
+
+
+// 8 vértices da caixa local
+float xs[2] = { local->minX, local->maxX };
+float ys[2] = { local->minY, local->maxY };
+float zs[2] = { local->minZ, local->maxZ };
+
+
+float minX = FLT_MAX, minY = FLT_MAX, minZ = FLT_MAX;
+float maxX = -FLT_MAX, maxY = -FLT_MAX, maxZ = -FLT_MAX;
+
+
+for (int xi = 0; xi < 2; xi++) {
+for (int yi = 0; yi < 2; yi++) {
+for (int zi = 0; zi < 2; zi++) {
+float lx = xs[xi];
+float ly = ys[yi];
+float lz = zs[zi];
+
+
+// Rotaciona em Y (em torno da origem local)
+float wx = lx * c - lz * s;
+float wz = lx * s + lz * c;
+float wy = ly;
+
+
+// Translada para a posição no mundo
+wx += tx;
+wy += ty;
+wz += tz;
+
+
+if (wx < minX) minX = wx;
+if (wy < minY) minY = wy;
+if (wz < minZ) minZ = wz;
+if (wx > maxX) maxX = wx;
+if (wy > maxY) maxY = wy;
+if (wz > maxZ) maxZ = wz;
+}
+}
+}
+
+
+out->minX = minX; out->minY = minY; out->minZ = minZ;
+out->maxX = maxX; out->maxY = maxY; out->maxZ = maxZ;
+}
+
 // Função para calcular o produto vetorial
 void crossProduct(Vertex v1, Vertex v2, Vertex *result) {
     result->x = v1.y * v2.z - v1.z * v2.y;

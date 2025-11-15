@@ -72,8 +72,13 @@ void updateTank() {
         if (pipeAngle < MIN_PIPE_ANGLE) pipeAngle = MIN_PIPE_ANGLE; // limite inferior
     }
 
-    tankX = nextX;
-    tankZ = nextZ;
+    if (!wouldCollideTank(nextX, nextZ, hullAngle)) {
+        tankX = nextX;
+        tankZ = nextZ;
+    } else {
+        // Para debug: imprime ou trata o bloqueio do movimento
+        printf("Movimento bloqueado por colisão\n");
+    }
 
     updateMapCellPos();
 }
