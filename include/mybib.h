@@ -144,5 +144,14 @@ void MultiplicaMatriz(GLfloat *orig, GLfloat *mat);
 void GeraMatrizRotacao(float angle, float x, float y, float z, GLfloat *mat);
 void AtualizaRotacao(GLfloat *mat, float angle, float x, float y, float z);
 
+void geraBox(ObjModel *model);
+int intersectBox(Box a, Box b);
+int intersectObj(ObjModel a, ObjModel b);
+
+
+// Transforma uma Box local (do modelo) para uma Box em coordenadas de mundo,
+// aplicando rotação em Y (em graus) e translação (tx,ty,tz).
+void transformBox(const Box *local, Box *out, float tx, float ty, float tz, float rotYDeg);
+
 
 #endif // MYBIB_H

@@ -44,11 +44,13 @@ void drawTank() {
     glPopMatrix();
     glDisable(GL_TEXTURE_2D); // Tem que desativar se não fica tudo escuro pq as outras coisas n têm textura
 }
-
 void updateTank() {
     float nextX = tankX;
     float nextZ = tankZ;
-
+    float nextHullAngle = hullAngle;
+    
+    // --- 1. Lógica de Movimento do Corpo (W/S/A/D) ---
+    
     if (keyStates['w'] || keyStates['W']) {
         nextX -= sinf(hullAngle * RADIAN_FACTOR) * moveSpeed;
         nextZ -= cosf(hullAngle * RADIAN_FACTOR) * moveSpeed;
@@ -57,23 +59,50 @@ void updateTank() {
         nextX += sinf(hullAngle * RADIAN_FACTOR) * moveSpeed;
         nextZ += cosf(hullAngle * RADIAN_FACTOR) * moveSpeed;
     }
-    if (keyStates['a'] || keyStates['A']) hullAngle += rotSpeed;
-    if (keyStates['d'] || keyStates['D']) hullAngle -= rotSpeed;
+    if (keyStates['a'] || keyStates['A']) nextHullAngle += rotSpeed;
+    if (keyStates['d'] || keyStates['D']) nextHullAngle -= rotSpeed;
 
-    if (specialKeyStates[GLUT_KEY_LEFT]) turretAngle += rotSpeed;
-    if (specialKeyStates[GLUT_KEY_RIGHT]) turretAngle -= rotSpeed;
+    // Verificação Unificada:
+    // Se eu me mover para nextX/nextZ ou girar o corpo para nextHullAngle,
+    // alguma parte do meu tanque (base OU cano) vai bater?
+    // Nota: A função wouldCollideTank usa a 'turretAngle' global atual.
+    // Como a torre anda junto com o tanque, se o tanque anda e o cano bate, wouldCollideTank retorna 1.
+    if (!wouldCollideTank(nextX, nextZ, nextHullAngle)) {
+        tankX = nextX;
+        tankZ = nextZ;
+        hullAngle = nextHullAngle;
+    } else {
+        // Opcional: Feedback visual ou sonoro de colisão
+        // printf("Movimento bloqueado! Cano ou base bateriam.\n");
+    }
 
+    // --- 2. Lógica de Rotação da Torre (Setas) ---
+    
+    float nextTurretAngle = turretAngle;
+
+    if (specialKeyStates[GLUT_KEY_LEFT]) nextTurretAngle += rotSpeed;
+    if (specialKeyStates[GLUT_KEY_RIGHT]) nextTurretAngle -= rotSpeed;
+
+    // Se houve tentativa de girar a torre
+    if (nextTurretAngle != turretAngle) {
+        // Verifica se SOMENTE girar a torre causaria colisão
+        if (!wouldCollideTurret(nextTurretAngle)) {
+            turretAngle = nextTurretAngle;
+        } else {
+            // printf("Giro da torre bloqueado!\n");
+        }
+    }
+
+    // --- 3. Inclinação do Cano (Cima/Baixo) ---
+    // Isso não afeta colisão X/Z, pode manter direto
     if (specialKeyStates[GLUT_KEY_UP]) {
         pipeAngle += pipeInclSpeed;
-        if (pipeAngle > MAX_PIPE_ANGLE) pipeAngle = MAX_PIPE_ANGLE; // limite superior
+        if (pipeAngle > MAX_PIPE_ANGLE) pipeAngle = MAX_PIPE_ANGLE; 
     }
     if (specialKeyStates[GLUT_KEY_DOWN]) {
         pipeAngle -= pipeInclSpeed;
-        if (pipeAngle < MIN_PIPE_ANGLE) pipeAngle = MIN_PIPE_ANGLE; // limite inferior
+        if (pipeAngle < MIN_PIPE_ANGLE) pipeAngle = MIN_PIPE_ANGLE; 
     }
-
-    tankX = nextX;
-    tankZ = nextZ;
 
     updateMapCellPos();
 }
