@@ -10,6 +10,7 @@ void display() {
     drawTank();
     drawEnemies();
     debugDrawPlayerCollision();
+    debugDrawEnemyCollision();
 
     // Desenha bullets
     for (int i = 0; i < MAX_BULLETS; i++) {
