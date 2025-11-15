@@ -9,7 +9,7 @@ void display() {
     drawMap();
     drawTank();
     drawEnemies();
-
+    debugDrawPlayerCollision();
 
     // Desenha bullets
     for (int i = 0; i < MAX_BULLETS; i++) {

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <math.h>       // Para rand()
 #include <time.h>       // Para time()
-
+#include <collision.h>
 Enemy enemies[MAX_ENEMIES];
 
 // Modelos 3D compartilhados por todos os inimigos
@@ -85,9 +85,21 @@ void drawEnemies() {
 void updateEnemies(float playerX, float playerZ) {
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (enemies[i].alive) {
-            // Exemplo simples: Torre fica girando sozinha
-            enemies[i].turretAngle += 1.0f;
-            if (enemies[i].turretAngle > 360.0f) enemies[i].turretAngle -= 360.0f;
+            
+            // Lógica simples: Tentar girar 1 grau
+            float currentAngle = enemies[i].turretAngle;
+            float nextAngle = currentAngle + 1.0f;
+            if (nextAngle > 360.0f) nextAngle -= 360.0f;
+
+            // --- VERIFICAÇÃO DE COLISÃO ANTES DE GIRAR ---
+            // Se girar vai bater no player, NÃO GIRE.
+            if (!wouldCollideEnemyTurret(i, nextAngle)) {
+                enemies[i].turretAngle = nextAngle;
+            } else {
+                // Opcional: Se colidiu, pode tentar girar para o outro lado
+                // ou simplesmente ficar parado esperando o player sair da frente.
+                // printf("Inimigo %d travado pelo canhão!\n", i);
+            }
         }
     }
 }
