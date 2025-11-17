@@ -65,6 +65,8 @@ void shootBullet() {
 }
 
 void drawBullet(){
+    if(!player_bullet.active) return;
+    
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
         glTranslatef(player_bullet.x, player_bullet.y, player_bullet.z);

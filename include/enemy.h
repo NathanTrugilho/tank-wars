@@ -3,7 +3,7 @@
 
 #include "mybib.h" 
 
-#define MAX_ENEMIES 10
+#define MAX_ENEMIES 2
 
 // --- DIMENSÕES DE COLISÃO ESPECÍFICAS DO INIMIGO ---
 // Copiado dos valores que você ajustou

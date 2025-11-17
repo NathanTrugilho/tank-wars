@@ -4,14 +4,16 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
     updateCamera();
     drawSun();
     drawMap();
-    drawTank();
     drawEnemies();
+    drawTank();
+    drawBullet();
+    
     //debugDrawPlayerCollision();
     //debugDrawEnemyCollision();
-    //drawBullet();
 
     glutSwapBuffers();
 }
@@ -47,4 +49,5 @@ void init() {
     initEnemies();
     initTank();
     initBullet();
+    //printf("%p %p", &hullModel, &shellModel);
 }

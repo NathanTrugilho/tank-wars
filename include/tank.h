@@ -18,8 +18,8 @@
 #define TANK_MOVEMENT_SPEED 0.1
 
 #define TANK_ROT_SPEED 2.0f
-#define TURRET_ROT_SPEED 1.0f
-#define PIPE_INCLINE_SPEED 0.5f
+#define TURRET_ROT_SPEED 0.5f
+#define PIPE_INCLINE_SPEED 0.1f
 
 #define TRUE 1
 #define FALSE 0

@@ -33,7 +33,6 @@ void drawTank() {
             drawModel(&pipeModel);
             //drawBox(pipeModel.box); //Hitbox do cano
         glPopMatrix();
-
     glPopMatrix();
     glDisable(GL_TEXTURE_2D); // Tem que desativar se não fica tudo escuro pq as outras coisas n têm textura
 }
@@ -129,7 +128,6 @@ void initTank(){
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo do canhão.\n");
     }
-    
     if (loadOBJ("objects/hull.obj", "objects/hull.mtl", &hullModel)) {
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo da base.\n");
