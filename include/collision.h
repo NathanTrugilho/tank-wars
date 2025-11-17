@@ -8,12 +8,12 @@
 // LENGTH: Quanto maior, mais longe ele alcança (corrige bater de frente)
 
 // Base (Hull): Quadrada, encolhe um pouco tudo
-#define SCALE_HULL_W   0.75f
+#define SCALE_HULL_W   0.90f
 #define SCALE_HULL_L   0.90f
 
 // Torre (Turret): Geralmente menor que a base
-#define SCALE_TURRET_W 0.01f
-#define SCALE_TURRET_L 0.01f
+#define SCALE_TURRET_W 0.90f
+#define SCALE_TURRET_L 0.90f
 
 // Cano (Pipe): Precisa ser FINO (W=0.3) para não bater nos lados girando
 // Mas precisa ser LONGO (L=0.95) para bater a ponta corretamente
@@ -27,16 +27,13 @@
 #define HULL_Y_MAX 1.5f
 
 // A torre fica em cima da base, então começa quase onde a base termina.
-#define TURRET_Y_MIN 0.9f
-#define TURRET_Y_MAX 1.6f
+#define TURRET_Y_MIN 1.4f
+#define TURRET_Y_MAX 1.9f
 
 // O cano geralmente fica na mesma faixa de altura da torre.
 // Importante: Se o PIPE_MIN > HULL_MAX, o cano NUNCA vai bater na base do inimigo!
 #define PIPE_Y_MIN   1.51f
 #define PIPE_Y_MAX   1.7f
-
-
-
 
 typedef struct {
     float x, z;

@@ -9,21 +9,10 @@ void display() {
     drawMap();
     drawTank();
     drawEnemies();
-    debugDrawPlayerCollision();
-    debugDrawEnemyCollision();
-
-    // Desenha bullets
-    for (int i = 0; i < MAX_BULLETS; i++) {
-        if (bullets[i].active) {
-            glPushMatrix();
-                glTranslatef(bullets[i].x, 0.3f, bullets[i].z);
-                glColor3f(1.0f, 1.0f, 0.0f);
-                glutSolidSphere(0.2, 10, 10);
-            glPopMatrix();
-        }
-    }
-
+    //debugDrawPlayerCollision();
+    //debugDrawEnemyCollision();
     glutSwapBuffers();
+    drawBullet();
 }
 
 // Não mudar
@@ -53,9 +42,9 @@ void init() {
     glShadeModel(GL_SMOOTH);
     glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
     setupLighting();
-    //initBullets();
     initEnemies();
     initMapCells();
     calcularNormaisDoMapa();
     initTank();
+    initBullet();
 }

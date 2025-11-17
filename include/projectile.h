@@ -1,4 +1,4 @@
-#ifndef PROJECTILE_H   // Se GAME_H não estiver definido
+#ifndef PROJECTILE_H  
 #define PROJECTILE_H
 
 #include <math.h>
@@ -8,19 +8,24 @@
 
 // Estrutura bullets
 typedef struct {
-    float x, z;
-    float angle;
-    int active;
+    unsigned char active;
+    float x, y, z;
+    float horizontal_angle;
+    float vertical_angle;
 } Bullet;
 
-extern Bullet bullets[MAX_BULLETS];
+extern Bullet player_bullet;
 
 // Atualiza bullets
 void updateBullets();
 
-// Inicializa bullets e inimigos
-void initBulletsAndEnemies();
+// Carrega o obj da bullet e inicializa
+void initBullet();
+
 // Dispara bullet
 void shootBullet();
+
+// Desenha bullet
+void drawBullet();
 
 #endif
