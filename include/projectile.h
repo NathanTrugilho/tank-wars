@@ -3,6 +3,10 @@
 
 #include <math.h>
 #include <time.h>
+#include <enemy.h>
+#include <tank.h>
+#include <map.h>
+#include <mybib.h>
 
 #define MAX_BULLETS 100
 
@@ -15,6 +19,8 @@ typedef struct {
 } Bullet;
 
 extern Bullet player_bullet;
+
+extern ObjModel shellModel;
 
 // Atualiza bullets
 void updateBullets();

@@ -11,8 +11,9 @@ void display() {
     drawEnemies();
     //debugDrawPlayerCollision();
     //debugDrawEnemyCollision();
+    //drawBullet();
+
     glutSwapBuffers();
-    drawBullet();
 }
 
 // Não mudar
@@ -27,7 +28,6 @@ void reshape(int w, int h) {
 }
 
 void timer(int value) {
-
     updateTank();
     updateEnemies(tankX, tankZ);
     updateBullets();
@@ -42,9 +42,9 @@ void init() {
     glShadeModel(GL_SMOOTH);
     glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
     setupLighting();
-    initEnemies();
     initMapCells();
     calcularNormaisDoMapa();
+    initEnemies();
     initTank();
     initBullet();
 }

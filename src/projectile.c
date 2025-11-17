@@ -1,10 +1,6 @@
 #include <projectile.h>
-#include <enemy.h>
-#include <tank.h>
-#include <map.h>
 
 Bullet player_bullet;
-
 ObjModel shellModel;
 
 // Atualiza bullets
