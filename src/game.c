@@ -46,9 +46,6 @@ void init() {
     initMapCells();
     calcularNormaisDoMapa();
     initEnemies();
-    initBullet();
     initTank();
-    debugObjModel(&shellModel);
-    debugObjModel(&hullModel);
-    //printf("%p %p", &hullModel, &shellModel);
+    initBullet();
 }

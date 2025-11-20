@@ -11,9 +11,9 @@ void updateBullets() {
     float vector_z = -cosf(player_bullet.horizontal_angle * RADIAN_FACTOR);
     float vector_y =  sinf(player_bullet.vertical_angle   * RADIAN_FACTOR);
 
-    player_bullet.x += vector_x * 0.4f;
-    player_bullet.z += vector_z * 0.4f;
-    player_bullet.y += vector_y * 0.4f;
+    player_bullet.x += vector_x * BULLET_SPEED;
+    player_bullet.z += vector_z * BULLET_SPEED;
+    player_bullet.y += vector_y * BULLET_SPEED;
 
     /*
     if (player_bullet.x < -MAP_SIZE/2 || player_bullet.x > MAP_SIZE/2 ||
