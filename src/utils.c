@@ -99,3 +99,33 @@ void calcularNormaisDoMapa() {
         }
     }
 }
+
+void debugObjModel(ObjModel *model) {
+    if (model == NULL) {
+        printf("[DEBUG] Erro: O ponteiro do modelo esta NULO!\n");
+        return;
+    }
+
+    printf("\n========================================\n");
+    printf(" RELATORIO DE DEBUG DO OBJMODEL \n");
+    printf("========================================\n");
+
+    // 1. Resumo das Contagens
+    printf("ESTATISTICAS:\n");
+    printf(" - Vertices:  %d\n", model->vertexCount);
+    printf(" - Normais:   %d\n", model->normalCount);
+    printf(" - TexCoords: %d\n", model->texCoordCount);
+    printf(" - Faces:     %d\n", model->faceCount);
+    printf(" - Materiais: %d\n", model->materialCount);
+    printf(" - Texturas:  %d\n", model->textureCount);
+    printf("----------------------------------------");
+
+    // 7. Listar Texturas (Nomes de arquivos)
+    if (model->textures && model->textureCount > 0) {
+        printf("\n--- TEXTURAS ARQUIVOS (Total: %d) ---\n", model->textureCount);
+        for (int i = 0; i < model->textureCount; i++) {
+            printf("Texture[%d]: %s (ID: %d)\n", i, model->textures[i].name, model->textures[i].textureID);
+        }
+    }
+    printf("========================================\n");
+}

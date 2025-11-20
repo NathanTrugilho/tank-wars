@@ -336,13 +336,12 @@ void setMaterial(
 }
 
 // Função para carregar texturas usando stb_image
-// Função para carregar texturas usando stb_image
 void loadTextures(Texture **textures, int *textureIDCount) {
 
     if (*textureIDCount == 0) return;
     glEnable(GL_TEXTURE_2D); // Habilita uso de texturas
 
-    // !!! CORREÇÃO 3 (da 1ª resposta): Inverter a imagem no carregamento !!!
+    // Inverter a imagem no carregamento !!!
     stbi_set_flip_vertically_on_load(1); 
 
     GLuint textureIds[*textureIDCount]; // Um array para armazenar os identificadores das texturas.
@@ -566,6 +565,35 @@ int loadOBJ(const char *fileOBJ, const char *fileMTL, ObjModel *model) {
     }
     model->textureCount = objTexturesCount;
 
+    // BOTEI ISSO AQUI USANDO O GEMINI PARA PADRONIZAR A ILUMINACAO DOS OBJ
+    for (int i = 0; i < model->materialCount; i++) {
+        
+        // 1. Padroniza a Luz Ambiente (Ka)
+        // Evita que objetos brilhem no escuro (como estava o projetil).
+        // 0.2 é um cinza escuro, bom para sombras.
+        model->materials[i].Ka[0] = 0.2f;
+        model->materials[i].Ka[1] = 0.2f;
+        model->materials[i].Ka[2] = 0.2f;
+
+        // 2. Padroniza a Cor Difusa (Kd)
+        // Força o material a ser BRANCO para receber a cor da TEXTURA.
+        // Se o MTL vier preto (0,0,0), a textura não aparece. 
+        // Com 1.0, a textura aparece com a cor original.
+        model->materials[i].Kd[0] = 1.0f;
+        model->materials[i].Kd[1] = 1.0f;
+        model->materials[i].Kd[2] = 1.0f;
+
+        // 3. Padroniza o Brilho (Ks)
+        // Vamos definir um brilho baixo para tudo, para evitar o "estouro" de luz.
+        // Se quiseres coisas metálicas, aumenta isto para 0.8 depois.
+        model->materials[i].Ks[0] = 0.1f;
+        model->materials[i].Ks[1] = 0.1f;
+        model->materials[i].Ks[2] = 0.1f;
+
+        // 4. Define a opacidade total (d)
+        model->materials[i].d = 1.0f; 
+    }
+
     // Verificar se model->textureCount é válido
     if (model->textureCount < 0) {
         printf("Erro: model->textureCount inválido (%d)\n", model->textureCount);
@@ -787,113 +815,88 @@ void drawModel(ObjModel *model) {
         return;
     }
     
-    // Assegura que temos texturas (mesmo que não as usemos)
-    // para evitar erros se texCoords for NULL mas faces.t1 > 0
+    // Assegura que temos texturas
     if (model->textureCount > 0 && !model->texCoords) {
         printf("Modelo tem texturas mas não tem coordenadas de textura.\n");
         return;
     }
 
-    // --- NOVA LINHA ---
-    // Define um material difuso (Kd) branco genérico
-    GLfloat whiteDiffuse[] = { 1.0f, 1.0f, 1.0f };
-
-    glBegin(GL_TRIANGLES);
-
     for (int i = 0; i < model->faceCount; i++) {
         Face face = model->faces[i];
 
         if (face.v1 > model->vertexCount || face.v2 > model->vertexCount || face.v3 > model->vertexCount) {
-            printf("Índice de vértice inválido.\n");
-            continue; // Pula esta face
+            continue; 
         }
-        
-        char hasTexture = 0; // <-- Vamos usar isto para saber se a textura foi ligada
 
+        // Procura o material desta face
         for (int m = 0; m < model->materialCount; m++) {
             if (strcmp(face.material, model->materials[m].name) == 0) {
                 
+                // --- LÓGICA DE TEXTURA ---
+                GLuint textureToBind = 0; 
                 if (model->textures) {
                     int materialTextureIndex = model->materials[m].textureID; 
                     if (materialTextureIndex > 0 && materialTextureIndex <= model->textureCount) {
-                        
-                        GLuint realOpenGLTextureID = model->textures[materialTextureIndex - 1].textureID;
-                        glBindTexture(GL_TEXTURE_2D, realOpenGLTextureID);
-                        
-                        hasTexture = 1; // Marcamos que há textura
-                    } else {
-                        glBindTexture(GL_TEXTURE_2D, 0); // Sem textura
+                        textureToBind = model->textures[materialTextureIndex - 1].textureID;
                     }
                 } 
                 
+                // --- MUDANÇA CRÍTICA 2: Trocar a textura ANTES de desenhar ---
+                // O glBindTexture deve acontecer FORA do glBegin/glEnd.
+                // Como estamos num loop face a face, aplicamos a textura e o material agora.
+                
+                glBindTexture(GL_TEXTURE_2D, textureToBind);
+
                 setMaterial(model->materials[m].Ka,
-                            // --- ALTERAÇÃO AQUI ---
-                            // Se 'hasTexture' for verdadeiro, usa 'whiteDiffuse'.
-                            // Senão, usa o Kd normal do material.
-                            hasTexture ? whiteDiffuse : model->materials[m].Kd,
-                            model->materials[m].Ks,
-                            model->materials[m].Ke,
-                            model->materials[m].Ns,
-                            model->materials[m].d,
-                            model->materials[m].illum);
-                break; // Encontramos o material
+                    model->materials[m].Kd,
+                    model->materials[m].Ks,
+                    model->materials[m].Ke,
+                    model->materials[m].Ns,
+                    model->materials[m].d,
+                    model->materials[m].illum);
+                    
+                break; 
             }
         }
 
-        Vertex faceNormal = {0.0f, 0.0f, 0.0f};; // Para o caso de não termos normais de vértice
+        glBegin(GL_TRIANGLES); 
 
-        // Passo 1: Calcula a normal da face se o modelo não tiver (n1 == 0)
-        if (face.n1 == 0) {
-            Vertex edge1 = {model->vertices[face.v2 - 1].x  -  model->vertices[face.v1 - 1].x, 
-                            model->vertices[face.v2 - 1].y  -  model->vertices[face.v1 - 1].y,
-                            model->vertices[face.v2 - 1].z  -  model->vertices[face.v1 - 1].z};
-            Vertex edge2 = {model->vertices[face.v3 - 1].x  -  model->vertices[face.v1 - 1].x, 
-                            model->vertices[face.v3 - 1].y  -  model->vertices[face.v1 - 1].y,
-                            model->vertices[face.v3 - 1].z  -  model->vertices[face.v1 - 1].z};
+            Vertex faceNormal = {0.0f, 0.0f, 0.0f};
 
-            // CORREÇÃO DA NORMAL INVERTIDA: Invertemos a ordem (edge2, edge1)
-            // Isto corrige o modelo preto/escuro
-            crossProduct(edge2, edge1, &faceNormal);
-            normalize(&faceNormal);
-        }
+            if (face.n1 == 0) {
+                Vertex edge1 = {model->vertices[face.v2 - 1].x  -  model->vertices[face.v1 - 1].x, 
+                                model->vertices[face.v2 - 1].y  -  model->vertices[face.v1 - 1].y,
+                                model->vertices[face.v2 - 1].z  -  model->vertices[face.v1 - 1].z};
+                Vertex edge2 = {model->vertices[face.v3 - 1].x  -  model->vertices[face.v1 - 1].x, 
+                                model->vertices[face.v3 - 1].y  -  model->vertices[face.v1 - 1].y,
+                                model->vertices[face.v3 - 1].z  -  model->vertices[face.v1 - 1].z};
+                crossProduct(edge2, edge1, &faceNormal);
+                normalize(&faceNormal);
+            }
 
-        // --- VÉRTICE 1 ---
-        if (face.n1 > 0) { // Usa a normal do vértice (suave)
-            glNormal3f(model->normals[face.n1 - 1].x, model->normals[face.n1 - 1].y, model->normals[face.n1 - 1].z);
-        } else { // Usa a normal da face (plana)
-            glNormal3f(faceNormal.x, faceNormal.y, faceNormal.z);
-        }
-        if (model->textures && face.t1 > 0) {
-            glTexCoord2f(model->texCoords[face.t1 - 1].u, model->texCoords[face.t1 - 1].v);
-        }
-        glVertex3f(model->vertices[face.v1 - 1].x, model->vertices[face.v1 - 1].y, model->vertices[face.v1 - 1].z);
+            // --- VÉRTICE 1 ---
+            if (face.n1 > 0) glNormal3f(model->normals[face.n1 - 1].x, model->normals[face.n1 - 1].y, model->normals[face.n1 - 1].z);
+            else glNormal3f(faceNormal.x, faceNormal.y, faceNormal.z);
+            
+            if (model->textures && face.t1 > 0) glTexCoord2f(model->texCoords[face.t1 - 1].u, model->texCoords[face.t1 - 1].v);
+            glVertex3f(model->vertices[face.v1 - 1].x, model->vertices[face.v1 - 1].y, model->vertices[face.v1 - 1].z);
 
+            // --- VÉRTICE 2 ---
+            if (face.n2 > 0) glNormal3f(model->normals[face.n2 - 1].x, model->normals[face.n2 - 1].y, model->normals[face.n2 - 1].z);
+            else glNormal3f(faceNormal.x, faceNormal.y, faceNormal.z);
+            
+            if (model->textures && face.t2 > 0) glTexCoord2f(model->texCoords[face.t2 - 1].u, model->texCoords[face.t2 - 1].v);
+            glVertex3f(model->vertices[face.v2 - 1].x, model->vertices[face.v2 - 1].y, model->vertices[face.v2 - 1].z);
 
-        // --- VÉRTICE 2 ---
-        if (face.n2 > 0) { // Usa a normal do vértice (suave)
-            glNormal3f(model->normals[face.n2 - 1].x, model->normals[face.n2 - 1].y, model->normals[face.n2 - 1].z);
-        } else { // Usa a normal da face (plana)
-            glNormal3f(faceNormal.x, faceNormal.y, faceNormal.z);
-        }
-        if (model->textures && face.t2 > 0) {
-            glTexCoord2f(model->texCoords[face.t2 - 1].u, model->texCoords[face.t2 - 1].v);
-        }
-        glVertex3f(model->vertices[face.v2 - 1].x, model->vertices[face.v2 - 1].y, model->vertices[face.v2 - 1].z);
+            // --- VÉRTICE 3 ---
+            if (face.n3 > 0) glNormal3f(model->normals[face.n3 - 1].x, model->normals[face.n3 - 1].y, model->normals[face.n3 - 1].z);
+            else glNormal3f(faceNormal.x, faceNormal.y, faceNormal.z);
+            
+            if (model->textures && face.t3 > 0) glTexCoord2f(model->texCoords[face.t3 - 1].u, model->texCoords[face.t3 - 1].v);
+            glVertex3f(model->vertices[face.v3 - 1].x, model->vertices[face.v3 - 1].y, model->vertices[face.v3 - 1].z);
 
-
-        // --- VÉRTICE 3 ---
-        if (face.n3 > 0) { // Usa a normal do vértice (suave)
-            glNormal3f(model->normals[face.n3 - 1].x, model->normals[face.n3 - 1].y, model->normals[face.n3 - 1].z);
-        } else { // Usa a normal da face (plana)
-            glNormal3f(faceNormal.x, faceNormal.y, faceNormal.z);
-        }
-        if (model->textures && face.t3 > 0) {
-            glTexCoord2f(model->texCoords[face.t3 - 1].u, model->texCoords[face.t3 - 1].v);
-        }
-        glVertex3f(model->vertices[face.v3 - 1].x, model->vertices[face.v3 - 1].y, model->vertices[face.v3 - 1].z);
+        glEnd(); // Fechamos o triângulo imediatamente para poder mudar o estado na próxima iteração
     }
-    
-    glEnd();  //GL_TRIANGLES
 }
 
 void drawBox(Box b) {

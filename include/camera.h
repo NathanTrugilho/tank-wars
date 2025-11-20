@@ -5,8 +5,11 @@
 #include <tank.h>
 #include <math.h>
 
+#define CAM_FACTOR_X 5.0f
+#define CAM_FACTOR_Y 2.7f
+#define CAM_FACTOR_Z 5.0f
+
 void updateCamera();
-int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg);
 
 #endif
 

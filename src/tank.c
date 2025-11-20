@@ -3,6 +3,8 @@
 int mapCellX = INITIAL_TANK_CELL_X;
 int mapCellZ = INITIAL_TANK_CELL_Z;
 
+const double RADIAN_FACTOR = 3.14159 / 180.0;
+
 ObjModel turretModel, pipeModel, hullModel;
 
 float tankX;
@@ -13,15 +15,6 @@ float hullAngle = 0.0f;
 float turretAngle = 0.0f;
 float pipeAngle = 0.0f;
 
-float moveSpeed = 0.1f;
-
-float rotSpeed = 2.0f;
-float turretRotSpeed = 1.0f;
-
-float pipeInclSpeed = 0.5f;
-
-const double RADIAN_FACTOR = 3.14159 / 180.0; // Pra converter de graus pra radiano
-
 void drawTank() {
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
@@ -29,21 +22,21 @@ void drawTank() {
         glPushMatrix();
             glRotatef(hullAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&hullModel); 
-            drawBox(hullModel.box); // Hitbox da base
+            //drawBox(hullModel.box); // Hitbox da base
         glPopMatrix();
 
         glPushMatrix();
             glRotatef(turretAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&turretModel);
-            drawBox(turretModel.box); //Hitbox da torreta
+            //drawBox(turretModel.box); //Hitbox da torreta
             glRotatef(pipeAngle, 1.0f, 0.0f, 0.0f); // Em x
             drawModel(&pipeModel);
-            drawBox(pipeModel.box); //Hitbox do cano
+            //drawBox(pipeModel.box); //Hitbox do cano
         glPopMatrix();
-
     glPopMatrix();
     glDisable(GL_TEXTURE_2D); // Tem que desativar se não fica tudo escuro pq as outras coisas n têm textura
 }
+
 void updateTank() {
     float nextX = tankX;
     float nextZ = tankZ;
@@ -52,15 +45,15 @@ void updateTank() {
     // --- 1. Lógica de Movimento do Corpo (W/S/A/D) ---
     
     if (keyStates['w'] || keyStates['W']) {
-        nextX -= sinf(hullAngle * RADIAN_FACTOR) * moveSpeed;
-        nextZ -= cosf(hullAngle * RADIAN_FACTOR) * moveSpeed;
+        nextX -= sinf(hullAngle * RADIAN_FACTOR) * TANK_MOVEMENT_SPEED;
+        nextZ -= cosf(hullAngle * RADIAN_FACTOR) * TANK_MOVEMENT_SPEED;
     }
     if (keyStates['s'] || keyStates['S']) {
-        nextX += sinf(hullAngle * RADIAN_FACTOR) * moveSpeed;
-        nextZ += cosf(hullAngle * RADIAN_FACTOR) * moveSpeed;
+        nextX += sinf(hullAngle * RADIAN_FACTOR) * TANK_MOVEMENT_SPEED;
+        nextZ += cosf(hullAngle * RADIAN_FACTOR) * TANK_MOVEMENT_SPEED;
     }
-    if (keyStates['a'] || keyStates['A']) nextHullAngle += rotSpeed;
-    if (keyStates['d'] || keyStates['D']) nextHullAngle -= rotSpeed;
+    if (keyStates['a'] || keyStates['A']) nextHullAngle += TANK_ROT_SPEED;
+    if (keyStates['d'] || keyStates['D']) nextHullAngle -= TANK_ROT_SPEED;
 
     // Verificação Unificada:
     // Se eu me mover para nextX/nextZ ou girar o corpo para nextHullAngle,
@@ -71,36 +64,30 @@ void updateTank() {
         tankX = nextX;
         tankZ = nextZ;
         hullAngle = nextHullAngle;
-    } else {
-        // Opcional: Feedback visual ou sonoro de colisão
-        // printf("Movimento bloqueado! Cano ou base bateriam.\n");
-    }
+    } 
 
-    // --- 2. Lógica de Rotação da Torre (Setas) ---
     
     float nextTurretAngle = turretAngle;
 
-    if (specialKeyStates[GLUT_KEY_LEFT]) nextTurretAngle += rotSpeed;
-    if (specialKeyStates[GLUT_KEY_RIGHT]) nextTurretAngle -= rotSpeed;
+    if (specialKeyStates[GLUT_KEY_LEFT]) nextTurretAngle += TANK_ROT_SPEED;
+    if (specialKeyStates[GLUT_KEY_RIGHT]) nextTurretAngle -= TANK_ROT_SPEED;
 
     // Se houve tentativa de girar a torre
     if (nextTurretAngle != turretAngle) {
         // Verifica se SOMENTE girar a torre causaria colisão
         if (!wouldCollideTurret(nextTurretAngle)) {
             turretAngle = nextTurretAngle;
-        } else {
-            // printf("Giro da torre bloqueado!\n");
         }
     }
 
     // --- 3. Inclinação do Cano (Cima/Baixo) ---
     // Isso não afeta colisão X/Z, pode manter direto
     if (specialKeyStates[GLUT_KEY_UP]) {
-        pipeAngle += pipeInclSpeed;
+        pipeAngle += PIPE_INCLINE_SPEED;
         if (pipeAngle > MAX_PIPE_ANGLE) pipeAngle = MAX_PIPE_ANGLE; 
     }
     if (specialKeyStates[GLUT_KEY_DOWN]) {
-        pipeAngle -= pipeInclSpeed;
+        pipeAngle -= PIPE_INCLINE_SPEED;
         if (pipeAngle < MIN_PIPE_ANGLE) pipeAngle = MIN_PIPE_ANGLE; 
     }
 
@@ -135,7 +122,6 @@ void initTank(){
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo do canhão.\n");
     }
-    
     if (loadOBJ("objects/hull.obj", "objects/hull.mtl", &hullModel)) {
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo da base.\n");

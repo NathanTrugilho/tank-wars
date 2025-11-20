@@ -71,6 +71,7 @@ void drawSingleEnemy(Enemy *e) {
 // Função principal chamada pelo game loop para desenhar TODOS
 void drawEnemies() {
     glEnable(GL_TEXTURE_2D); // Garante texturas ligadas para os modelos
+    glPushMatrix();
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (enemies[i].alive) {
              // Mudar a cor para diferenciar do player se usar o mesmo modelo
@@ -78,6 +79,7 @@ void drawEnemies() {
              drawSingleEnemy(&enemies[i]);
         }
     }
+    glPopMatrix();
     glDisable(GL_TEXTURE_2D);
 }
 

@@ -1,58 +1,89 @@
 #include <projectile.h>
-#include <enemy.h>
-#include <tank.h>
-#include <map.h>
 
-Bullet bullets[MAX_BULLETS];
+Bullet player_bullet;
+ObjModel shellModel;
 
 // Atualiza bullets
 void updateBullets() {
-    for (int i = 0; i < MAX_BULLETS; i++) {
-        if (bullets[i].active) {
-            bullets[i].x -= sinf(bullets[i].angle * 3.14159 / 180.0) * 0.4f;
-            bullets[i].z -= cosf(bullets[i].angle * 3.14159 / 180.0) * 0.4f;
+    if (!player_bullet.active) return;
 
-            // Limites do mapa
-            //if (bullets[i].x < -MAP_SIZE/2 || bullets[i].x > MAP_SIZE/2 || bullets[i].z < -MAP_SIZE/2 || bullets[i].z > MAP_SIZE/2)
-                //bullets[i].active = 0;
+    float horizontal_without_vertical = player_bullet.horizontal_angle * RADIAN_FACTOR;
 
-            // Colisão com inimigos
-            for (int j = 0; j < MAX_ENEMIES; j++) {
-                if (enemies[j].alive) {
-                    float dx = bullets[i].x - enemies[j].x;
-                    float dz = bullets[i].z - enemies[j].z;
-                    float dist = sqrtf(dx*dx + dz*dz);
-                    if (dist < 0.7f) {
-                        enemies[j].alive = 0;
-                        bullets[i].active = 0;
-                    }
-                }
-            }
+    float horizontal_scale = cosf(player_bullet.vertical_angle   * RADIAN_FACTOR); 
+
+    float vector_x = -sinf(horizontal_without_vertical) * horizontal_scale;
+    float vector_z = -cosf(horizontal_without_vertical) * horizontal_scale;
+    float vector_y =  sinf(player_bullet.vertical_angle   * RADIAN_FACTOR);
+
+    player_bullet.x += vector_x * BULLET_SPEED;
+    player_bullet.z += vector_z * BULLET_SPEED;
+    player_bullet.y += vector_y * BULLET_SPEED;
+
+    // Fazer a colisão da bullet com os inimigos usando a lógica do Pedro
+    for (int j = 0; j < MAX_ENEMIES; j++) {
+        if (!enemies[j].alive) continue;
+
+        float dx = player_bullet.x - enemies[j].x;
+        float dz = player_bullet.z - enemies[j].z;
+        float dist = sqrtf(dx*dx + dz*dz);
+
+        if (dist < 0.7f) {
+            enemies[j].alive = FALSE;
+            player_bullet.active = FALSE;
+            break;
         }
     }
 }
 
-// Inicializa bullets e inimigos
-void initBulletsAndEnemies() {
-    for (int i = 0; i < MAX_BULLETS; i++) bullets[i].active = 0;
-
-    srand(time(NULL));
-    for (int i = 0; i < MAX_ENEMIES; i++) {
-        enemies[i].alive = 1;
-        enemies[i].x = rand() % 50; // entre -18 e 18
-        enemies[i].z = rand() % 50; // entre -18 e 18
-    }
+// Carrega o modelo da bullet
+void initBullet() {
+    if (loadOBJ("objects/shell.obj", "objects/shell.mtl", &shellModel)) {
+    } else {
+        printf("ERRO: Nao foi possivel carregar o modelo do projetil.\n");
+    } 
+    player_bullet.active = FALSE;
 }
 
 // Dispara bullet
 void shootBullet() {
-    for (int i = 0; i < MAX_BULLETS; i++) {
-        if (!bullets[i].active) {
-            bullets[i].active = 1;
-            bullets[i].x = tankX;
-            bullets[i].z = tankZ;
-            bullets[i].angle = turretAngle;
-            break;
-        }
-    }
+    static unsigned long lastShootTime = 0; // Só é zero quando inicializar
+    unsigned long now = glutGet(GLUT_ELAPSED_TIME);;
+
+    // Serve pra botar um cooldown antes de atirar dnv
+    if (now - lastShootTime < 3000) return;
+    lastShootTime = now;
+
+    player_bullet.active = TRUE;
+
+    player_bullet.horizontal_angle = turretAngle; // inclinação horizontal
+    player_bullet.vertical_angle = pipeAngle; // inclinação vertical
+    
+    float h_rad = turretAngle * RADIAN_FACTOR;
+    float v_rad = pipeAngle * RADIAN_FACTOR;
+
+    float horizontal_dist = cosf(v_rad) * PIPE_LENGTH;
+
+    float right_x = cosf(h_rad);
+    float right_z = -sinf(h_rad);
+
+    player_bullet.x = tankX - sinf(h_rad) * horizontal_dist - (right_x * BULLET_SIDE_CORRECTION);
+    player_bullet.z = tankZ - cosf(h_rad) * horizontal_dist - (right_z * BULLET_SIDE_CORRECTION);
+    player_bullet.y = (tankY + PIPE_HEIGHT) + sinf(v_rad) * PIPE_LENGTH;
+}
+
+void drawBullet(){
+    if(!player_bullet.active) return;
+    
+    glEnable(GL_TEXTURE_2D);
+    glPushMatrix();
+        glTranslatef(player_bullet.x, player_bullet.y, player_bullet.z);
+        glScalef(BULLET_SCALE_CORRECTION,BULLET_SCALE_CORRECTION,BULLET_SCALE_CORRECTION);
+        glRotatef(player_bullet.horizontal_angle, 0.0f, 1.0f, 0.0f);
+        glRotatef(player_bullet.vertical_angle, 1.0f, 0.0f, 0.0f);
+
+        drawModel(&shellModel); 
+        //drawBox(hullModel.box); // Hitbox da base
+
+    glPopMatrix();
+    glDisable(GL_TEXTURE_2D); // Tem que desativar se não fica tudo escuro pq as outras coisas n têm textura
 }

@@ -1,6 +1,6 @@
 # Blender 4.5.4 LTS
 # www.blender.org
-mtllib cannon.mtl
+mtllib pipe.mtl
 o Gun_Object_1.003
 v -0.088132 1.137438 -3.000185
 v -0.076547 1.127653 -2.980505
