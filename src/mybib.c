@@ -336,13 +336,12 @@ void setMaterial(
 }
 
 // Função para carregar texturas usando stb_image
-// Função para carregar texturas usando stb_image
 void loadTextures(Texture **textures, int *textureIDCount) {
 
     if (*textureIDCount == 0) return;
     glEnable(GL_TEXTURE_2D); // Habilita uso de texturas
 
-    // !!! CORREÇÃO 3 (da 1ª resposta): Inverter a imagem no carregamento !!!
+    // Inverter a imagem no carregamento !!!
     stbi_set_flip_vertically_on_load(1); 
 
     GLuint textureIds[*textureIDCount]; // Um array para armazenar os identificadores das texturas.
@@ -565,6 +564,35 @@ int loadOBJ(const char *fileOBJ, const char *fileMTL, ObjModel *model) {
         model->materials[i].illum = objMaterials[i].illum;
     }
     model->textureCount = objTexturesCount;
+
+    // BOTEI ISSO AQUI USANDO O GEMINI PARA PADRONIZAR A ILUMINACAO DOS OBJ
+    for (int i = 0; i < model->materialCount; i++) {
+        
+        // 1. Padroniza a Luz Ambiente (Ka)
+        // Evita que objetos brilhem no escuro (como estava o projetil).
+        // 0.2 é um cinza escuro, bom para sombras.
+        model->materials[i].Ka[0] = 0.2f;
+        model->materials[i].Ka[1] = 0.2f;
+        model->materials[i].Ka[2] = 0.2f;
+
+        // 2. Padroniza a Cor Difusa (Kd)
+        // Força o material a ser BRANCO para receber a cor da TEXTURA.
+        // Se o MTL vier preto (0,0,0), a textura não aparece. 
+        // Com 1.0, a textura aparece com a cor original.
+        model->materials[i].Kd[0] = 1.0f;
+        model->materials[i].Kd[1] = 1.0f;
+        model->materials[i].Kd[2] = 1.0f;
+
+        // 3. Padroniza o Brilho (Ks)
+        // Vamos definir um brilho baixo para tudo, para evitar o "estouro" de luz.
+        // Se quiseres coisas metálicas, aumenta isto para 0.8 depois.
+        model->materials[i].Ks[0] = 0.1f;
+        model->materials[i].Ks[1] = 0.1f;
+        model->materials[i].Ks[2] = 0.1f;
+
+        // 4. Define a opacidade total (d)
+        model->materials[i].d = 1.0f; 
+    }
 
     // Verificar se model->textureCount é válido
     if (model->textureCount < 0) {
@@ -794,10 +822,6 @@ void drawModel(ObjModel *model) {
         return;
     }
 
-    // --- NOVA LINHA ---
-    // Define um material difuso (Kd) branco genérico
-    GLfloat whiteDiffuse[] = { 1.0f, 1.0f, 1.0f };
-
     glBegin(GL_TRIANGLES);
 
     for (int i = 0; i < model->faceCount; i++) {
@@ -807,8 +831,6 @@ void drawModel(ObjModel *model) {
             printf("Índice de vértice inválido.\n");
             continue; // Pula esta face
         }
-        
-        char hasTexture = 0; // <-- Vamos usar isto para saber se a textura foi ligada
 
         for (int m = 0; m < model->materialCount; m++) {
             if (strcmp(face.material, model->materials[m].name) == 0) {
@@ -819,23 +841,19 @@ void drawModel(ObjModel *model) {
                         
                         GLuint realOpenGLTextureID = model->textures[materialTextureIndex - 1].textureID;
                         glBindTexture(GL_TEXTURE_2D, realOpenGLTextureID);
-                        
-                        hasTexture = 1; // Marcamos que há textura
                     } else {
                         glBindTexture(GL_TEXTURE_2D, 0); // Sem textura
                     }
                 } 
                 
                 setMaterial(model->materials[m].Ka,
-                            // --- ALTERAÇÃO AQUI ---
-                            // Se 'hasTexture' for verdadeiro, usa 'whiteDiffuse'.
-                            // Senão, usa o Kd normal do material.
-                            hasTexture ? whiteDiffuse : model->materials[m].Kd,
-                            model->materials[m].Ks,
-                            model->materials[m].Ke,
-                            model->materials[m].Ns,
-                            model->materials[m].d,
-                            model->materials[m].illum);
+                    model->materials[m].Kd,
+                    model->materials[m].Ks,
+                    model->materials[m].Ke,
+                    model->materials[m].Ns,
+                    model->materials[m].d,
+                    model->materials[m].illum);
+                    
                 break; // Encontramos o material
             }
         }

@@ -7,6 +7,7 @@
 #include <map.h>
 #include <stdio.h>
 #include <mybib.h>
+#include <utils.h>
 #include <collision.h>
 
 #define INITIAL_TANK_CELL_Z 25

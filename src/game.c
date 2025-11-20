@@ -4,7 +4,6 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
     updateCamera();
     drawSun();
     drawMap();
@@ -47,7 +46,9 @@ void init() {
     initMapCells();
     calcularNormaisDoMapa();
     initEnemies();
-    initTank();
     initBullet();
+    initTank();
+    debugObjModel(&shellModel);
+    debugObjModel(&hullModel);
     //printf("%p %p", &hullModel, &shellModel);
 }
