@@ -7,8 +7,12 @@ ObjModel shellModel;
 void updateBullets() {
     if (!player_bullet.active) return;
 
-    float vector_x = -sinf(player_bullet.horizontal_angle * RADIAN_FACTOR);
-    float vector_z = -cosf(player_bullet.horizontal_angle * RADIAN_FACTOR);
+    float horizontal_without_vertical = player_bullet.horizontal_angle * RADIAN_FACTOR;
+
+    float horizontal_scale = cosf(player_bullet.vertical_angle   * RADIAN_FACTOR); 
+
+    float vector_x = -sinf(horizontal_without_vertical) * horizontal_scale;
+    float vector_z = -cosf(horizontal_without_vertical) * horizontal_scale;
     float vector_y =  sinf(player_bullet.vertical_angle   * RADIAN_FACTOR);
 
     player_bullet.x += vector_x * BULLET_SPEED;
@@ -56,12 +60,21 @@ void shootBullet() {
     lastShootTime = now;
 
     player_bullet.active = TRUE;
-    player_bullet.x = tankX;
-    player_bullet.y = 1;
-    player_bullet.z = tankZ;
 
     player_bullet.horizontal_angle = turretAngle; // inclinação horizontal
     player_bullet.vertical_angle = pipeAngle; // inclinação vertical
+    
+    float h_rad = turretAngle * RADIAN_FACTOR;
+    float v_rad = pipeAngle * RADIAN_FACTOR;
+
+    float horizontal_dist = cosf(v_rad) * PIPE_LENGTH;
+
+    float right_x = cosf(h_rad);
+    float right_z = -sinf(h_rad);
+
+    player_bullet.x = tankX - sinf(h_rad) * horizontal_dist - (right_x * BULLET_SIDE_CORRECTION);
+    player_bullet.z = tankZ - cosf(h_rad) * horizontal_dist - (right_z * BULLET_SIDE_CORRECTION);
+    player_bullet.y = (tankY + PIPE_HEIGHT) + sinf(v_rad) * PIPE_LENGTH;
 }
 
 void drawBullet(){
@@ -70,7 +83,7 @@ void drawBullet(){
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
         glTranslatef(player_bullet.x, player_bullet.y, player_bullet.z);
-
+        glScalef(BULLET_SCALE_CORRECTION,BULLET_SCALE_CORRECTION,BULLET_SCALE_CORRECTION);
         glRotatef(player_bullet.horizontal_angle, 0.0f, 1.0f, 0.0f);
         glRotatef(player_bullet.vertical_angle, 1.0f, 0.0f, 0.0f);
 

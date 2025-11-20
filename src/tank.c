@@ -64,12 +64,8 @@ void updateTank() {
         tankX = nextX;
         tankZ = nextZ;
         hullAngle = nextHullAngle;
-    } else {
-        // Opcional: Feedback visual ou sonoro de colisão
-        // printf("Movimento bloqueado! Cano ou base bateriam.\n");
-    }
+    } 
 
-    // --- 2. Lógica de Rotação da Torre (Setas) ---
     
     float nextTurretAngle = turretAngle;
 
@@ -81,8 +77,6 @@ void updateTank() {
         // Verifica se SOMENTE girar a torre causaria colisão
         if (!wouldCollideTurret(nextTurretAngle)) {
             turretAngle = nextTurretAngle;
-        } else {
-            // printf("Giro da torre bloqueado!\n");
         }
     }
 

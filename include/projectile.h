@@ -9,7 +9,9 @@
 #include <mybib.h>
 
 #define MAX_BULLETS 100
-#define BULLET_SPEED 0.01f
+#define BULLET_SPEED 1.0f
+#define BULLET_SCALE_CORRECTION 0.15f
+#define BULLET_SIDE_CORRECTION 0.07f
 
 // Estrutura bullets
 typedef struct {
