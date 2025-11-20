@@ -19,12 +19,7 @@ void updateBullets() {
     player_bullet.z += vector_z * BULLET_SPEED;
     player_bullet.y += vector_y * BULLET_SPEED;
 
-    /*
-    if (player_bullet.x < -MAP_SIZE/2 || player_bullet.x > MAP_SIZE/2 ||
-        player_bullet.z < -MAP_SIZE/2 || player_bullet.z > MAP_SIZE/2 ||
-        player_bullet.y < 0)
-        player_bullet.active = FALSE; */
-
+    // Fazer a colisão da bullet com os inimigos usando a lógica do Pedro
     for (int j = 0; j < MAX_ENEMIES; j++) {
         if (!enemies[j].alive) continue;
 
@@ -39,7 +34,6 @@ void updateBullets() {
         }
     }
 }
-
 
 // Carrega o modelo da bullet
 void initBullet() {

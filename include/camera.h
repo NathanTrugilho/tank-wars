@@ -11,8 +11,6 @@
 
 void updateCamera();
 
-int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg);
-
 #endif
 
 
