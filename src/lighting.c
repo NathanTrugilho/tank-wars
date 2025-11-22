@@ -2,14 +2,13 @@
 
 void setupLighting() {
 
-    GLfloat light_ambient[] = { 0.4f, 0.3f, 0.1f, 1.0f };
-    GLfloat light_diffuse[] = { 0.8f, 0.6f, 0.3f, 1.0f };
-    GLfloat light_specular[] = { 0.9f, 0.8f, 0.6f, 1.0f };
+    GLfloat light_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+    GLfloat light_diffuse[] = { 1.0f, 0.95f, 0.9f, 1.0f };
+    GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    GLfloat espec[4] = { 0.1f, 0.1f, 0.1f, 1.0f }; 
+    GLint especMaterial = 10;
 
-    GLfloat espec[4]={1.0,1.0,1.0,1.0}; 
-    GLint especMaterial = 60;
-
-    glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
+    glClearColor(0.5f, 0.7f, 1.0f, 1.0f); // Cor do céu (azul claro)
 
     glShadeModel(GL_SMOOTH);
 
@@ -28,8 +27,11 @@ void setupLighting() {
 }
 
 void drawSun(){
-    GLfloat light_position[] = { 1.0f, 0.5f, 1.0f, 0.0f }; // ultimo param diz se é posicional (1) ou direcional (0). 
-                                                           // por ser direcional, ele simula uma fonte muito distante que manda raios de luz
-                                                           // na direção (5, 2, 1) que são os outros parâmetros
+    GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 0.0f };
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+}
+
+void drawMapSun(){
+    GLfloat light_position[] = { 0.0f, 1.0f, 0.0f, 0.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 }
