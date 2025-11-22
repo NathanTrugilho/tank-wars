@@ -1,11 +1,11 @@
 #include <game.h>
 
+float ratio;
+
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
     updateCamera();
-    drawSun();
+
     drawMap();
     drawEnemies();
     drawTank();
@@ -18,14 +18,11 @@ void display() {
 }
 
 // Não mudar
-void reshape(int w, int h) {
+void reshape(GLsizei w, GLsizei h) {
     if (h == 0) h = 1;
-    float ratio = (float)w / (float)h;
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(60, ratio, 0.1, 100);
-    glMatrixMode(GL_MODELVIEW);
+    ratio = (GLfloat)w/(GLfloat)h;
     glViewport(0, 0, w, h);
+    updateCamera();
 }
 
 void timer(int value) {
@@ -38,10 +35,7 @@ void timer(int value) {
 
 // Inicialização
 void init() {
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_NORMALIZE);
-    glShadeModel(GL_SMOOTH);
-    glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
+    glEnable(GL_NORMALIZE); 
     setupLighting();
     initMapCells();
     calcularNormaisDoMapa();

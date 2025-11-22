@@ -11,10 +11,12 @@
 #include <lighting.h>
 #include <utils.h>
 
+extern float ratio;
+
 void display();
 
 // Reshape
-void reshape(int w, int h);
+void reshape(GLsizei w, GLsizei h);
 
 // Animação
 void timer(int value);

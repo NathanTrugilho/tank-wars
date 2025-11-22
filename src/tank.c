@@ -65,7 +65,6 @@ void updateTank() {
         tankZ = nextZ;
         hullAngle = nextHullAngle;
     } 
-
     
     float nextTurretAngle = turretAngle;
 
@@ -92,6 +91,7 @@ void updateTank() {
     }
 
     updateMapCellPos();
+    glutPostRedisplay();
 }
 
 void updateMapCellPos(){
