@@ -1,20 +1,22 @@
-// enemy.c
 #include "enemy.h"
 #include <GL/glut.h>
 #include <stdio.h>
-#include <math.h>       // Para rand()
-#include <time.h>       // Para time()
+#include <math.h>       
+#include <time.h>       
 #include <collision.h>
+#include <projectile.h> // Necessário para shootEnemyBullet
+
+#ifndef RADIAN_FACTOR
+#define RADIAN_FACTOR (3.14159265359 / 180.0)
+#endif
+
 Enemy enemies[MAX_ENEMIES];
 
-// Modelos 3D compartilhados por todos os inimigos
-// Meu objetivo é criar uma estrutura geral que funcione para todos os inimigos, player, mapa, construções etc.
 ObjModel enemyHullModel;
 ObjModel enemyTurretModel;
 ObjModel enemyPipeModel;
 
 void initEnemies() {
-    // Carrega os modelos dos inimigos (usando os mesmos do player por enquanto)
     if (!loadOBJ("objects/hull.obj", "objects/hull.mtl", &enemyHullModel)) {
         printf("Erro ao carregar Base do inimigo.\n");
     }
@@ -25,57 +27,104 @@ void initEnemies() {
         printf("Erro ao carregar Canhão do inimigo.\n");
     }
 
-    // 2. Inicializa as posições
     srand(time(NULL));
     for (int i = 0; i < MAX_ENEMIES; i++) {
         enemies[i].alive = 1;
-        enemies[i].x = (rand() % 50) - 25; // Exemplo: posição aleatória entre -25 e 25
+        enemies[i].x = (rand() % 50) - 25; 
         enemies[i].z = (rand() % 50) - 25;
-        enemies[i].hullAngle = rand() % 360;   // Rotação inicial aleatória
-        enemies[i].turretAngle = 0.0f;         // Torre começa alinhada
+        enemies[i].hullAngle = rand() % 360;   
+        enemies[i].turretAngle = 0.0f;         
+        enemies[i].wanderTimer = 0;
+        enemies[i].targetWanderAngle = enemies[i].hullAngle;
+        enemies[i].lastShootTime = 0; // Inicializa timer de tiro
     }
 }
 
-// Função interna para desenhar UM inimigo específico
-void drawSingleEnemy(Enemy *e) {
-    glPushMatrix();
-        // Move para a posição DESTE inimigo
-        glTranslatef(e->x, 0.5f, e->z); // 0.5f é a altura do chão (tankY)
+void drawVisionCone(Enemy *e) {
+    glPushAttrib(GL_ENABLE_BIT); 
 
-        // Desenha a Base
+    float totalAngle = e->hullAngle + e->turretAngle;
+    float rad = totalAngle * RADIAN_FACTOR;
+    float halfFovRad = (ENEMY_VIEW_ANGLE / 2.0f) * RADIAN_FACTOR;
+
+    float y = (ENEMY_PIPE_Y_MIN + ENEMY_PIPE_Y_MAX) / 2.0f;
+
+    float cx = -sinf(rad) * ENEMY_VIEW_RANGE;
+    float cz = -cosf(rad) * ENEMY_VIEW_RANGE;
+
+    float lx = -sinf(rad + halfFovRad) * ENEMY_VIEW_RANGE;
+    float lz = -cosf(rad + halfFovRad) * ENEMY_VIEW_RANGE;
+
+    float rx = -sinf(rad - halfFovRad) * ENEMY_VIEW_RANGE;
+    float rz = -cosf(rad - halfFovRad) * ENEMY_VIEW_RANGE;
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glLineWidth(2.0f);
+    
+    glColor3f(0.0f, 1.0f, 1.0f); 
+
+    glBegin(GL_LINES);
+        glVertex3f(e->x, y, e->z);
+        glVertex3f(e->x + cx, y, e->z + cz);
+        glVertex3f(e->x, y, e->z);
+        glVertex3f(e->x + lx, y, e->z + lz);
+        glVertex3f(e->x, y, e->z);
+        glVertex3f(e->x + rx, y, e->z + rz);
+        glVertex3f(e->x + lx, y, e->z + lz);
+        glVertex3f(e->x + rx, y, e->z + rz);
+    glEnd();
+
+    glPopAttrib(); 
+}
+
+int canSeePlayer(Enemy *e, float px, float pz) {
+    float dx = px - e->x;
+    float dz = pz - e->z;
+    float distSq = dx*dx + dz*dz;
+
+    if (distSq > ENEMY_VIEW_RANGE * ENEMY_VIEW_RANGE) return 0; 
+
+    float totalAngle = e->hullAngle + e->turretAngle;
+    float rad = totalAngle * RADIAN_FACTOR;
+    float forwardX = -sinf(rad);
+    float forwardZ = -cosf(rad);
+
+    float dist = sqrtf(distSq);
+    float dirToPlayerX = dx / dist;
+    float dirToPlayerZ = dz / dist;
+
+    float dot = forwardX * dirToPlayerX + forwardZ * dirToPlayerZ;
+    float cosHalfFov = cosf((ENEMY_VIEW_ANGLE / 2.0f) * RADIAN_FACTOR);
+
+    return (dot > cosHalfFov);
+}
+
+void drawSingleEnemy(Enemy *e) {
+    drawVisionCone(e);
+
+    glColor3f(1.0f, 1.0f, 1.0f); 
+
+    glPushMatrix();
+        glTranslatef(e->x, 0.5f, e->z); 
         glPushMatrix();
             glRotatef(e->hullAngle, 0.0f, 1.0f, 0.0f);
-            drawModel(&enemyHullModel); 
-            //drawBox(enemyHullModel.box); essa função é a "hitbox" só que feita pelo mybib. Logo é só desconsiderar
+            drawModel(&enemyHullModel);
         glPopMatrix();
 
-        // Desenha a Torre e o Canhão
         glPushMatrix();
-            // ATENÇÃO:
-            // A torre gira em relação à base OU ao mundo? 
-            // Se for em relação ao mundo, usa só turretAngle.
-            // Se for em relação à base, some (hullAngle + turretAngle).
             glRotatef(e->hullAngle + e->turretAngle, 0.0f, 1.0f, 0.0f);
-            
             drawModel(&enemyTurretModel);
-            //drawBox(enemyTurretModel.box); // Opcional
-
-            // O canhão não precisa girar pra cima/baixo por enquanto para inimigos
             drawModel(&enemyPipeModel);
-            //drawBox(enemyPipeModel.box); // Opcional
         glPopMatrix();
-
     glPopMatrix();
 }
 
-// Função principal chamada pelo game loop para desenhar TODOS
 void drawEnemies() {
-    glEnable(GL_TEXTURE_2D); // Garante texturas ligadas para os modelos
+    glEnable(GL_TEXTURE_2D); 
     glPushMatrix();
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (enemies[i].alive) {
-             // Mudar a cor para diferenciar do player se usar o mesmo modelo
-             glColor3f(1.0f, 0.5f, 0.5f); // Tom avermelhado (precisa que o drawModel suporte glColor misturado com textura)
              drawSingleEnemy(&enemies[i]);
         }
     }
@@ -83,24 +132,90 @@ void drawEnemies() {
     glDisable(GL_TEXTURE_2D);
 }
 
-// Se quiser que eles façam algo, atualize aqui
 void updateEnemies(float playerX, float playerZ) {
-    for (int i = 0; i < MAX_ENEMIES; i++) {
-        if (enemies[i].alive) {
-            
-            // Lógica simples: Tentar girar 1 grau
-            float currentAngle = enemies[i].turretAngle;
-            float nextAngle = currentAngle + 1.0f;
-            if (nextAngle > 360.0f) nextAngle -= 360.0f;
+    unsigned long now = glutGet(GLUT_ELAPSED_TIME);
 
-            // --- VERIFICAÇÃO DE COLISÃO ANTES DE GIRAR ---
-            // Se girar vai bater no player, NÃO GIRE.
-            if (!wouldCollideEnemyTurret(i, nextAngle)) {
-                enemies[i].turretAngle = nextAngle;
-            } else {
-                // Opcional: Se colidiu, pode tentar girar para o outro lado
-                // ou simplesmente ficar parado esperando o player sair da frente.
-                // printf("Inimigo %d travado pelo canhão!\n", i);
+    for (int i = 0; i < MAX_ENEMIES; i++) {
+        if (!enemies[i].alive) continue;
+
+        float nextX = enemies[i].x;
+        float nextZ = enemies[i].z;
+        float moveSpeed = ENEMY_SPEED;
+        
+        int seesPlayer = canSeePlayer(&enemies[i], playerX, playerZ);
+        
+        if (seesPlayer) {
+            // --- PERSEGUIR E ATIRAR ---
+            
+            // Lógica de tiro
+            if (now - enemies[i].lastShootTime > ENEMY_SHOOT_DELAY) {
+                shootEnemyBullet(&enemies[i]);
+                enemies[i].lastShootTime = now;
+            }
+
+            float dx = playerX - enemies[i].x;
+            float dz = playerZ - enemies[i].z;
+            
+            float targetRad = atan2f(-dx, -dz); 
+            float targetDeg = targetRad * (180.0f / 3.14159f);
+
+            float desiredGlobalAngle = targetDeg;
+            float currentGlobalAngle = enemies[i].hullAngle + enemies[i].turretAngle;
+
+            float diff = desiredGlobalAngle - currentGlobalAngle;
+            while (diff > 180) diff -= 360;
+            while (diff < -180) diff += 360;
+
+            if (diff > ENEMY_ROT_SPEED) currentGlobalAngle += ENEMY_ROT_SPEED;
+            else if (diff < -ENEMY_ROT_SPEED) currentGlobalAngle -= ENEMY_ROT_SPEED;
+            else currentGlobalAngle = desiredGlobalAngle;
+
+            float hullDiff = desiredGlobalAngle - enemies[i].hullAngle;
+            while (hullDiff > 180) hullDiff -= 360;
+            while (hullDiff < -180) hullDiff += 360;
+            
+            if (hullDiff > ENEMY_ROT_SPEED) enemies[i].hullAngle += ENEMY_ROT_SPEED;
+            else if (hullDiff < -ENEMY_ROT_SPEED) enemies[i].hullAngle -= ENEMY_ROT_SPEED;
+
+            enemies[i].turretAngle = currentGlobalAngle - enemies[i].hullAngle;
+
+            float rad = enemies[i].hullAngle * RADIAN_FACTOR;
+            nextX -= sinf(rad) * moveSpeed;
+            nextZ -= cosf(rad) * moveSpeed;
+
+        } else {
+            // --- PATRULHAR ---
+            enemies[i].wanderTimer--;
+            if (enemies[i].wanderTimer <= 0) {
+                enemies[i].wanderTimer = 60 + (rand() % 120); 
+                enemies[i].targetWanderAngle = (float)(rand() % 360);
+            }
+
+            float diff = enemies[i].targetWanderAngle - enemies[i].hullAngle;
+            while (diff > 180) diff -= 360;
+            while (diff < -180) diff += 360;
+
+            if (diff > ENEMY_ROT_SPEED) enemies[i].hullAngle += ENEMY_ROT_SPEED;
+            else if (diff < -ENEMY_ROT_SPEED) enemies[i].hullAngle -= ENEMY_ROT_SPEED;
+
+            enemies[i].turretAngle *= 0.95f; 
+
+            float rad = enemies[i].hullAngle * RADIAN_FACTOR;
+            nextX -= sinf(rad) * moveSpeed;
+            nextZ -= cosf(rad) * moveSpeed;
+        }
+
+        float oldX = enemies[i].x;
+        float oldZ = enemies[i].z;
+        
+        enemies[i].x = nextX;
+        enemies[i].z = nextZ;
+        
+        if (wouldCollideEnemyTurret(i, enemies[i].turretAngle)) {
+            enemies[i].x = oldX;
+            enemies[i].z = oldZ;
+            if (!seesPlayer) {
+                 enemies[i].targetWanderAngle += 180.0f; 
             }
         }
     }

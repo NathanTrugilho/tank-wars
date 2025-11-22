@@ -11,6 +11,9 @@ void display() {
     drawTank();
     drawBullet();
     
+    // NOVO: Desenhar balas inimigas
+    drawEnemyBullets();
+
     debugDrawPlayerCollision();
     debugDrawEnemyCollision();
 
@@ -29,6 +32,10 @@ void timer(int value) {
     updateTank();
     updateEnemies(tankX, tankZ);
     updateBullets();
+    
+    // NOVO: Atualizar balas inimigas
+    updateEnemyBullets();
+
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0); 
 }
@@ -41,5 +48,5 @@ void init() {
     calcularNormaisDoMapa();
     initEnemies();
     initTank();
-    initBullet();
+    initBullet(); // Isso já chama initEnemyBullets dentro do projectile.c atualizado
 }

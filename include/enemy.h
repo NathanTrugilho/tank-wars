@@ -3,7 +3,7 @@
 
 #include "mybib.h" 
 
-#define MAX_ENEMIES 30
+#define MAX_ENEMIES 2
 
 // AJUSTE FINO
 // WIDTH: Quanto menor, mais "fino" fica o colisor (evita bater girando)
@@ -34,11 +34,23 @@
 #define ENEMY_PIPE_Y_MIN   1.51f
 #define ENEMY_PIPE_Y_MAX   1.7f
 
+// --- PARÂMETROS DE IA E VISÃO ---
+#define ENEMY_VIEW_RANGE 15.0f      // Distância máxima que o inimigo enxerga
+#define ENEMY_VIEW_ANGLE 45.0f      // Ângulo de abertura do cone (em graus)
+#define ENEMY_SPEED      0.05f      // Velocidade do inimigo (menor que a do player 0.1)
+#define ENEMY_ROT_SPEED  1.5f       // Velocidade de rotação do inimigo
+
 typedef struct {
     int alive;
     float x, z;
     float hullAngle; 
-    float turretAngle; 
+    float turretAngle;
+    
+    // Controle de estado para patrulha (Wander)
+    int wanderTimer;      // Tempo até mudar de direção aleatória
+    float targetWanderAngle; // Ângulo alvo aleatório quando não vê o player
+    // Controle de Tiro
+    long lastShootTime; // Tempo do último disparo (em ms)
 } Enemy;
 
 extern Enemy enemies[MAX_ENEMIES];
@@ -50,5 +62,4 @@ extern ObjModel enemyPipeModel;
 void initEnemies();
 void updateEnemies(float playerX, float playerZ); 
 void drawEnemies();
-
 #endif
