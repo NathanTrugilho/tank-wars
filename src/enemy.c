@@ -45,8 +45,8 @@ void drawSingleEnemy(Enemy *e) {
         // Desenha a Base
         glPushMatrix();
             glRotatef(e->hullAngle, 0.0f, 1.0f, 0.0f);
-            drawModel(&enemyHullModel);
-            drawBox(enemyHullModel.box); // desenha a  hitbox, estou usando para debug
+            drawModel(&enemyHullModel); 
+            //drawBox(enemyHullModel.box); essa função é a "hitbox" só que feita pelo mybib. Logo é só desconsiderar
         glPopMatrix();
 
         // Desenha a Torre e o Canhão
@@ -58,11 +58,11 @@ void drawSingleEnemy(Enemy *e) {
             glRotatef(e->hullAngle + e->turretAngle, 0.0f, 1.0f, 0.0f);
             
             drawModel(&enemyTurretModel);
-            drawBox(enemyTurretModel.box); // Opcional
+            //drawBox(enemyTurretModel.box); // Opcional
 
             // O canhão não precisa girar pra cima/baixo por enquanto para inimigos
             drawModel(&enemyPipeModel);
-            drawBox(enemyPipeModel.box); // Opcional
+            //drawBox(enemyPipeModel.box); // Opcional
         glPopMatrix();
 
     glPopMatrix();

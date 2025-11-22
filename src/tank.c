@@ -38,6 +38,10 @@ void drawTank() {
 }
 
 void updateTank() {
+    if (freeCameraMode) {
+        glutPostRedisplay();
+        return;
+    }
     float nextX = tankX;
     float nextZ = tankZ;
     float nextHullAngle = hullAngle;

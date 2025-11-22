@@ -3,11 +3,12 @@
 
 #include "mybib.h" 
 
-#define MAX_ENEMIES 2
+#define MAX_ENEMIES 30
 
-// --- DIMENSÕES DE COLISÃO ESPECÍFICAS DO INIMIGO ---
-// Copiado dos valores que você ajustou
-
+// AJUSTE FINO
+// WIDTH: Quanto menor, mais "fino" fica o colisor (evita bater girando)
+// LENGTH: Quanto maior, mais longe ele alcança (corrige bater de frente)
+// Esse é para as dimensões dos inimigos
 // Base (Hull)
 #define ENEMY_SCALE_HULL_W   0.90f
 #define ENEMY_SCALE_HULL_L   0.90f
@@ -20,8 +21,8 @@
 #define ENEMY_SCALE_TURRET_L 0.9f
 
 // Cano (Pipe)
-#define ENEMY_SCALE_PIPE_W   0.5f 
-#define ENEMY_SCALE_PIPE_L   0.70f 
+#define ENEMY_SCALE_PIPE_W   0.3f 
+#define ENEMY_SCALE_PIPE_L   1.0f 
 
 // --- ALTURAS (Y-RANGE) DO INIMIGO ---
 #define ENEMY_HULL_Y_MIN 0.6f

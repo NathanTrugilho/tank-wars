@@ -7,7 +7,7 @@
 #include <tank.h>
 #include <map.h>
 #include <mybib.h>
-
+#include <collision.h>
 #define MAX_BULLETS 100
 #define BULLET_SPEED 1.0f
 #define BULLET_SCALE_CORRECTION 0.15f

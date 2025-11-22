@@ -8,290 +8,274 @@
 
 #define RADIAN_FACTOR (3.14159265359 / 180.0)
 
-// ... (manter rotatePoint igual) ...
-Point2D rotatePoint(float x, float z, float angleRad) {
-    angleRad = -angleRad; 
-    Point2D res;
-    float c = cos(angleRad);
-    float s = sin(angleRad);
-    res.x = x * c - z * s;
-    res.z = x * s + z * c;
-    return res;
+// --- MATEMÁTICA VETORIAL 3D ---
+
+Point3D add(Point3D a, Point3D b) { return (Point3D){a.x + b.x, a.y + b.y, a.z + b.z}; }
+Point3D sub(Point3D a, Point3D b) { return (Point3D){a.x - b.x, a.y - b.y, a.z - b.z}; }
+float dot(Point3D a, Point3D b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+
+Point3D normalizeVector(Point3D v) {
+    float len = sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+    if(len < 0.0001f) return (Point3D){0,0,0};
+    return (Point3D){v.x/len, v.y/len, v.z/len};
 }
 
-// ... (manter getRotatedRect igual) ...
-RotatedRect getRotatedRect(const Box *localBox, float tx, float tz, float angleDeg, float scaleW, float scaleL) {
-    RotatedRect rect;
-    float angleRad = angleDeg * RADIAN_FACTOR;
-    float minX = localBox->minX; float maxX = localBox->maxX;
-    float minZ = localBox->minZ; float maxZ = localBox->maxZ;
-    float centerX = (minX + maxX) / 2.0f;
-    float centerZ = (minZ + maxZ) / 2.0f;
-    float sizeX = maxX - minX;
-    float sizeZ = maxZ - minZ;
-    float halfNewW = (sizeX * scaleW) / 2.0f;
-    float halfNewL = (sizeZ * scaleL) / 2.0f;
-    float x1 = centerX - halfNewW; float x2 = centerX + halfNewW;
-    float z1 = centerZ - halfNewL; float z2 = centerZ + halfNewL;
-    float localX[4] = { x1, x1, x2, x2 };
-    float localZ[4] = { z1, z2, z2, z1 };
-    for (int i = 0; i < 4; i++) {
-        Point2D p = rotatePoint(localX[i], localZ[i], angleRad);
-        rect.p[i].x = p.x + tx;
-        rect.p[i].z = p.z + tz;
+Point3D rotateX(Point3D p, float angleDeg) {
+    float rad = angleDeg * RADIAN_FACTOR; 
+    float c = cos(rad);
+    float s = sin(rad);
+    return (Point3D){ p.x, p.y * c - p.z * s, p.y * s + p.z * c };
+}
+
+Point3D rotateY(Point3D p, float angleDeg) {
+    float rad = -angleDeg * RADIAN_FACTOR; 
+    float c = cos(rad);
+    float s = sin(rad);
+    return (Point3D){ p.x * c - p.z * s, p.y, p.x * s + p.z * c };
+}
+
+// --- GERAÇÃO DA CAIXA 3D (OBB) ---
+
+CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz, 
+                             float angleYaw, float anglePitch, 
+                             float scaleW, float scaleL, 
+                             float yMinFixed, float yMaxFixed) {
+    CollisionBox cb;
+
+    float width = (localBox->maxX - localBox->minX) * scaleW;
+    float length = (localBox->maxZ - localBox->minZ) * scaleL;
+    float height = yMaxFixed - yMinFixed;
+
+    cb.halfSize[0] = width / 2.0f;
+    cb.halfSize[1] = height / 2.0f;
+    cb.halfSize[2] = length / 2.0f;
+
+    float localCenterY = (yMinFixed + yMaxFixed) / 2.0f;
+    
+    Point3D localPos = {
+        ((localBox->minX + localBox->maxX) / 2.0f) * scaleW,
+        localCenterY - ty, 
+        ((localBox->minZ + localBox->maxZ) / 2.0f) * scaleL
+    };
+
+    Point3D axisBase[3] = { {1,0,0}, {0,1,0}, {0,0,1} };
+    
+    for(int i=0; i<3; i++) {
+        Point3D tmp = axisBase[i];
+        if(fabs(anglePitch) > 0.001f) tmp = rotateX(tmp, anglePitch);
+        tmp = rotateY(tmp, angleYaw);
+        cb.axis[i] = normalizeVector(tmp);
     }
-    return rect;
-}
 
-// ... (manter checkSATCollision igual) ...
-int checkSATCollision(RotatedRect r1, RotatedRect r2) {
-    RotatedRect *rects[2] = { &r1, &r2 };
-    for (int i = 0; i < 2; i++) {
-        RotatedRect *curr = rects[i];
-        for (int j = 0; j < 2; j++) {
-            Point2D p1 = curr->p[j];
-            Point2D p2 = curr->p[(j + 1) % 4];
-            float edgeX = p2.x - p1.x; float edgeZ = p2.z - p1.z;
-            float axisX = -edgeZ; float axisZ = edgeX;
-            float len = sqrt(axisX * axisX + axisZ * axisZ);
-            if (len < 0.0001f) continue;
-            axisX /= len; axisZ /= len;
-            float minA = FLT_MAX, maxA = -FLT_MAX;
-            for (int k = 0; k < 4; k++) {
-                float proj = r1.p[k].x * axisX + r1.p[k].z * axisZ;
-                if (proj < minA) minA = proj;
-                if (proj > maxA) maxA = proj;
+    Point3D centerRot = localPos;
+    if(fabs(anglePitch) > 0.001f) centerRot = rotateX(centerRot, anglePitch);
+    centerRot = rotateY(centerRot, angleYaw);
+
+    cb.center.x = centerRot.x + tx;
+    cb.center.y = centerRot.y + ty; 
+    cb.center.z = centerRot.z + tz;
+
+    int idx = 0;
+    for(int i=-1; i<=1; i+=2) {
+        for(int j=-1; j<=1; j+=2) {
+            for(int k=-1; k<=1; k+=2) {
+                Point3D v = cb.center;
+                for(int d=0; d<3; d++) {
+                    float s = (d==0 ? i : (d==1 ? j : k)) * cb.halfSize[d];
+                    v.x += cb.axis[d].x * s;
+                    v.y += cb.axis[d].y * s;
+                    v.z += cb.axis[d].z * s;
+                }
+                cb.corners[idx++] = v;
             }
-            float minB = FLT_MAX, maxB = -FLT_MAX;
-            for (int k = 0; k < 4; k++) {
-                float proj = r2.p[k].x * axisX + r2.p[k].z * axisZ;
-                if (proj < minB) minB = proj;
-                if (proj > maxB) maxB = proj;
-            }
-            if (maxA < minB || maxB < minA) return 0; 
         }
     }
-    return 1; 
+    return cb;
 }
 
-// --- NOVO: VERIFICAÇÃO DE ALTURA ---
-// Retorna 1 se houver sobreposição vertical, 0 caso contrário.
-int checkVerticalOverlap(float minY1, float maxY1, float minY2, float maxY2) {
-    // Lógica clássica de intersecção 1D
-    return (minY1 <= maxY2 && maxY1 >= minY2);
-}
+// --- COLISÃO SAT 3D ---
 
-// Função auxiliar que combina Altura + SAT
-int checkCollision3D(RotatedRect *r1, float min1, float max1, 
-                     RotatedRect *r2, float min2, float max2) {
-    // 1. Primeiro teste rápido: Altura bate?
-    if (!checkVerticalOverlap(min1, max1, min2, max2)) {
-        return 0; // Alturas diferentes, nem precisa testar X/Z!
+int getSeparation(CollisionBox *a, CollisionBox *b, Point3D axis) {
+    float minA = FLT_MAX, maxA = -FLT_MAX;
+    float minB = FLT_MAX, maxB = -FLT_MAX;
+
+    for(int i=0; i<8; i++) {
+        float p = dot(a->corners[i], axis);
+        if(p < minA) minA = p;
+        if(p > maxA) maxA = p;
     }
-    // 2. Teste caro: Geometria bate?
-    return checkSATCollision(*r1, *r2);
+    for(int i=0; i<8; i++) {
+        float p = dot(b->corners[i], axis);
+        if(p < minB) minB = p;
+        if(p > maxB) maxB = p;
+    }
+    return (maxA < minB || maxB < minA);
 }
 
-// Verifica intersecção entre todas as partes considerando ALTURA
-int checkPartsIntersection(
-    RotatedRect *pHull, RotatedRect *pTurret, RotatedRect *pPipe,
-    RotatedRect *eHull, RotatedRect *eTurret, RotatedRect *ePipe
-) {
-    // --- PLAYER HULL vs INIMIGO ... ---
-    if (checkCollision3D(pHull, HULL_Y_MIN, HULL_Y_MAX, eHull, HULL_Y_MIN, HULL_Y_MAX)) return 1;
-    if (checkCollision3D(pHull, HULL_Y_MIN, HULL_Y_MAX, eTurret, TURRET_Y_MIN, TURRET_Y_MAX)) return 1;
-    if (checkCollision3D(pHull, HULL_Y_MIN, HULL_Y_MAX, ePipe, PIPE_Y_MIN, PIPE_Y_MAX)) return 1;
+int checkCollisionOBB(CollisionBox *a, CollisionBox *b) {
+    if(getSeparation(a, b, a->axis[0])) return 0;
+    if(getSeparation(a, b, a->axis[1])) return 0;
+    if(getSeparation(a, b, a->axis[2])) return 0;
 
-    // --- PLAYER TURRET vs INIMIGO ... ---
-    if (checkCollision3D(pTurret, TURRET_Y_MIN, TURRET_Y_MAX, eHull, HULL_Y_MIN, HULL_Y_MAX)) return 1;
-    if (checkCollision3D(pTurret, TURRET_Y_MIN, TURRET_Y_MAX, eTurret, TURRET_Y_MIN, TURRET_Y_MAX)) return 1;
-    if (checkCollision3D(pTurret, TURRET_Y_MIN, TURRET_Y_MAX, ePipe, PIPE_Y_MIN, PIPE_Y_MAX)) return 1;
+    if(getSeparation(a, b, b->axis[0])) return 0;
+    if(getSeparation(a, b, b->axis[1])) return 0;
+    if(getSeparation(a, b, b->axis[2])) return 0;
 
-    // --- PLAYER PIPE vs INIMIGO ... ---
-    // AQUI ESTÁ A MÁGICA: 
-    // checkCollision3D(pPipe, ..., eHull, ...) vai comparar PIPE_MIN(1.0) com HULL_MAX(0.9).
-    // Como 1.0 > 0.9, não há overlap vertical. A colisão é ignorada!
-    
-    if (checkCollision3D(pPipe, PIPE_Y_MIN, PIPE_Y_MAX, eHull, HULL_Y_MIN, HULL_Y_MAX)) return 1;
-    if (checkCollision3D(pPipe, PIPE_Y_MIN, PIPE_Y_MAX, eTurret, TURRET_Y_MIN, TURRET_Y_MAX)) return 1;
-    if (checkCollision3D(pPipe, PIPE_Y_MIN, PIPE_Y_MAX, ePipe, PIPE_Y_MIN, PIPE_Y_MAX)) return 1;
-
-    return 0;
+    return 1;
 }
 
-// --- AS FUNÇÕES PRINCIPAIS FICAM IGUAIS (Elas só chamam checkPartsIntersection) ---
+// --- HELPERS ---
+
+CollisionBox makeHull(float x, float z, float angle) {
+    return getCollisionBox(&hullModel.box, x, tankY, z, angle, 0.0f, SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
+}
+CollisionBox makeTurret(float x, float z, float angle) {
+    return getCollisionBox(&turretModel.box, x, tankY, z, angle, 0.0f, SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
+}
+CollisionBox makePipe(float x, float z, float tAngle, float pAngle) {
+    return getCollisionBox(&pipeModel.box, x, tankY, z, tAngle, pAngle, SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
+}
+
+CollisionBox makeEnemyHull(Enemy *e) {
+    return getCollisionBox(&enemyHullModel.box, e->x, tankY, e->z, e->hullAngle, 0.0f, ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
+}
+CollisionBox makeEnemyTurret(Enemy *e) {
+    float angle = e->hullAngle + e->turretAngle;
+    return getCollisionBox(&enemyTurretModel.box, e->x, tankY, e->z, angle, 0.0f, ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
+}
+CollisionBox makeEnemyPipe(Enemy *e) {
+    float angle = e->hullAngle + e->turretAngle;
+    return getCollisionBox(&enemyPipeModel.box, e->x, tankY, e->z, angle, 0.0f, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
+}
+
+// --- FUNÇÕES PRINCIPAIS ---
 
 int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg) {
-    // PLAYER usa constantes de collision.h
-    RotatedRect pHull   = getRotatedRect(&hullModel.box, nextX, nextZ, hullAngleDeg, SCALE_HULL_W, SCALE_HULL_L);
-    RotatedRect pTurret = getRotatedRect(&turretModel.box, nextX, nextZ, turretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
-    RotatedRect pPipe   = getRotatedRect(&pipeModel.box, nextX, nextZ, turretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
+    CollisionBox pHull = makeHull(nextX, nextZ, hullAngleDeg);
+    CollisionBox pTurret = makeTurret(nextX, nextZ, turretAngle);
+    CollisionBox pPipe = makePipe(nextX, nextZ, turretAngle, pipeAngle);
 
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
-        float ex = enemies[i].x; float ez = enemies[i].z;
         
-        // INIMIGO usa constantes de enemy.h
-        RotatedRect eHull = getRotatedRect(&enemyHullModel.box, ex, ez, enemies[i].hullAngle, ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L);
-        
-        float eGlobT = enemies[i].hullAngle + enemies[i].turretAngle;
-        RotatedRect eTurret = getRotatedRect(&enemyTurretModel.box, ex, ez, eGlobT, ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L);
-        RotatedRect ePipe = getRotatedRect(&enemyPipeModel.box, ex, ez, eGlobT, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L);
+        CollisionBox eHull = makeEnemyHull(&enemies[i]);
+        CollisionBox eTurret = makeEnemyTurret(&enemies[i]);
+        CollisionBox ePipe = makeEnemyPipe(&enemies[i]);
 
-        // Passamos as alturas corretas aqui também
-        if (checkCollision3D(&pHull, HULL_Y_MIN, HULL_Y_MAX, &eHull, ENEMY_HULL_Y_MIN, ENEMY_HULL_Y_MAX)) return 1;
-        if (checkCollision3D(&pHull, HULL_Y_MIN, HULL_Y_MAX, &eTurret, ENEMY_TURRET_Y_MIN, ENEMY_TURRET_Y_MAX)) return 1;
-        if (checkCollision3D(&pHull, HULL_Y_MIN, HULL_Y_MAX, &ePipe, ENEMY_PIPE_Y_MIN, ENEMY_PIPE_Y_MAX)) return 1;
-        
-        // Repetir logica para pTurret e pPipe contra as partes do inimigo...
-        // Simplifiquei aqui chamando checkPartsIntersection se você adaptou ela para aceitar alturas,
-        // mas como as alturas agora são diferentes (Player vs Enemy), o ideal é fazer checkCollision3D direto.
-        
-        // Teste Player Turret
-        if (checkCollision3D(&pTurret, TURRET_Y_MIN, TURRET_Y_MAX, &eHull, ENEMY_HULL_Y_MIN, ENEMY_HULL_Y_MAX)) return 1;
-        if (checkCollision3D(&pTurret, TURRET_Y_MIN, TURRET_Y_MAX, &eTurret, ENEMY_TURRET_Y_MIN, ENEMY_TURRET_Y_MAX)) return 1;
-        if (checkCollision3D(&pTurret, TURRET_Y_MIN, TURRET_Y_MAX, &ePipe, ENEMY_PIPE_Y_MIN, ENEMY_PIPE_Y_MAX)) return 1;
-
-        // Teste Player Pipe
-        if (checkCollision3D(&pPipe, PIPE_Y_MIN, PIPE_Y_MAX, &eHull, ENEMY_HULL_Y_MIN, ENEMY_HULL_Y_MAX)) return 1;
-        if (checkCollision3D(&pPipe, PIPE_Y_MIN, PIPE_Y_MAX, &eTurret, ENEMY_TURRET_Y_MIN, ENEMY_TURRET_Y_MAX)) return 1;
-        if (checkCollision3D(&pPipe, PIPE_Y_MIN, PIPE_Y_MAX, &ePipe, ENEMY_PIPE_Y_MIN, ENEMY_PIPE_Y_MAX)) return 1;
+        if (checkCollisionOBB(&pHull, &eHull) || checkCollisionOBB(&pHull, &eTurret) || checkCollisionOBB(&pHull, &ePipe)) return 1;
+        if (checkCollisionOBB(&pTurret, &eHull) || checkCollisionOBB(&pTurret, &eTurret) || checkCollisionOBB(&pTurret, &ePipe)) return 1;
+        if (checkCollisionOBB(&pPipe, &eHull) || checkCollisionOBB(&pPipe, &eTurret) || checkCollisionOBB(&pPipe, &ePipe)) return 1;
     }
     return 0;
 }
+
 int wouldCollideTurret(float nextTurretAngle) {
-    // 1. Gera retângulos do PLAYER
-    // A Base (Hull) usa a posição e ângulo ATUAIS (não estamos movendo a base)
-    RotatedRect pHull   = getRotatedRect(&hullModel.box, tankX, tankZ, hullAngle, SCALE_HULL_W, SCALE_HULL_L);
-    
-    // A Torre e o Cano usam o PRÓXIMO ângulo (nextTurretAngle) para prever a colisão
-    RotatedRect pTurret = getRotatedRect(&turretModel.box, tankX, tankZ, nextTurretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
-    RotatedRect pPipe   = getRotatedRect(&pipeModel.box, tankX, tankZ, nextTurretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
+    CollisionBox pHull = makeHull(tankX, tankZ, hullAngle);
+    CollisionBox pTurret = makeTurret(tankX, tankZ, nextTurretAngle);
+    CollisionBox pPipe = makePipe(tankX, tankZ, nextTurretAngle, pipeAngle);
 
-    // 2. Verifica contra todos os inimigos
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
-
-        float ex = enemies[i].x; 
-        float ez = enemies[i].z;
-
-        // Gera retângulos do INIMIGO usando as constantes DELE (ENEMY_SCALE_...)
-        RotatedRect eHull = getRotatedRect(&enemyHullModel.box, ex, ez, enemies[i].hullAngle, ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L);
         
-        float eGlobT = enemies[i].hullAngle + enemies[i].turretAngle;
-        RotatedRect eTurret = getRotatedRect(&enemyTurretModel.box, ex, ez, eGlobT, ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L);
-        RotatedRect ePipe = getRotatedRect(&enemyPipeModel.box, ex, ez, eGlobT, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L);
+        CollisionBox eHull = makeEnemyHull(&enemies[i]);
+        CollisionBox eTurret = makeEnemyTurret(&enemies[i]);
+        CollisionBox ePipe = makeEnemyPipe(&enemies[i]);
 
-        // 3. Verifica colisões cruzadas (Player vs Enemy) considerando ALTURAS (Y-Range)
-
-        // --- Player HULL vs Inimigo ---
-        if (checkCollision3D(&pHull, HULL_Y_MIN, HULL_Y_MAX, &eHull, ENEMY_HULL_Y_MIN, ENEMY_HULL_Y_MAX)) return 1;
-        if (checkCollision3D(&pHull, HULL_Y_MIN, HULL_Y_MAX, &eTurret, ENEMY_TURRET_Y_MIN, ENEMY_TURRET_Y_MAX)) return 1;
-        if (checkCollision3D(&pHull, HULL_Y_MIN, HULL_Y_MAX, &ePipe, ENEMY_PIPE_Y_MIN, ENEMY_PIPE_Y_MAX)) return 1;
-
-        // --- Player TURRET vs Inimigo ---
-        if (checkCollision3D(&pTurret, TURRET_Y_MIN, TURRET_Y_MAX, &eHull, ENEMY_HULL_Y_MIN, ENEMY_HULL_Y_MAX)) return 1;
-        if (checkCollision3D(&pTurret, TURRET_Y_MIN, TURRET_Y_MAX, &eTurret, ENEMY_TURRET_Y_MIN, ENEMY_TURRET_Y_MAX)) return 1;
-        if (checkCollision3D(&pTurret, TURRET_Y_MIN, TURRET_Y_MAX, &ePipe, ENEMY_PIPE_Y_MIN, ENEMY_PIPE_Y_MAX)) return 1;
-
-        // --- Player PIPE vs Inimigo ---
-        if (checkCollision3D(&pPipe, PIPE_Y_MIN, PIPE_Y_MAX, &eHull, ENEMY_HULL_Y_MIN, ENEMY_HULL_Y_MAX)) return 1;
-        if (checkCollision3D(&pPipe, PIPE_Y_MIN, PIPE_Y_MAX, &eTurret, ENEMY_TURRET_Y_MIN, ENEMY_TURRET_Y_MAX)) return 1;
-        if (checkCollision3D(&pPipe, PIPE_Y_MIN, PIPE_Y_MAX, &ePipe, ENEMY_PIPE_Y_MIN, ENEMY_PIPE_Y_MAX)) return 1;
+        if (checkCollisionOBB(&pTurret, &eHull) || checkCollisionOBB(&pTurret, &eTurret) || checkCollisionOBB(&pTurret, &ePipe)) return 1;
+        if (checkCollisionOBB(&pPipe, &eHull) || checkCollisionOBB(&pPipe, &eTurret) || checkCollisionOBB(&pPipe, &ePipe)) return 1;
+        if (checkCollisionOBB(&pHull, &eHull) || checkCollisionOBB(&pHull, &eTurret) || checkCollisionOBB(&pHull, &ePipe)) return 1;
     }
-
-    return 0; // Nenhuma colisão detectada
+    return 0;
 }
+
+// Esta função verifica se o inimigo 'enemyIndex', ao girar para 'nextTurretAngle',
+// colide com o PLAYER ou com OUTROS INIMIGOS.
 int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle) {
-    float ex = enemies[enemyIndex].x;
-    float ez = enemies[enemyIndex].z;
-    float eh = enemies[enemyIndex].hullAngle;
+    // 1. Cria o "Fantasma" do inimigo atual na nova posição/ângulo
+    Enemy temp = enemies[enemyIndex];
+    temp.turretAngle = nextTurretAngle;
 
-    // Gera retângulos do INIMIGO alvo (quem está se mexendo)
-    RotatedRect eHull = getRotatedRect(&enemyHullModel.box, ex, ez, eh, ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L);
-    float propGlob = eh + nextTurretAngle;
-    RotatedRect eTurret = getRotatedRect(&enemyTurretModel.box, ex, ez, propGlob, ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L);
-    RotatedRect ePipe = getRotatedRect(&enemyPipeModel.box, ex, ez, propGlob, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L);
+    CollisionBox eHull = makeEnemyHull(&temp);
+    CollisionBox eTurret = makeEnemyTurret(&temp);
+    CollisionBox ePipe = makeEnemyPipe(&temp);
 
-    // Gera retângulos do PLAYER (obstáculo)
-    RotatedRect pHull = getRotatedRect(&hullModel.box, tankX, tankZ, hullAngle, SCALE_HULL_W, SCALE_HULL_L);
-    RotatedRect pTurret = getRotatedRect(&turretModel.box, tankX, tankZ, turretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
-    RotatedRect pPipe = getRotatedRect(&pipeModel.box, tankX, tankZ, turretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
+    // 2. Verifica Colisão contra o PLAYER
+    CollisionBox pHull = makeHull(tankX, tankZ, hullAngle);
+    CollisionBox pTurret = makeTurret(tankX, tankZ, turretAngle);
+    CollisionBox pPipe = makePipe(tankX, tankZ, turretAngle, pipeAngle);
 
-    // Verifica colisão usando as alturas CORRETAS de cada um
-    // Inimigo (e...) vs Player (p...)
-    
-    // eHull vs Player
-    if (checkCollision3D(&eHull, ENEMY_HULL_Y_MIN, ENEMY_HULL_Y_MAX, &pHull, HULL_Y_MIN, HULL_Y_MAX)) return 1;
-    if (checkCollision3D(&eHull, ENEMY_HULL_Y_MIN, ENEMY_HULL_Y_MAX, &pTurret, TURRET_Y_MIN, TURRET_Y_MAX)) return 1;
-    if (checkCollision3D(&eHull, ENEMY_HULL_Y_MIN, ENEMY_HULL_Y_MAX, &pPipe, PIPE_Y_MIN, PIPE_Y_MAX)) return 1;
+    if (checkCollisionOBB(&eHull, &pPipe) || checkCollisionOBB(&eTurret, &pPipe) || checkCollisionOBB(&ePipe, &pPipe)) return 1;
+    if (checkCollisionOBB(&eTurret, &pHull) || checkCollisionOBB(&eTurret, &pTurret)) return 1;
+    if (checkCollisionOBB(&ePipe, &pHull) || checkCollisionOBB(&ePipe, &pTurret)) return 1;
 
-    // eTurret vs Player
-    if (checkCollision3D(&eTurret, ENEMY_TURRET_Y_MIN, ENEMY_TURRET_Y_MAX, &pHull, HULL_Y_MIN, HULL_Y_MAX)) return 1;
-    if (checkCollision3D(&eTurret, ENEMY_TURRET_Y_MIN, ENEMY_TURRET_Y_MAX, &pTurret, TURRET_Y_MIN, TURRET_Y_MAX)) return 1;
-    if (checkCollision3D(&eTurret, ENEMY_TURRET_Y_MIN, ENEMY_TURRET_Y_MAX, &pPipe, PIPE_Y_MIN, PIPE_Y_MAX)) return 1;
+    // 3. --- NOVO: VERIFICAÇÃO INIMIGO vs INIMIGO ---
+    for(int i = 0; i < MAX_ENEMIES; i++) {
+        // Não checar contra si mesmo e nem contra inimigos mortos
+        if (i == enemyIndex || !enemies[i].alive) continue;
 
-    // ePipe vs Player
-    if (checkCollision3D(&ePipe, ENEMY_PIPE_Y_MIN, ENEMY_PIPE_Y_MAX, &pHull, HULL_Y_MIN, HULL_Y_MAX)) return 1;
-    if (checkCollision3D(&ePipe, ENEMY_PIPE_Y_MIN, ENEMY_PIPE_Y_MAX, &pTurret, TURRET_Y_MIN, TURRET_Y_MAX)) return 1;
-    if (checkCollision3D(&ePipe, ENEMY_PIPE_Y_MIN, ENEMY_PIPE_Y_MAX, &pPipe, PIPE_Y_MIN, PIPE_Y_MAX)) return 1;
+        CollisionBox otherHull = makeEnemyHull(&enemies[i]);
+        CollisionBox otherTurret = makeEnemyTurret(&enemies[i]);
+        CollisionBox otherPipe = makeEnemyPipe(&enemies[i]);
+
+        // Verifica se minhas partes (e...) batem nas partes do outro (other...)
+        
+        // Minha Torre bate no outro?
+        if (checkCollisionOBB(&eTurret, &otherHull) || checkCollisionOBB(&eTurret, &otherTurret) || checkCollisionOBB(&eTurret, &otherPipe)) return 1;
+        
+        // Meu Cano bate no outro?
+        if (checkCollisionOBB(&ePipe, &otherHull) || checkCollisionOBB(&ePipe, &otherTurret) || checkCollisionOBB(&ePipe, &otherPipe)) return 1;
+        
+        // (Opcional) Minha Base bate no outro? 
+        // Se os inimigos estiverem parados e só girando a torre, a base não se mexe, 
+        // mas se você adicionar movimento no futuro, é bom ter:
+        if (checkCollisionOBB(&eHull, &otherHull) || checkCollisionOBB(&eHull, &otherTurret) || checkCollisionOBB(&eHull, &otherPipe)) return 1;
+    }
 
     return 0;
 }
-// --- DEBUG VISUAL ATUALIZADO (Desenha na altura certa) ---
-void drawDebugHitbox(RotatedRect r, float yMin, float yMax) {
+
+// --- DEBUG VISUAL ---
+
+void drawDebugBox(CollisionBox b) {
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
     glLineWidth(2.0f);
-    glColor3f(1.0f, 0.0f, 0.0f); // Vermelho
+    glColor3f(1.0f, 0.0f, 0.0f); // VERMELHO
 
-    // Desenha a base (yMin)
-    glBegin(GL_LINE_LOOP);
-        for(int i=0; i<4; i++) glVertex3f(r.p[i].x, yMin, r.p[i].z);
-    glEnd();
-
-    // Desenha o topo (yMax)
-    glBegin(GL_LINE_LOOP);
-        for(int i=0; i<4; i++) glVertex3f(r.p[i].x, yMax, r.p[i].z);
-    glEnd();
-
-    // Conecta os cantos (linhas verticais)
     glBegin(GL_LINES);
-        for(int i=0; i<4; i++) {
-            glVertex3f(r.p[i].x, yMin, r.p[i].z);
-            glVertex3f(r.p[i].x, yMax, r.p[i].z);
-        }
-    glEnd();
+    // Base
+    glVertex3f(b.corners[0].x, b.corners[0].y, b.corners[0].z); glVertex3f(b.corners[1].x, b.corners[1].y, b.corners[1].z);
+    glVertex3f(b.corners[1].x, b.corners[1].y, b.corners[1].z); glVertex3f(b.corners[3].x, b.corners[3].y, b.corners[3].z);
+    glVertex3f(b.corners[3].x, b.corners[3].y, b.corners[3].z); glVertex3f(b.corners[2].x, b.corners[2].y, b.corners[2].z);
+    glVertex3f(b.corners[2].x, b.corners[2].y, b.corners[2].z); glVertex3f(b.corners[0].x, b.corners[0].y, b.corners[0].z);
     
+    // Topo
+    glVertex3f(b.corners[4].x, b.corners[4].y, b.corners[4].z); glVertex3f(b.corners[5].x, b.corners[5].y, b.corners[5].z);
+    glVertex3f(b.corners[5].x, b.corners[5].y, b.corners[5].z); glVertex3f(b.corners[7].x, b.corners[7].y, b.corners[7].z);
+    glVertex3f(b.corners[7].x, b.corners[7].y, b.corners[7].z); glVertex3f(b.corners[6].x, b.corners[6].y, b.corners[6].z);
+    glVertex3f(b.corners[6].x, b.corners[6].y, b.corners[6].z); glVertex3f(b.corners[4].x, b.corners[4].y, b.corners[4].z);
+    
+    // Laterais
+    glVertex3f(b.corners[0].x, b.corners[0].y, b.corners[0].z); glVertex3f(b.corners[4].x, b.corners[4].y, b.corners[4].z);
+    glVertex3f(b.corners[1].x, b.corners[1].y, b.corners[1].z); glVertex3f(b.corners[5].x, b.corners[5].y, b.corners[5].z);
+    glVertex3f(b.corners[2].x, b.corners[2].y, b.corners[2].z); glVertex3f(b.corners[6].x, b.corners[6].y, b.corners[6].z);
+    glVertex3f(b.corners[3].x, b.corners[3].y, b.corners[3].z); glVertex3f(b.corners[7].x, b.corners[7].y, b.corners[7].z);
+    glEnd();
+
     glEnable(GL_LIGHTING); 
 }
 
 void debugDrawPlayerCollision() {
-    RotatedRect pHull   = getRotatedRect(&hullModel.box, tankX, tankZ, hullAngle, SCALE_HULL_W, SCALE_HULL_L);
-    RotatedRect pTurret = getRotatedRect(&turretModel.box, tankX, tankZ, turretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
-    RotatedRect pPipe   = getRotatedRect(&pipeModel.box, tankX, tankZ, turretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
-    
-    drawDebugHitbox(pHull, HULL_Y_MIN, HULL_Y_MAX);
-    drawDebugHitbox(pTurret, TURRET_Y_MIN, TURRET_Y_MAX);
-    drawDebugHitbox(pPipe, PIPE_Y_MIN, PIPE_Y_MAX);
+    drawDebugBox(makeHull(tankX, tankZ, hullAngle));
+    drawDebugBox(makeTurret(tankX, tankZ, turretAngle));
+    drawDebugBox(makePipe(tankX, tankZ, turretAngle, pipeAngle));
 }
+
 void debugDrawEnemyCollision() {
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
-
-        float ex = enemies[i].x;
-        float ez = enemies[i].z;
-        
-        // Recalcula as caixas usando as constantes do ENEMY.H
-        RotatedRect eHull = getRotatedRect(&enemyHullModel.box, ex, ez, enemies[i].hullAngle, ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L);
-        
-        float eGlobT = enemies[i].hullAngle + enemies[i].turretAngle;
-        RotatedRect eTurret = getRotatedRect(&enemyTurretModel.box, ex, ez, eGlobT, ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L);
-        RotatedRect ePipe = getRotatedRect(&enemyPipeModel.box, ex, ez, eGlobT, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L);
-
-        // Desenha usando as alturas do ENEMY.H
-        drawDebugHitbox(eHull, ENEMY_HULL_Y_MIN, ENEMY_HULL_Y_MAX);
-        drawDebugHitbox(eTurret, ENEMY_TURRET_Y_MIN, ENEMY_TURRET_Y_MAX);
-        drawDebugHitbox(ePipe, ENEMY_PIPE_Y_MIN, ENEMY_PIPE_Y_MAX);
+        drawDebugBox(makeEnemyHull(&enemies[i]));
+        drawDebugBox(makeEnemyTurret(&enemies[i]));
+        drawDebugBox(makeEnemyPipe(&enemies[i]));
     }
 }

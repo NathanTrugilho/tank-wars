@@ -11,8 +11,8 @@ void display() {
     drawTank();
     drawBullet();
     
-    //debugDrawPlayerCollision();
-    //debugDrawEnemyCollision();
+    debugDrawPlayerCollision();
+    debugDrawEnemyCollision();
 
     glutSwapBuffers();
 }
