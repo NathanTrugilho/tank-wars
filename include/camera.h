@@ -19,15 +19,17 @@
 // Variável de Estado (0 = Tanque, 1 = Livre)
 extern int freeCameraMode;
 
-// Posição e Rotação da Câmera Livre
+extern float fcAngleH;
+extern float fcAngleV;
 extern float fcX, fcY, fcZ;
-extern float fcAngleH, fcAngleV;
 
 void updateCamera();
 
 void updateMinimapCamera();
 
 void drawMapSun();
+
+void CalculateFreeCamNewPosition();
 
 #endif
 

@@ -16,12 +16,11 @@ void display() {
     drawEnemies();
     drawTank();
     drawBullet();
-    
-    // Desenha balas inimigas
     drawEnemyBullets();
 
     debugDrawPlayerCollision();
     debugDrawEnemyCollision();
+
     // ====================================
     // MINIMAPA 
     // ====================================
@@ -73,8 +72,6 @@ void timer(int value) {
     updateTank();
     updateEnemies(tankX, tankZ);
     updateBullets();
-    
-    // Atualiza balas inimigas
     updateEnemyBullets();
 
     glutPostRedisplay();
