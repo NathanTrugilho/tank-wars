@@ -8,7 +8,7 @@ void updateCamera()
     gluPerspective(60, ratio, 0.1, 100);
 
     glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	  glLoadIdentity();
 
     float camX = tankX + sinf(turretAngle * 3.14159 / 180.0) * CAM_FACTOR_X;  
     float camY = CAM_FACTOR_Y - (pipeAngle * 0.1f); 
