@@ -8,7 +8,7 @@
 
 #define RADIAN_FACTOR (3.14159265359 / 180.0)
 
-// --- MATEMÁTICA VETORIAL 3D ---
+// MATEMÁTICA VETORIAL 3D
 
 Point3D add(Point3D a, Point3D b) { return (Point3D){a.x + b.x, a.y + b.y, a.z + b.z}; }
 Point3D sub(Point3D a, Point3D b) { return (Point3D){a.x - b.x, a.y - b.y, a.z - b.z}; }
@@ -34,8 +34,7 @@ Point3D rotateY(Point3D p, float angleDeg) {
     return (Point3D){ p.x * c - p.z * s, p.y, p.x * s + p.z * c };
 }
 
-// --- GERAÇÃO DA CAIXA 3D (OBB) ---
-
+// GERAÇÃO DA CAIXA 3D (OBB)
 CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz, 
                              float angleYaw, float anglePitch, 
                              float scaleW, float scaleL, 
@@ -93,7 +92,7 @@ CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz,
     return cb;
 }
 
-// --- COLISÃO SAT 3D ---
+// COLISÃO SAT 3D
 
 int getSeparation(CollisionBox *a, CollisionBox *b, Point3D axis) {
     float minA = FLT_MAX, maxA = -FLT_MAX;
@@ -124,7 +123,7 @@ int checkCollisionOBB(CollisionBox *a, CollisionBox *b) {
     return 1;
 }
 
-// --- HELPERS ---
+// HELPERS
 
 CollisionBox makeHull(float x, float z, float angle) {
     return getCollisionBox(&hullModel.box, x, tankY, z, angle, 0.0f, SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
@@ -148,7 +147,7 @@ CollisionBox makeEnemyPipe(Enemy *e) {
     return getCollisionBox(&enemyPipeModel.box, e->x, tankY, e->z, angle, 0.0f, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
 }
 
-// --- FUNÇÕES PRINCIPAIS ---
+// FUNÇÕES PRINCIPAIS
 
 int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg) {
     CollisionBox pHull = makeHull(nextX, nextZ, hullAngleDeg);
@@ -191,7 +190,7 @@ int wouldCollideTurret(float nextTurretAngle) {
 // Esta função verifica se o inimigo 'enemyIndex', ao girar para 'nextTurretAngle',
 // colide com o PLAYER ou com OUTROS INIMIGOS.
 int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle) {
-    // 1. Cria o "Fantasma" do inimigo atual na nova posição/ângulo
+    // Cria o "Fantasma" do inimigo atual na nova posição/ângulo
     Enemy temp = enemies[enemyIndex];
     temp.turretAngle = nextTurretAngle;
 
@@ -199,7 +198,7 @@ int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle) {
     CollisionBox eTurret = makeEnemyTurret(&temp);
     CollisionBox ePipe = makeEnemyPipe(&temp);
 
-    // 2. Verifica Colisão contra o PLAYER
+    // Verifica Colisão contra o PLAYER
     CollisionBox pHull = makeHull(tankX, tankZ, hullAngle);
     CollisionBox pTurret = makeTurret(tankX, tankZ, turretAngle);
     CollisionBox pPipe = makePipe(tankX, tankZ, turretAngle, pipeAngle);
@@ -208,7 +207,7 @@ int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle) {
     if (checkCollisionOBB(&eTurret, &pHull) || checkCollisionOBB(&eTurret, &pTurret)) return 1;
     if (checkCollisionOBB(&ePipe, &pHull) || checkCollisionOBB(&ePipe, &pTurret)) return 1;
 
-    // 3. --- NOVO: VERIFICAÇÃO INIMIGO vs INIMIGO ---
+    // VERIFICAÇÃO INIMIGO vs INIMIGO
     for(int i = 0; i < MAX_ENEMIES; i++) {
         // Não checar contra si mesmo e nem contra inimigos mortos
         if (i == enemyIndex || !enemies[i].alive) continue;
@@ -225,16 +224,13 @@ int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle) {
         // Meu Cano bate no outro?
         if (checkCollisionOBB(&ePipe, &otherHull) || checkCollisionOBB(&ePipe, &otherTurret) || checkCollisionOBB(&ePipe, &otherPipe)) return 1;
         
-        // (Opcional) Minha Base bate no outro? 
-        // Se os inimigos estiverem parados e só girando a torre, a base não se mexe, 
-        // mas se você adicionar movimento no futuro, é bom ter:
         if (checkCollisionOBB(&eHull, &otherHull) || checkCollisionOBB(&eHull, &otherTurret) || checkCollisionOBB(&eHull, &otherPipe)) return 1;
     }
 
     return 0;
 }
 
-// --- DEBUG VISUAL ---
+// DEBUG VISUAL
 
 void drawDebugBox(CollisionBox b) {
     glDisable(GL_LIGHTING);

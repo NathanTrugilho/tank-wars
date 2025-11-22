@@ -145,7 +145,7 @@ void updateEnemies(float playerX, float playerZ) {
         int seesPlayer = canSeePlayer(&enemies[i], playerX, playerZ);
         
         if (seesPlayer) {
-            // --- PERSEGUIR E ATIRAR ---
+            // PERSEGUIR E ATIRAR
             
             // Lógica de tiro
             if (now - enemies[i].lastShootTime > ENEMY_SHOOT_DELAY) {
@@ -184,7 +184,7 @@ void updateEnemies(float playerX, float playerZ) {
             nextZ -= cosf(rad) * moveSpeed;
 
         } else {
-            // --- PATRULHAR ---
+            // PATRULHAR
             enemies[i].wanderTimer--;
             if (enemies[i].wanderTimer <= 0) {
                 enemies[i].wanderTimer = 60 + (rand() % 120); 

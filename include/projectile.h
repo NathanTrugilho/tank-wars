@@ -3,8 +3,7 @@
 
 #include <math.h>
 #include <time.h>
-// Forward declaration para evitar inclusão circular se necessário, 
-// mas mantendo seus includes originais:
+// Forward declaration para evitar inclusão circular se necessário
 #include <enemy.h> 
 #include <tank.h>
 #include <map.h>
@@ -36,7 +35,7 @@ extern ObjModel shellModel;
 // Atualiza bullets do jogador
 void updateBullets();
 
-// --- NOVO: Gerenciamento de balas inimigas ---
+// Gerenciamento de balas inimigas 
 void initEnemyBullets();
 void updateEnemyBullets();
 void drawEnemyBullets();

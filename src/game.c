@@ -11,7 +11,7 @@ void display() {
     drawTank();
     drawBullet();
     
-    // NOVO: Desenhar balas inimigas
+    // Desenha balas inimigas
     drawEnemyBullets();
 
     debugDrawPlayerCollision();
@@ -33,7 +33,7 @@ void timer(int value) {
     updateEnemies(tankX, tankZ);
     updateBullets();
     
-    // NOVO: Atualizar balas inimigas
+    // Atualiza balas inimigas
     updateEnemyBullets();
 
     glutPostRedisplay();

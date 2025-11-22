@@ -10,7 +10,7 @@ float fcAngleV = 0.0f;
 
 void updateCamera()
 {
-    // Configuração da projeção (Mantida igual)
+    // Configuração da projeção 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60, ratio, 0.1, 100); // ratio vem de game.h (extern)
@@ -19,7 +19,7 @@ void updateCamera()
     glLoadIdentity();
 
     if (freeCameraMode) {
-        // --- LÓGICA DA CÂMERA LIVRE ---
+        // LÓGICA DA CÂMERA LIVRE 
         
         // Controles de Rotação (Setinhas)
         if (specialKeyStates[GLUT_KEY_LEFT]) fcAngleH += FREE_CAM_ROT_SPEED;
@@ -27,7 +27,7 @@ void updateCamera()
         if (specialKeyStates[GLUT_KEY_UP])   fcAngleV += FREE_CAM_ROT_SPEED;
         if (specialKeyStates[GLUT_KEY_DOWN]) fcAngleV -= FREE_CAM_ROT_SPEED;
 
-        // Limita o olhar para cima/baixo para não quebrar o pescoço (opcional)
+        // Limita o olhar para cima/baixo
         if (fcAngleV > 89.0f) fcAngleV = 89.0f;
         if (fcAngleV < -89.0f) fcAngleV = -89.0f;
 
@@ -43,7 +43,6 @@ void updateCamera()
 
         // Controles de Movimento (W/A/S/D + Q/E para subir/descer)
         // W/S andam na direção que se olha (exceto Y, para andar no plano como FPS, ou full 3D)
-        // Aqui faremos andar "full 3D" (voar)
         
         if (keyStates['w'] || keyStates['W']) {
             fcX += dirX * FREE_CAM_SPEED;
@@ -79,7 +78,7 @@ void updateCamera()
                   0.0f, 1.0f, 0.0f);    // Up
 
     } else {
-        // --- LÓGICA DA CÂMERA DO TANQUE (Original) ---
+        // LÓGICA DA CÂMERA DO TANQUE
         
         float camX = tankX + sinf(turretAngle * 3.14159 / 180.0) * CAM_FACTOR_X;  
         float camY = CAM_FACTOR_Y - (pipeAngle * 0.1f); 

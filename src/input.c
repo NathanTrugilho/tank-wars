@@ -22,7 +22,7 @@ void keyDown(unsigned char key, int x, int y) {
             fcX = tankX;
             fcY = tankY + 5.0f; // Um pouco acima
             fcZ = tankZ + 5.0f; // Um pouco atrás
-            fcAngleH = 180.0f;  // Olhando pra trás (ajuste conforme seu gosto)
+            fcAngleH = 180.0f;  // Olhando pra trás 
             fcAngleV = -20.0f;  // Olhando levemente para baixo
         }
     }

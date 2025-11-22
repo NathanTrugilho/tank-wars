@@ -16,11 +16,11 @@
 #define SCALE_TURRET_L 0.90f
 
 // Cano (Pipe): Precisa ser FINO (W=0.3) para não bater nos lados girando
-// Mas precisa ser LONGO (L=0.95) para bater a ponta corretamente
+// Mas precisa ser LONGO (L=1.0) para bater a ponta corretamente
 #define SCALE_PIPE_W   0.3f 
 #define SCALE_PIPE_L   1.0f 
 
-// --- NOVO: AJUSTE DE ALTURA (Y-RANGE) ---
+// AJUSTE DE ALTURA (Y-RANGE)
 // Defina onde começa (MIN) e termina (MAX) cada parte no eixo Y do mundo.
 // Exemplo: Se o Hull vai do chão (0.0) até quase 1 metro de altura.
 #define HULL_Y_MIN 0.6f
@@ -46,11 +46,11 @@ typedef struct {
     Point3D corners[8];  // Os 8 cantos para desenhar o debug
 } CollisionBox;
 
-// Função principal que gera a caixa baseada nas suas escalas e rotações
+// Função principal que gera a caixa 
 CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz, 
                              float angleYaw, float anglePitch, 
                              float scaleW, float scaleL, 
-                             float yMinFixed, float yMaxFixed); // Novos parâmetros para respeitar seus defines
+                             float yMinFixed, float yMaxFixed); 
 
 int checkCollisionOBB(CollisionBox *a, CollisionBox *b);
 

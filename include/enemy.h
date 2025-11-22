@@ -13,9 +13,7 @@
 #define ENEMY_SCALE_HULL_W   0.90f
 #define ENEMY_SCALE_HULL_L   0.90f
 
-// Torre (Turret) - Notei que está bem pequeno (0.01), deve ser proposital
-//#define ENEMY_SCALE_TURRET_W 0.01f
-//#define ENEMY_SCALE_TURRET_L 0.01f
+// Torre (Turret) 
 
 #define ENEMY_SCALE_TURRET_W 0.9f
 #define ENEMY_SCALE_TURRET_L 0.9f
@@ -24,7 +22,7 @@
 #define ENEMY_SCALE_PIPE_W   0.3f 
 #define ENEMY_SCALE_PIPE_L   1.0f 
 
-// --- ALTURAS (Y-RANGE) DO INIMIGO ---
+// ALTURAS (Y-RANGE) DO INIMIGO
 #define ENEMY_HULL_Y_MIN 0.6f
 #define ENEMY_HULL_Y_MAX 1.5f
 
@@ -34,7 +32,7 @@
 #define ENEMY_PIPE_Y_MIN   1.51f
 #define ENEMY_PIPE_Y_MAX   1.7f
 
-// --- PARÂMETROS DE IA E VISÃO ---
+// PARÂMETROS DE IA E VISÃO 
 #define ENEMY_VIEW_RANGE 15.0f      // Distância máxima que o inimigo enxerga
 #define ENEMY_VIEW_ANGLE 45.0f      // Ângulo de abertura do cone (em graus)
 #define ENEMY_SPEED      0.05f      // Velocidade do inimigo (menor que a do player 0.1)
