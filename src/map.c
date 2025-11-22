@@ -90,7 +90,7 @@ void initMapCells(){
 }
 
 void drawMap() {
-    glColor3f(0.2f, 0.8f, 0.2f);
+    glColor3f(0.1f, 0.6f, 0.1f);
 
     // Loop para percorrer cada linha do mapa no eixo Z
     for (int z = 0; z < MAP_SIZE; z++) {

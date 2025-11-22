@@ -16,6 +16,10 @@
 
 void updateCamera();
 
+void updateMinimapCamera();
+
+void drawMapSun();
+
 #endif
 
 
