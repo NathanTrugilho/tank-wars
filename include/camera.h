@@ -25,4 +25,10 @@ extern float fcAngleH, fcAngleV;
 
 void updateCamera();
 
+void updateMinimapCamera();
+
+void drawMapSun();
+
 #endif
+
+
