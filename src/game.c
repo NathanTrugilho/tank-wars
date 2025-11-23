@@ -1,4 +1,5 @@
 #include <game.h>
+#include <hud.h>
 
 float ratio;
 
@@ -16,6 +17,10 @@ void display() {
     drawEnemies();
     drawTank();
     drawBullet();
+
+    // HUD
+    updateHUDTime();
+    drawHUD();
     
     // ====================================
     // MINIMAPA 
