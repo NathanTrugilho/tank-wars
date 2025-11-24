@@ -20,13 +20,14 @@ Point3D normalizeVector(Point3D v) {
     return (Point3D){v.x/len, v.y/len, v.z/len};
 }
 
+// Subir e descer em XZ (pitch) Muito usado no pipe
 Point3D rotateX(Point3D p, float angleDeg) {
     float rad = angleDeg * RADIAN_FACTOR; 
     float c = cos(rad);
     float s = sin(rad);
     return (Point3D){ p.x, p.y * c - p.z * s, p.y * s + p.z * c };
 }
-
+// Girar em Y (yaw) apenas
 Point3D rotateY(Point3D p, float angleDeg) {
     float rad = -angleDeg * RADIAN_FACTOR; 
     float c = cos(rad);
@@ -35,12 +36,18 @@ Point3D rotateY(Point3D p, float angleDeg) {
 }
 
 // GERAÇÃO DA CAIXA 3D (OBB)
+// Box é defindio no mybib.h como:
+// typedef struct Box {
+//     float minX, minY, minZ;
+//     float maxX, maxY, maxZ;
+// } Box;
 CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz, 
                              float angleYaw, float anglePitch, 
                              float scaleW, float scaleL, 
                              float yMinFixed, float yMaxFixed) {
     CollisionBox cb;
-
+    
+    // Define o tamanho da caixa antes de girar, o tamanho é afetado pela escala e definido a partir do centro 
     float width = (localBox->maxX - localBox->minX) * scaleW;
     float length = (localBox->maxZ - localBox->minZ) * scaleL;
     float height = yMaxFixed - yMinFixed;
@@ -51,29 +58,34 @@ CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz,
 
     float localCenterY = (yMinFixed + yMaxFixed) / 2.0f;
     
+    // Encontrar a posição local do centro da caixa
+    // Basicamente, ele pega a média entre o mínimo e o máximo (o meio) e aplica a escala.
     Point3D localPos = {
         ((localBox->minX + localBox->maxX) / 2.0f) * scaleW,
         localCenterY - ty, 
         ((localBox->minZ + localBox->maxZ) / 2.0f) * scaleL
     };
-
+    // Lógica de colisão OBB (Oriented Bounding Box, ou Caixa Delimitadora Orientada)
+    // Orientada pois ela segue a orientação do tank
     Point3D axisBase[3] = { {1,0,0}, {0,1,0}, {0,0,1} };
-    
+    //A ideia é calcular a orientação dos eixos da caixa aplicando as rotações necessárias.
     for(int i=0; i<3; i++) {
         Point3D tmp = axisBase[i];
+        // Pega os vetores base originais e aplica as rotações anglePitch (inclinação)
+        // e angleYaw (direção, virar para esquerda/direita).
         if(fabs(anglePitch) > 0.001f) tmp = rotateX(tmp, anglePitch);
         tmp = rotateY(tmp, angleYaw);
         cb.axis[i] = normalizeVector(tmp);
     }
-
+    // Aplica as rotações ao centro local para obter a posição correta no mundo
     Point3D centerRot = localPos;
     if(fabs(anglePitch) > 0.001f) centerRot = rotateX(centerRot, anglePitch);
     centerRot = rotateY(centerRot, angleYaw);
-
+    // A posição final do centro da caixa no mundo. Ela é a posição rotacionada + a translação (tx, ty, tz)
     cb.center.x = centerRot.x + tx;
     cb.center.y = centerRot.y + ty; 
     cb.center.z = centerRot.z + tz;
-
+    // Calcula os 8 cantos da caixa para facilitar a detecção de colisão depois
     int idx = 0;
     for(int i=-1; i<=1; i+=2) {
         for(int j=-1; j<=1; j+=2) {
@@ -92,26 +104,39 @@ CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz,
     return cb;
 }
 
-// COLISÃO SAT 3D
-
+// COLISÃO SAT 3D (Separating Axis Theorem ou Teorema do Eixo Separador)
+// Resumo:
+// Imagine que você quer saber se dois objetos colidiram, mas eles estão girados no espaço. 
+// Uma maneira de fazer isso é olhar para eles de um ângulo específico (um eixo) e ver se as "sombras" (projeções) deles se sobrepõem.
+// Se você encontrar pelo menos um ângulo onde as sombras não se tocam, você tem certeza absoluta de que os objetos não estão colidindo.
 int getSeparation(CollisionBox *a, CollisionBox *b, Point3D axis) {
     float minA = FLT_MAX, maxA = -FLT_MAX;
     float minB = FLT_MAX, maxB = -FLT_MAX;
 
     for(int i=0; i<8; i++) {
+        // Recebe um axis (um vetor de direção). Comprime a caixa 3D inteira em cima dessa única linha.
+        // Calcula onde os cantos da caixa "caem" nessa linha (axis).
         float p = dot(a->corners[i], axis);
+        // Encontra o mínimo e máximo dessa projeção para a caixa A
         if(p < minA) minA = p;
         if(p > maxA) maxA = p;
     }
     for(int i=0; i<8; i++) {
         float p = dot(b->corners[i], axis);
+        // Encontra o mínimo e máximo dessa projeção para a caixa B
         if(p < minB) minB = p;
         if(p > maxB) maxB = p;
     }
     return (maxA < minB || maxB < minA);
 }
-
+// Testa apenas as faces da caixa, desconsiderando arestas para simplificar
+// e melhorar performance. Pode falhar em casos extremos.
+// No total, seria 15 eixos (3 de A, 3 de B, 9 cruzamentos)
 int checkCollisionOBB(CollisionBox *a, CollisionBox *b) {
+    // Existe um buraco entre os objetos neste ângulo
+    // Testa 6 eixos: os 3 de A e os 3 de B
+    // Olha para a cena alinhado com o chão do Tanque A. Se vê luz entre os tanques, não colidiu.
+    // Olha alinhado com a parede lateral do Tanque A. Se vê luz, não colidiu.
     if(getSeparation(a, b, a->axis[0])) return 0;
     if(getSeparation(a, b, a->axis[1])) return 0;
     if(getSeparation(a, b, a->axis[2])) return 0;
@@ -124,7 +149,10 @@ int checkCollisionOBB(CollisionBox *a, CollisionBox *b) {
 }
 
 // HELPERS
-
+// Pegam as medidas exatas de cada uma dessas partes (que já estão definidas em variáveis globais ou constantes 
+// como SCALE_HULL_W, hullModel.box) e preparam a caixa certa.
+// Dado um corpo na posição (x, z) com ângulo 'angle', retorna a CollisionBox correta. 
+// Ela preenche todo o resto (altura, largura, modelo 3D).
 CollisionBox makeHull(float x, float z, float angle) {
     return getCollisionBox(&hullModel.box, x, tankY, z, angle, 0.0f, SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
 }

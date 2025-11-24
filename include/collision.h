@@ -15,14 +15,13 @@
 #define SCALE_TURRET_W 0.90f
 #define SCALE_TURRET_L 0.90f
 
-// Cano (Pipe): Precisa ser FINO (W=0.3) para não bater nos lados girando
+// Cano (Pipe): Precisa ser FINO para não bater nos lados girando
 // Mas precisa ser LONGO (L=1.0) para bater a ponta corretamente
 #define SCALE_PIPE_W   0.3f 
 #define SCALE_PIPE_L   1.0f 
 
 // AJUSTE DE ALTURA (Y-RANGE)
 // Defina onde começa (MIN) e termina (MAX) cada parte no eixo Y do mundo.
-// Exemplo: Se o Hull vai do chão (0.0) até quase 1 metro de altura.
 #define HULL_Y_MIN 0.6f
 #define HULL_Y_MAX 1.5f
 
