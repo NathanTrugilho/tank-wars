@@ -10,6 +10,7 @@ vertex vertexNormals[VERTEX_NUM][VERTEX_NUM];
 
 ObjModel churchModel;
 ObjModel houseModel;
+ObjModel gasStationModel;
 
 
 void initHeightMatrix(){
@@ -46,6 +47,11 @@ void initChurch() {
 void initHouse() {
     houseModel.faceCount = 0; 
     loadOBJ("objects/house.obj", "objects/house.mtl", &houseModel);
+}
+
+void initGasStation() {
+    gasStationModel.faceCount = 0; 
+    loadOBJ("objects/gasStation.obj", "objects/gasStation.mtl", &gasStationModel);
 }
 
 void initMapCells(){
@@ -192,6 +198,77 @@ void drawMap() {
 
         if (houseModel.faceCount > 0) {
             drawModel(&houseModel);
+        }
+        
+    glPopMatrix();
+
+    // ===================================
+    // Draw Gas Station
+    // ===================================
+    glPushMatrix();
+        int gasStationCellX = (int)GASSTATION_X;
+        int gasStationCellZ = (int)GASSTATION_Z;
+        float gasStationY = mapCells[gasStationCellZ][gasStationCellX].A.y; 
+
+        glTranslatef(GASSTATION_X, gasStationY, GASSTATION_Z); 
+
+        float gasStationScale = 0.7f; 
+        glScalef(gasStationScale, gasStationScale, gasStationScale);
+        // glRotatef(90.0f, 0.0f, 1.0f, 0.0f); 
+
+        if (gasStationModel.faceCount > 0) {
+            drawModel(&gasStationModel);
+        }
+        
+    glPopMatrix();
+
+    glPushMatrix();
+        int gasStation2CellX = (int)GASSTATION2_X;
+        int gasStation2CellZ = (int)GASSTATION2_Z;
+        float gasStation2Y = mapCells[gasStation2CellZ][gasStation2CellX].A.y; 
+
+        glTranslatef(GASSTATION2_X, gasStation2Y, GASSTATION2_Z); 
+
+        float gasStation2Scale = 0.7f; 
+        glScalef(gasStation2Scale, gasStation2Scale, gasStation2Scale);
+        // glRotatef(90.0f, 0.0f, 1.0f, 0.0f); 
+
+        if (gasStationModel.faceCount > 0) {
+            drawModel(&gasStationModel);
+        }
+        
+    glPopMatrix();
+
+    glPushMatrix();
+        int gasStation3CellX = (int)GASSTATION3_X;
+        int gasStation3CellZ = (int)GASSTATION3_Z;
+        float gasStation3Y = mapCells[gasStation3CellZ][gasStation3CellX].A.y; 
+
+        glTranslatef(GASSTATION3_X, gasStation3Y, GASSTATION3_Z); 
+
+        float gasStation3Scale = 0.7f; 
+        glScalef(gasStation3Scale, gasStation3Scale, gasStation3Scale);
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); 
+
+        if (gasStationModel.faceCount > 0) {
+            drawModel(&gasStationModel);
+        }
+        
+    glPopMatrix();
+
+    glPushMatrix();
+        int gasStation4CellX = (int)GASSTATION4_X;
+        int gasStation4CellZ = (int)GASSTATION4_Z;
+        float gasStation4Y = mapCells[gasStation4CellZ][gasStation4CellX].A.y; 
+
+        glTranslatef(GASSTATION4_X, gasStation4Y, GASSTATION4_Z); 
+
+        float gasStation4Scale = 0.7f; 
+        glScalef(gasStation4Scale, gasStation4Scale, gasStation4Scale);
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); 
+
+        if (gasStationModel.faceCount > 0) {
+            drawModel(&gasStationModel);
         }
         
     glPopMatrix();

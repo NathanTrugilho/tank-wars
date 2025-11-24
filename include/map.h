@@ -15,6 +15,18 @@
 #define HOUSE2_X 19.0f  
 #define HOUSE2_Z 9.0f
 
+#define GASSTATION_X 25.0f  
+#define GASSTATION_Z 18.0f
+
+#define GASSTATION2_X 30.0f  
+#define GASSTATION2_Z 18.0f
+
+#define GASSTATION3_X 25.0f  
+#define GASSTATION3_Z 10.0f
+
+#define GASSTATION4_X 30.0f  
+#define GASSTATION4_Z 10.0f
+
 typedef struct vertex {
     float x;
     float y;
@@ -47,5 +59,7 @@ void initMapCells();
 void initChurch();
 
 void initHouse();
+
+void initGasStation();
 
 #endif

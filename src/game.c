@@ -93,4 +93,5 @@ void init() {
     initBullet();
     initChurch();
     initHouse();
+    initGasStation();
 }
