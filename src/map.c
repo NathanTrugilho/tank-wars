@@ -9,6 +9,8 @@ float heightMatrix[VERTEX_NUM][VERTEX_NUM];
 vertex vertexNormals[VERTEX_NUM][VERTEX_NUM];
 
 ObjModel churchModel;
+ObjModel houseModel;
+
 
 void initHeightMatrix(){
 
@@ -39,6 +41,11 @@ void initHeightMatrix(){
 void initChurch() {
     churchModel.faceCount = 0; 
     loadOBJ("objects/igreja.obj", "objects/igreja.mtl", &churchModel);
+}
+
+void initHouse() {
+    houseModel.faceCount = 0; 
+    loadOBJ("objects/house.obj", "objects/house.mtl", &houseModel);
 }
 
 void initMapCells(){
@@ -127,6 +134,10 @@ void drawMap() {
     }
 
     glEnable(GL_TEXTURE_2D); 
+
+    // ===================================
+    // Draw Church
+    // ===================================
     glPushMatrix();
         
         int cellX = (int)CHURCH_X;
@@ -143,6 +154,44 @@ void drawMap() {
         
         if (churchModel.faceCount > 0) {
             drawModel(&churchModel);
+        }
+        
+    glPopMatrix();
+
+
+    // ===================================
+    // Draw House
+    // ===================================
+    glPushMatrix();
+        int houseCellX = (int)HOUSE_X;
+        int houseCellZ = (int)HOUSE_Z;
+        float houseY = mapCells[houseCellZ][houseCellX].A.y; 
+
+        glTranslatef(HOUSE_X, houseY, HOUSE_Z); 
+
+        float houseScale = 1.0f; 
+        glScalef(houseScale, houseScale, houseScale);
+        // glRotatef(90.0f, 0.0f, 1.0f, 0.0f); 
+
+        if (houseModel.faceCount > 0) {
+            drawModel(&houseModel);
+        }
+        
+    glPopMatrix();
+
+    glPushMatrix();
+        int house2CellX = (int)HOUSE2_X;
+        int house2CellZ = (int)HOUSE2_Z;
+        float house2Y = mapCells[house2CellZ][house2CellX].A.y; 
+
+        glTranslatef(HOUSE2_X, house2Y, HOUSE2_Z); 
+
+        float house2Scale = 1.0f; 
+        glScalef(house2Scale, house2Scale, house2Scale);
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); 
+
+        if (houseModel.faceCount > 0) {
+            drawModel(&houseModel);
         }
         
     glPopMatrix();

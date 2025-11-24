@@ -9,6 +9,12 @@
 #define CHURCH_X 10.0f
 #define CHURCH_Z 18.0f
 
+#define HOUSE_X 15.0f  
+#define HOUSE_Z 18.0f
+
+#define HOUSE2_X 19.0f  
+#define HOUSE2_Z 9.0f
+
 typedef struct vertex {
     float x;
     float y;
@@ -39,5 +45,7 @@ void initHeightMatrix();
 void initMapCells();
 
 void initChurch();
+
+void initHouse();
 
 #endif
