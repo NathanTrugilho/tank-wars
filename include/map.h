@@ -6,6 +6,9 @@
 #define MAP_SIZE 50
 #define VERTEX_NUM MAP_SIZE + 1 // Tem que ser um a mais que o tamanho do mapa
 
+#define CHURCH_X 10.0f
+#define CHURCH_Z 18.0f
+
 typedef struct vertex {
     float x;
     float y;
@@ -34,5 +37,7 @@ void drawMap();
 void initHeightMatrix();
 
 void initMapCells();
+
+void initChurch();
 
 #endif

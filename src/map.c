@@ -1,11 +1,14 @@
 #include <map.h>
-//#include <stdio.h>
+#include <stdio.h>
+#include <mybib.h>
 
 square mapCells[MAP_SIZE][MAP_SIZE];
 
 float heightMatrix[VERTEX_NUM][VERTEX_NUM];
 
 vertex vertexNormals[VERTEX_NUM][VERTEX_NUM];
+
+ObjModel churchModel;
 
 void initHeightMatrix(){
 
@@ -31,6 +34,11 @@ void initHeightMatrix(){
     for (int z = 0; z < VERTEX_NUM; z++) {
         heightMatrix[z][50] = 5.0f;
     }
+}
+
+void initChurch() {
+    churchModel.faceCount = 0; 
+    loadOBJ("objects/igreja.obj", "objects/igreja.mtl", &churchModel);
 }
 
 void initMapCells(){
@@ -92,39 +100,50 @@ void initMapCells(){
 void drawMap() {
     glColor3f(0.1f, 0.6f, 0.1f);
 
-    // Loop para percorrer cada linha do mapa no eixo Z
     for (int z = 0; z < MAP_SIZE; z++) {
         
-        // Loop para percorrer cada coluna do mapa no eixo X
         for (int x = 0; x < MAP_SIZE; x++) {
             
             glBegin(GL_TRIANGLE_STRIP);
 
-            // Vértice A
             vertex normalA = vertexNormals[z][x];
             glNormal3f(normalA.x, normalA.y, normalA.z);
             glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
-            //printf("A: %f, %f, %f \n ", normalA.x, normalA.y, normalA.z);
         
-            // Vértice B
             vertex normalB = vertexNormals[z+1][x];
             glNormal3f(normalB.x, normalB.y, normalB.z);
             glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);
-            //printf("B: %f, %f, %f \n ", normalB.x, normalB.y, normalB.z);
 
-            // Vértice C
             vertex normalC = vertexNormals[z][x+1];
             glNormal3f(normalC.x, normalC.y, normalC.z);
             glVertex3f(mapCells[z][x].C.x, mapCells[z][x].C.y, mapCells[z][x].C.z);
-            //printf("C: %f, %f, %f \n ", normalC.x, normalC.y, normalC.z);
 
-            // Vértice D
             vertex normalD = vertexNormals[z+1][x+1];
             glNormal3f(normalD.x, normalD.y, normalD.z);
             glVertex3f(mapCells[z][x].D.x, mapCells[z][x].D.y, mapCells[z][x].D.z);
-            //printf("D: %f, %f, %f \n ", normalD.x, normalD.y, normalD.z);
 
             glEnd();
         }
     }
+
+    glEnable(GL_TEXTURE_2D); 
+    glPushMatrix();
+        
+        int cellX = (int)CHURCH_X;
+        int cellZ = (int)CHURCH_Z;
+        
+        float churchY = mapCells[cellZ][cellX].A.y; 
+
+        glTranslatef(CHURCH_X, churchY, CHURCH_Z); 
+        
+        float debugScale = 1.0f; 
+        glScalef(debugScale, debugScale, debugScale);
+
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+        
+        if (churchModel.faceCount > 0) {
+            drawModel(&churchModel);
+        }
+        
+    glPopMatrix();
 }
