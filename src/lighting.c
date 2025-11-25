@@ -2,7 +2,7 @@
 
 void setupLighting() {
 
-    GLfloat light_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+    GLfloat light_ambient[] = { 0.5f, 0.5f, 0.5f, 1.0f };
     GLfloat light_diffuse[] = { 1.0f, 0.95f, 0.9f, 1.0f };
     GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     GLfloat espec[4] = { 0.1f, 0.1f, 0.1f, 1.0f }; 

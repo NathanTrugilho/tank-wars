@@ -1,6 +1,7 @@
 #include <map.h>
 #include <stdio.h>
 #include <mybib.h>
+#include <math.h>
 
 square mapCells[MAP_SIZE][MAP_SIZE];
 
@@ -13,31 +14,52 @@ ObjModel houseModel;
 ObjModel gasStationModel;
 ObjModel storeModel;
 
-
-void initHeightMatrix(){
-
+void addHill(float centerX, float centerZ, float radius, float height) {
     for (int z = 0; z < VERTEX_NUM; z++) {
         for (int x = 0; x < VERTEX_NUM; x++) {
-            heightMatrix[z][x] = 0;
+            float dx = x - centerX;
+            float dz = z - centerZ;
+            float distance = sqrt(dx * dx + dz * dz);
+            
+            if (distance < radius) {
+                float factor = (cos(distance / radius * 3.14159f) + 1.0f) / 2.0f;
+                heightMatrix[z][x] += height * factor;
+            }
+        }
+    }
+}
+
+void initHeightMatrix(){
+    // Primeiro, deixa tudo plano (altura 0)
+    for (int z = 0; z < VERTEX_NUM; z++) {
+        for (int x = 0; x < VERTEX_NUM; x++) {
+            heightMatrix[z][x] = 0.0f;
         }
     }
 
-    // Simulando alguma altura
+    //PAREDES
     for (int x = 0; x < VERTEX_NUM; x++) {
         heightMatrix[0][x] = 5.0f;
     }
-
+    
     for (int x = 0; x < VERTEX_NUM; x++) {
         heightMatrix[50][x] = 5.0f;
     }
-
+    
     for (int z = 0; z < VERTEX_NUM; z++) {
         heightMatrix[z][0] = 5.0f;
     }
-
+    
     for (int z = 0; z < VERTEX_NUM; z++) {
         heightMatrix[z][50] = 5.0f;
     }
+
+    //ELEVAÇÕES - x, z, raio, altura
+    addHill(40, 25, 5.0f, 1.0f);  // colina
+    
+    addHill(25, 26, 5.0f, -0.9f);  // buraco
+
+    addHill(10, 27, 5.0f, 1.0f); // colina
 }
 
 void initChurch() {
@@ -117,11 +139,19 @@ void initMapCells(){
 }
 
 void drawMap() {
-    glColor3f(0.1f, 0.6f, 0.1f);
-
     for (int z = 0; z < MAP_SIZE; z++) {
-        
         for (int x = 0; x < MAP_SIZE; x++) {
+            
+            float avgHeight = (mapCells[z][x].A.y + mapCells[z][x].B.y + mapCells[z][x].C.y + mapCells[z][x].D.y) / 4.0f;
+                        
+            float normalizedHeight = fmax(0.0f, fmin(avgHeight, 10.0f)); 
+            
+            float minFactor = 0.5f; 
+            float maxVariation = 1.0f; 
+            
+            float colorFactor = minFactor + (normalizedHeight / 10.0f) * maxVariation;
+            
+            glColor3f(0.1f * colorFactor, 0.6f * colorFactor, 0.1f * colorFactor);
             
             glBegin(GL_TRIANGLE_STRIP);
 
