@@ -11,6 +11,7 @@ vertex vertexNormals[VERTEX_NUM][VERTEX_NUM];
 ObjModel churchModel;
 ObjModel houseModel;
 ObjModel gasStationModel;
+ObjModel storeModel;
 
 
 void initHeightMatrix(){
@@ -52,6 +53,11 @@ void initHouse() {
 void initGasStation() {
     gasStationModel.faceCount = 0; 
     loadOBJ("objects/gasStation.obj", "objects/gasStation.mtl", &gasStationModel);
+}
+
+void initStore() {
+    storeModel.faceCount = 0; 
+    loadOBJ("objects/store.obj", "objects/store.mtl", &storeModel);
 }
 
 void initMapCells(){
@@ -269,6 +275,26 @@ void drawMap() {
 
         if (gasStationModel.faceCount > 0) {
             drawModel(&gasStationModel);
+        }
+        
+    glPopMatrix();
+
+    // ===================================
+    // Draw Store
+    // ===================================
+    glPushMatrix();
+        int storeCellX = (int)STORE_X;
+        int storeCellZ = (int)STORE_Z;
+        float storeY = mapCells[storeCellZ][storeCellX].A.y; 
+
+        glTranslatef(STORE_X, storeY, STORE_Z); 
+
+        float storeScale = 1.0f; 
+        glScalef(storeScale, storeScale, storeScale);
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); 
+
+        if (storeModel.faceCount > 0) {
+            drawModel(&storeModel);
         }
         
     glPopMatrix();

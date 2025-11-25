@@ -27,6 +27,9 @@
 #define GASSTATION4_X 30.0f  
 #define GASSTATION4_Z 10.0f
 
+#define STORE_X 38.0f  
+#define STORE_Z 18.0f
+
 typedef struct vertex {
     float x;
     float y;
@@ -61,5 +64,7 @@ void initChurch();
 void initHouse();
 
 void initGasStation();
+
+void initStore();
 
 #endif
