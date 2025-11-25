@@ -55,20 +55,20 @@ void shootBullet() {
 
     player_bullet.active = TRUE;
 
-    player_bullet.horizontal_angle = turretAngle; // inclinação horizontal
-    player_bullet.vertical_angle = pipeAngle; // inclinação vertical
+    player_bullet.horizontal_angle = player.turretAngle; // inclinação horizontal
+    player_bullet.vertical_angle = player.pipeAngle; // inclinação vertical
     
-    float h_rad = turretAngle * RADIAN_FACTOR;
-    float v_rad = pipeAngle * RADIAN_FACTOR;
+    float h_rad = player.turretAngle * RADIAN_FACTOR;
+    float v_rad = player.pipeAngle * RADIAN_FACTOR;
 
     float horizontal_dist = cosf(v_rad) * PIPE_LENGTH;
 
     float right_x = cosf(h_rad);
     float right_z = -sinf(h_rad);
 
-    player_bullet.x = tankX - sinf(h_rad) * horizontal_dist - (right_x * BULLET_SIDE_CORRECTION);
-    player_bullet.z = tankZ - cosf(h_rad) * horizontal_dist - (right_z * BULLET_SIDE_CORRECTION);
-    player_bullet.y = (tankY + PIPE_HEIGHT) + sinf(v_rad) * PIPE_LENGTH;
+    player_bullet.x = player.x - sinf(h_rad) * horizontal_dist - (right_x * BULLET_SIDE_CORRECTION);
+    player_bullet.z = player.z - cosf(h_rad) * horizontal_dist - (right_z * BULLET_SIDE_CORRECTION);
+    player_bullet.y = (player.y + PIPE_HEIGHT) + sinf(v_rad) * PIPE_LENGTH;
 }
 
 void drawBullet(){

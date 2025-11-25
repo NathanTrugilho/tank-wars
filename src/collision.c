@@ -124,8 +124,8 @@ int checkPartsIntersection(
 int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg) {
     // PLAYER usa constantes de collision.h
     RotatedRect pHull   = getRotatedRect(&hullModel.box, nextX, nextZ, hullAngleDeg, SCALE_HULL_W, SCALE_HULL_L);
-    RotatedRect pTurret = getRotatedRect(&turretModel.box, nextX, nextZ, turretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
-    RotatedRect pPipe   = getRotatedRect(&pipeModel.box, nextX, nextZ, turretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
+    RotatedRect pTurret = getRotatedRect(&turretModel.box, nextX, nextZ, player.turretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
+    RotatedRect pPipe   = getRotatedRect(&pipeModel.box, nextX, nextZ, player.turretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
 
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
@@ -162,11 +162,11 @@ int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg) {
 int wouldCollideTurret(float nextTurretAngle) {
     // 1. Gera retângulos do PLAYER
     // A Base (Hull) usa a posição e ângulo ATUAIS (não estamos movendo a base)
-    RotatedRect pHull   = getRotatedRect(&hullModel.box, tankX, tankZ, hullAngle, SCALE_HULL_W, SCALE_HULL_L);
+    RotatedRect pHull   = getRotatedRect(&hullModel.box, player.x, player.z, player.hullAngle, SCALE_HULL_W, SCALE_HULL_L);
     
     // A Torre e o Cano usam o PRÓXIMO ângulo (nextTurretAngle) para prever a colisão
-    RotatedRect pTurret = getRotatedRect(&turretModel.box, tankX, tankZ, nextTurretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
-    RotatedRect pPipe   = getRotatedRect(&pipeModel.box, tankX, tankZ, nextTurretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
+    RotatedRect pTurret = getRotatedRect(&turretModel.box, player.x, player.z, nextTurretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
+    RotatedRect pPipe   = getRotatedRect(&pipeModel.box, player.x, player.z, nextTurretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
 
     // 2. Verifica contra todos os inimigos
     for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -214,9 +214,9 @@ int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle) {
     RotatedRect ePipe = getRotatedRect(&enemyPipeModel.box, ex, ez, propGlob, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L);
 
     // Gera retângulos do PLAYER (obstáculo)
-    RotatedRect pHull = getRotatedRect(&hullModel.box, tankX, tankZ, hullAngle, SCALE_HULL_W, SCALE_HULL_L);
-    RotatedRect pTurret = getRotatedRect(&turretModel.box, tankX, tankZ, turretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
-    RotatedRect pPipe = getRotatedRect(&pipeModel.box, tankX, tankZ, turretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
+    RotatedRect pHull = getRotatedRect(&hullModel.box, player.x, player.z, player.hullAngle, SCALE_HULL_W, SCALE_HULL_L);
+    RotatedRect pTurret = getRotatedRect(&turretModel.box, player.x, player.z, player.turretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
+    RotatedRect pPipe = getRotatedRect(&pipeModel.box, player.x, player.z, player.turretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
 
     // Verifica colisão usando as alturas CORRETAS de cada um
     // Inimigo (e...) vs Player (p...)
@@ -267,9 +267,9 @@ void drawDebugHitbox(RotatedRect r, float yMin, float yMax) {
 }
 
 void debugDrawPlayerCollision() {
-    RotatedRect pHull   = getRotatedRect(&hullModel.box, tankX, tankZ, hullAngle, SCALE_HULL_W, SCALE_HULL_L);
-    RotatedRect pTurret = getRotatedRect(&turretModel.box, tankX, tankZ, turretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
-    RotatedRect pPipe   = getRotatedRect(&pipeModel.box, tankX, tankZ, turretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
+    RotatedRect pHull   = getRotatedRect(&hullModel.box, player.x, player.z, player.hullAngle, SCALE_HULL_W, SCALE_HULL_L);
+    RotatedRect pTurret = getRotatedRect(&turretModel.box, player.x, player.z, player.turretAngle, SCALE_TURRET_W, SCALE_TURRET_L);
+    RotatedRect pPipe   = getRotatedRect(&pipeModel.box, player.x, player.z, player.turretAngle, SCALE_PIPE_W, SCALE_PIPE_L);
     
     drawDebugHitbox(pHull, HULL_Y_MIN, HULL_Y_MAX);
     drawDebugHitbox(pTurret, TURRET_Y_MIN, TURRET_Y_MAX);
