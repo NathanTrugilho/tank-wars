@@ -2,10 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <hud.h>
-
-// Exemplo de variáveis do HUD
-int tankHealth = 100;
-int tankAmmo = 20;
+#include <tank.h>
 
 // Controle de tempo
 static clock_t startTime = 0;
@@ -46,10 +43,10 @@ void drawHUD() {
 
     // 🔹 Informações de HUD
     char vidaText[32];
-    snprintf(vidaText, sizeof(vidaText), "Vida: %d", tankHealth);
+    snprintf(vidaText, sizeof(vidaText), "Vida: %d", player.health);
 
     char ammoText[32];
-    snprintf(ammoText, sizeof(ammoText), "Ammo: %d", tankAmmo);
+    snprintf(ammoText, sizeof(ammoText), "Ammo: %d", player.ammo);
 
     // 🔹 Desenha textos
     glColor3f(1, 1, 1); // Branco

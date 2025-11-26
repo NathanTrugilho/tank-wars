@@ -18,7 +18,6 @@ void display() {
     drawEnemies();
     drawTank();
     drawBullet();
-    //drawSnowFlake();
 
     // HUD
     updateHUDTime();
@@ -75,6 +74,7 @@ void timer(int value) {
     updateTank();
     updateEnemies(player.x, player.z);
     updateBullets();
+    testePowerUp();
 
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0); 

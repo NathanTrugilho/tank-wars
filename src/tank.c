@@ -129,6 +129,9 @@ void initTank() {
     // ---------------------------
     // Inicializando o Tank player
     // ---------------------------
+    player.mapCellX = INITIAL_TANK_CELL_X;
+    player.mapCellZ = INITIAL_TANK_CELL_Z;
+
     player.x = mapCells[player.mapCellZ][player.mapCellX].C.x;
     player.z = mapCells[player.mapCellZ][player.mapCellX].C.z;
     player.y = 0.5f;
@@ -144,8 +147,6 @@ void initTank() {
 
     player.health = 100;
     player.alive = 1;
+    player.ammo = 100;
     player.bulletDmg = 33;
-
-    player.mapCellX = INITIAL_TANK_CELL_X;
-    player.mapCellZ = INITIAL_TANK_CELL_Z;
 }

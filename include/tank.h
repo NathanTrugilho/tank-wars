@@ -48,6 +48,7 @@ typedef struct {
     
     int alive;
     int health;
+    int ammo;
     int bulletDmg;
 } Tank;
 
