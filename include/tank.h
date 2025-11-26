@@ -9,16 +9,16 @@
 #include <mybib.h>
 #include <utils.h>
 #include <collision.h>
-
+#include <camera.h>
 #define INITIAL_TANK_CELL_Z 25
 #define INITIAL_TANK_CELL_X 25
 
 #define MAX_PIPE_ANGLE 10
 #define MIN_PIPE_ANGLE -5
 
-#define TANK_MOVEMENT_SPEED 0.1
+#define TANK_MOVEMENT_SPEED 0.5f
 
-#define TANK_ROT_SPEED 1.0f
+#define TANK_ROT_SPEED 2.0f
 #define TURRET_ROT_SPEED 0.5f
 #define PIPE_INCLINE_SPEED 0.1f
 

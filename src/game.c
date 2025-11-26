@@ -17,6 +17,11 @@ void display() {
     drawEnemies();
     drawTank();
     drawBullet();
+    drawEnemyBullets();
+
+    debugDrawPlayerCollision();
+    debugDrawEnemyCollision();
+
 
     // HUD
     updateHUDTime();
@@ -73,6 +78,7 @@ void timer(int value) {
     updateTank();
     updateEnemies(tankX, tankZ);
     updateBullets();
+    updateEnemyBullets();
 
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0); 
@@ -86,5 +92,5 @@ void init() {
     calcularNormaisDoMapa();
     initEnemies();
     initTank();
-    initBullet();
+    initBullet(); // Isso já chama initEnemyBullets dentro do projectile.c atualizado
 }

@@ -38,6 +38,10 @@ void drawTank() {
 }
 
 void updateTank() {
+    if (freeCameraMode) {
+        glutPostRedisplay();
+        return;
+    }
     float nextX = tankX;
     float nextZ = tankZ;
     float nextHullAngle = hullAngle;
@@ -79,8 +83,7 @@ void updateTank() {
         }
     }
 
-    // --- 3. Inclinação do Cano (Cima/Baixo) ---
-    // Isso não afeta colisão X/Z, pode manter direto
+    // Inclinação do Cano (Cima/Baixo)
     if (specialKeyStates[GLUT_KEY_UP]) {
         pipeAngle += PIPE_INCLINE_SPEED;
         if (pipeAngle > MAX_PIPE_ANGLE) pipeAngle = MAX_PIPE_ANGLE; 
