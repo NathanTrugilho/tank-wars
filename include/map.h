@@ -53,6 +53,11 @@ extern float heightMatrix[VERTEX_NUM][VERTEX_NUM];
 
 extern vertex vertexNormals[VERTEX_NUM][VERTEX_NUM];
 
+extern ObjModel churchModel;
+extern ObjModel houseModel;
+extern ObjModel gasStationModel;
+extern ObjModel storeModel;
+
 void drawMap();
 
 void initHeightMatrix();

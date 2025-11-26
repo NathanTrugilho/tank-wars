@@ -63,22 +63,18 @@ void initHeightMatrix(){
 }
 
 void initChurch() {
-    churchModel.faceCount = 0; 
     loadOBJ("objects/igreja.obj", "objects/igreja.mtl", &churchModel);
 }
 
 void initHouse() {
-    houseModel.faceCount = 0; 
     loadOBJ("objects/house.obj", "objects/house.mtl", &houseModel);
 }
 
 void initGasStation() {
-    gasStationModel.faceCount = 0; 
     loadOBJ("objects/gasStation.obj", "objects/gasStation.mtl", &gasStationModel);
 }
 
 void initStore() {
-    storeModel.faceCount = 0; 
     loadOBJ("objects/store.obj", "objects/store.mtl", &storeModel);
 }
 
