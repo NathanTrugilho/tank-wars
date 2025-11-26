@@ -1,4 +1,5 @@
 #include <game.h>
+#include <hud.h>
 
 float ratio;
 
@@ -21,6 +22,11 @@ void display() {
     debugDrawPlayerCollision();
     debugDrawEnemyCollision();
 
+
+    // HUD
+    updateHUDTime();
+    drawHUD();
+    
     // ====================================
     // MINIMAPA 
     // ====================================
