@@ -74,7 +74,7 @@ void timer(int value) {
     updateTank();
     updateEnemies(player.x, player.z);
     updateBullets();
-    testePowerUp();
+    //testePowerUp();
 
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0); 

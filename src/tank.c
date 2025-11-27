@@ -149,4 +149,8 @@ void initTank() {
     player.alive = 1;
     player.ammo = 100;
     player.bulletDmg = 33;
+
+    player.lastShootTime = 0;
+    player.reloadTime = 3000;
+    player.flagReloadCircle = 0;
 }

@@ -46,12 +46,13 @@ void initBullet() {
 
 // Dispara bullet
 void shootBullet() {
-    static unsigned long lastShootTime = 0; // Só é zero quando inicializar
-    unsigned long now = glutGet(GLUT_ELAPSED_TIME);;
+    unsigned long now = glutGet(GLUT_ELAPSED_TIME);
+
+    player.flagReloadCircle = 1; //TRUE
 
     // Serve pra botar um cooldown antes de atirar dnv
-    if (now - lastShootTime < 3000) return;
-    lastShootTime = now;
+    if (now - player.lastShootTime < player.reloadTime) return;
+    player.lastShootTime = now;
 
     player_bullet.active = TRUE;
 

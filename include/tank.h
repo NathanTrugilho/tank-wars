@@ -50,6 +50,9 @@ typedef struct {
     int health;
     int ammo;
     int bulletDmg;
+    unsigned long lastShootTime;
+    int reloadTime;
+    int flagReloadCircle;
 } Tank;
 
 extern Tank player;
