@@ -21,6 +21,17 @@ typedef struct {
     float vertical_angle;
 } Bullet;
 
+typedef struct {
+    float x, y, z;
+    float radius;
+    float maxRadius;
+    int active;
+
+    float startTime;
+} Explosion;
+
+extern Explosion explosion;
+
 extern Bullet player_bullet;
 
 extern ObjModel shellModel;
@@ -36,5 +47,11 @@ void shootBullet();
 
 // Desenha bullet
 void drawBullet();
+
+void startExplosion(float x, float y, float z);
+
+void updateExplosion();
+
+void drawExplosion();
 
 #endif

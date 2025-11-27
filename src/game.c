@@ -1,6 +1,7 @@
 #include <game.h>
 #include <hud.h>
 #include <power_up.h>
+#include <projectile.h>
 
 float ratio;
 
@@ -18,7 +19,9 @@ void display() {
     drawEnemies();
     drawTank();
     drawBullet();
-    drawSnowFlake();
+    //drawSnowFlake();
+    drawExplosion();
+
     // HUD
     updateHUDTime();
     drawHUD();
@@ -75,6 +78,7 @@ void timer(int value) {
     updateEnemies(player.x, player.z);
     updateBullets();
     //testePowerUp();
+    updateExplosion();
 
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0); 
@@ -89,5 +93,5 @@ void init() {
     initEnemies();
     initTank();
     initBullet();
-    initPowerUps();
+    //initPowerUps();
 }
