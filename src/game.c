@@ -18,7 +18,7 @@ void display() {
     drawEnemies();
     drawTank();
     drawBullet();
-
+    drawSnowFlake();
     // HUD
     updateHUDTime();
     drawHUD();
@@ -89,5 +89,5 @@ void init() {
     initEnemies();
     initTank();
     initBullet();
-    //initPowerUps();
+    initPowerUps();
 }

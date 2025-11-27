@@ -19,7 +19,7 @@ void testePowerUp() {
 ObjModel snowFlake;
 
 void initPowerUps() {
-    if (loadOBJ("objects/snowflake.obj", "objects/snowflake.mtl", &snowFlake)) {
+    if (loadOBJ("objects/SnowflakePintado.obj", "objects/snowflake.mtl", &snowFlake)) {
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo da neve.\n");
     }
@@ -27,7 +27,25 @@ void initPowerUps() {
 
 // ------------- FREEZE -------------
 void drawSnowFlake() {
+    float modelScale = 0.2f;
+    float estimatedModelRadius = 5.0f; // Raio aproximado do seu modelo em unidades locais
+    float worldRadius = estimatedModelRadius * modelScale;
     
+    // Modelo
+    glEnable(GL_TEXTURE_2D);
+    glPushMatrix();
+        glTranslatef(20, 1, 40);
+        glScalef(modelScale, modelScale, modelScale);
+        drawModel(&snowFlake);
+    glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
+    
+    // Esfera com raio calculado
+    glPushMatrix();
+        glTranslatef(20, 1, 40);
+        glColor3f(0.0f, 1.0f, 1.0f); // Ciano
+        glutWireSphere(worldRadius, 16, 12);
+    glPopMatrix();
 }
 
 void freeze() {
