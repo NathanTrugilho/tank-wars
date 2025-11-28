@@ -3,32 +3,26 @@
 #include <stdio.h>
 #include <math.h>       
 #include <time.h>       
-#include <collision.h>
+#include "collision.h" 
 #include <projectile.h> 
+#include "map.h"      
+#include "tank.h" 
 
 #ifndef RADIAN_FACTOR
 #define RADIAN_FACTOR (3.14159265359 / 180.0)
 #endif
 
 Enemy enemies[MAX_ENEMIES];
-// Models dos inimigos (o mesmo do tank do jogador)
 ObjModel enemyHullModel;
 ObjModel enemyTurretModel;
 ObjModel enemyPipeModel;
 
-// Distância mínima para ativar a repulsão entre inimigos
 #define SEPARATION_DIST 4.0f 
 
 void initEnemies() {
-    if (!loadOBJ("objects/hull.obj", "objects/hull.mtl", &enemyHullModel)) {
-        printf("Erro ao carregar Base do inimigo.\n");
-    }
-    if (!loadOBJ("objects/turret.obj", "objects/turret.mtl", &enemyTurretModel)) {
-        printf("Erro ao carregar Torre do inimigo.\n");
-    }
-    if (!loadOBJ("objects/pipe.obj", "objects/pipe.mtl", &enemyPipeModel)) {
-        printf("Erro ao carregar Canhão do inimigo.\n");
-    }
+    if (!loadOBJ("objects/hull.obj", "objects/hull.mtl", &enemyHullModel)) printf("Erro Hull\n");
+    if (!loadOBJ("objects/turret.obj", "objects/turret.mtl", &enemyTurretModel)) printf("Erro Turret\n");
+    if (!loadOBJ("objects/pipe.obj", "objects/pipe.mtl", &enemyPipeModel)) printf("Erro Pipe\n");
 
     srand(time(NULL));
     for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -40,16 +34,16 @@ void initEnemies() {
         enemies[i].wanderTimer = 0;
         enemies[i].targetWanderAngle = enemies[i].hullAngle;
         enemies[i].lastShootTime = 0; 
+        enemies[i].stuckTimer = 0; // Inicializa zerado
     }
 }
 
+// Funções auxiliares no topo
 void drawVisionCone(Enemy *e) {
     glPushAttrib(GL_ENABLE_BIT); 
-
     float totalAngle = e->hullAngle + e->turretAngle;
     float rad = totalAngle * RADIAN_FACTOR;
     float halfFovRad = (ENEMY_VIEW_ANGLE / 2.0f) * RADIAN_FACTOR;
-
     float y = (ENEMY_PIPE_Y_MIN + ENEMY_PIPE_Y_MAX) / 2.0f;
     float cx = -sinf(rad) * ENEMY_VIEW_RANGE;
     float cz = -cosf(rad) * ENEMY_VIEW_RANGE;
@@ -61,20 +55,14 @@ void drawVisionCone(Enemy *e) {
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
     glLineWidth(2.0f);
-    
     glColor3f(0.0f, 1.0f, 1.0f); 
 
     glBegin(GL_LINES);
-        glVertex3f(e->x, y, e->z);
-        glVertex3f(e->x + cx, y, e->z + cz);
-        glVertex3f(e->x, y, e->z);
-        glVertex3f(e->x + lx, y, e->z + lz);
-        glVertex3f(e->x, y, e->z);
-        glVertex3f(e->x + rx, y, e->z + rz);
-        glVertex3f(e->x + lx, y, e->z + lz);
-        glVertex3f(e->x + rx, y, e->z + rz);
+        glVertex3f(e->x, y, e->z); glVertex3f(e->x + cx, y, e->z + cz);
+        glVertex3f(e->x, y, e->z); glVertex3f(e->x + lx, y, e->z + lz);
+        glVertex3f(e->x, y, e->z); glVertex3f(e->x + rx, y, e->z + rz);
+        glVertex3f(e->x + lx, y, e->z + lz); glVertex3f(e->x + rx, y, e->z + rz);
     glEnd();
-
     glPopAttrib(); 
 }
 
@@ -82,36 +70,29 @@ int canSeePlayer(Enemy *e, float px, float pz) {
     float dx = px - e->x;
     float dz = pz - e->z;
     float distSq = dx*dx + dz*dz;
-
     if (distSq > ENEMY_VIEW_RANGE * ENEMY_VIEW_RANGE) return 0; 
 
     float totalAngle = e->hullAngle + e->turretAngle;
     float rad = totalAngle * RADIAN_FACTOR;
     float forwardX = -sinf(rad);
     float forwardZ = -cosf(rad);
-
     float dist = sqrtf(distSq);
     float dirToPlayerX = dx / dist;
     float dirToPlayerZ = dz / dist;
-
     float dot = forwardX * dirToPlayerX + forwardZ * dirToPlayerZ;
     float cosHalfFov = cosf((ENEMY_VIEW_ANGLE / 2.0f) * RADIAN_FACTOR);
-
     return (dot > cosHalfFov);
 }
 
-void drawSingleEnemy(Enemy *e) {
+void drawEnemyTank(Enemy *e) {
     drawVisionCone(e);
-
     glColor3f(1.0f, 1.0f, 1.0f); 
-
     glPushMatrix();
         glTranslatef(e->x, 0.5f, e->z); 
         glPushMatrix();
             glRotatef(e->hullAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&enemyHullModel);
         glPopMatrix();
-
         glPushMatrix();
             glRotatef(e->hullAngle + e->turretAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&enemyTurretModel);
@@ -124,9 +105,7 @@ void drawEnemies() {
     glEnable(GL_TEXTURE_2D); 
     glPushMatrix();
     for (int i = 0; i < MAX_ENEMIES; i++) {
-        if (enemies[i].alive) {
-             drawSingleEnemy(&enemies[i]);
-        }
+        if (enemies[i].alive) drawEnemyTank(&enemies[i]);
     }
     glPopMatrix();
     glDisable(GL_TEXTURE_2D);
@@ -138,46 +117,65 @@ void updateEnemies(float playerX, float playerZ) {
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
 
+        // LÓGICA DE "Manobrar"
+        // Se o inimigo estiver no estado "Stuck", ele ignora tudo e dá ré.
+        if (enemies[i].stuckTimer > 0) {
+            enemies[i].stuckTimer--;
+            
+            // Movimento de RÉ (Velocidade Negativa)
+            float rad = enemies[i].hullAngle * RADIAN_FACTOR;
+            float backSpeed = ENEMY_SPEED * 0.8f; // Ré um pouco mais lenta
+            
+            float nextX = enemies[i].x + sinf(rad) * backSpeed; // + sen/cos é ré (pois - é frente)
+            float nextZ = enemies[i].z + cosf(rad) * backSpeed;
+            
+            // Verifica se a ré é segura (não tem parede atrás)
+            Enemy futureBack = enemies[i];
+            futureBack.x = nextX;
+            futureBack.z = nextZ;
+            CollisionBox fh = makeEnemyHull(&futureBack);
+            
+            // Se a traseira não bater, aplica a ré
+            if (!checkCollisionWithWorld(&fh)) {
+                enemies[i].x = nextX;
+                enemies[i].z = nextZ;
+            }
+            
+            // Enquanto dá ré, tenta girar o corpo um pouco para mudar a direção de saída
+            enemies[i].hullAngle += 2.0f; 
+            
+            continue; // Pula o resto da IA (não atira nem persegue enquanto manobra)
+        }
+
         float nextX = enemies[i].x;
         float nextZ = enemies[i].z;
         float currentMoveSpeed = ENEMY_SPEED;
         float targetGlobalAngle = 0.0f; 
-        int shouldMove = 1; // Flag para controlar se deve andar ou só girar
+        int shouldMove = 1; 
         
         int seesPlayer = canSeePlayer(&enemies[i], playerX, playerZ);
         
-        // 1. DECISÃO DE OBJETIVO
+        // DECISÃO
         if (seesPlayer) {
             if (now - enemies[i].lastShootTime > ENEMY_SHOOT_DELAY) {
                 shootEnemyBullet(&enemies[i]);
                 enemies[i].lastShootTime = now;
             }
-
             float dx = playerX - enemies[i].x;
             float dz = playerZ - enemies[i].z;
-            
-            // --- NOVO: VERIFICAÇÃO DE DISTÂNCIA DE COMBATE ---
             float distSq = dx*dx + dz*dz;
-            if (distSq < ENEMY_MIN_COMBAT_DIST * ENEMY_MIN_COMBAT_DIST) {
-                shouldMove = 0; // Está perto o suficiente, para de andar!
-            }
-            // ------------------------------------------------
-
+            if (distSq < ENEMY_MIN_COMBAT_DIST * ENEMY_MIN_COMBAT_DIST) shouldMove = 0; 
             float targetRad = atan2f(-dx, -dz); 
             targetGlobalAngle = targetRad * (180.0f / 3.14159f);
-
         } else {
             enemies[i].wanderTimer--;
             if (enemies[i].wanderTimer <= 0) {
                 enemies[i].wanderTimer = 60 + (rand() % 120); 
-                
                 float dx = playerX - enemies[i].x;
                 float dz = playerZ - enemies[i].z;
                 float trueAngleRad = atan2f(-dx, -dz);
                 float trueAngleDeg = trueAngleRad * (180.0f / 3.14159f);
-
                 int spread = (int)(360.0f * (1.0f - ENEMY_TRACKING_BIAS));
-                
                 if (spread > 0) {
                     int randomOffset = (rand() % spread) - (spread / 2);
                     enemies[i].targetWanderAngle = trueAngleDeg + randomOffset;
@@ -188,77 +186,133 @@ void updateEnemies(float playerX, float playerZ) {
             targetGlobalAngle = enemies[i].targetWanderAngle;
         }
 
-        // 2. INTELIGÊNCIA DE REPULSÃO (EVITAR COLISÃO ENTRE INIMIGOS)
+        // REPULSÃO
         int isAvoiding = 0;
-
         for (int j = 0; j < MAX_ENEMIES; j++) {
             if (i == j || !enemies[j].alive) continue;
-
             float dx = enemies[j].x - enemies[i].x;
             float dz = enemies[j].z - enemies[i].z;
             float distSq = dx*dx + dz*dz;
-
             if (distSq < SEPARATION_DIST * SEPARATION_DIST) {
                 float angleToNeighborRad = atan2f(-dx, -dz);
                 float angleAwayDeg = (angleToNeighborRad * (180.0f / 3.14159f)) + 180.0f;
-
                 targetGlobalAngle = angleAwayDeg;
                 isAvoiding = 1;
-                shouldMove = 1; // Se está desviando, DEVE se mover para sair de perto
-                
+                shouldMove = 1; 
                 break; 
             }
         }
 
-        // 3. ROTAÇÃO SUAVE DO CORPO (HULL)
-        // Isso acontece MESMO se shouldMove for 0 (ele gira parado)
+        // ROTAÇÃO HULL
         float hullDiff = targetGlobalAngle - enemies[i].hullAngle;
         while (hullDiff > 180) hullDiff -= 360;
         while (hullDiff < -180) hullDiff += 360;
         
+        float nextHullAngle = enemies[i].hullAngle;
         float rotSpeed = isAvoiding ? ENEMY_ROT_SPEED * 2.0f : ENEMY_ROT_SPEED;
 
-        if (hullDiff > rotSpeed) enemies[i].hullAngle += rotSpeed;
-        else if (hullDiff < -rotSpeed) enemies[i].hullAngle -= rotSpeed;
-        else enemies[i].hullAngle = targetGlobalAngle; 
+        if (hullDiff > rotSpeed) nextHullAngle += rotSpeed;
+        else if (hullDiff < -rotSpeed) nextHullAngle -= rotSpeed;
+        else nextHullAngle = targetGlobalAngle; 
 
-        // 4. ROTAÇÃO DA TORRE
+        // Verifica colisão da rotação
+        Enemy futureRotHull = enemies[i];
+        futureRotHull.hullAngle = nextHullAngle;
+        CollisionBox fh = makeEnemyHull(&futureRotHull);
+        CollisionBox fp = makeEnemyPipe(&futureRotHull);
+
+        if (!checkCollisionWithWorld(&fh) && !checkCollisionWithWorld(&fp)) {
+            enemies[i].hullAngle = nextHullAngle;
+        }
+
+        // ROTAÇÃO TORRE
         if (seesPlayer && !isAvoiding) {
             float dx = playerX - enemies[i].x;
             float dz = playerZ - enemies[i].z;
             float pRad = atan2f(-dx, -dz); 
             float pDeg = pRad * (180.0f / 3.14159f);
-            
             float tDiff = pDeg - (enemies[i].hullAngle + enemies[i].turretAngle);
             while (tDiff > 180) tDiff -= 360;
             while (tDiff < -180) tDiff += 360;
-             
-            if (tDiff > ENEMY_ROT_SPEED) enemies[i].turretAngle += ENEMY_ROT_SPEED;
-            else if (tDiff < -ENEMY_ROT_SPEED) enemies[i].turretAngle -= ENEMY_ROT_SPEED;
+            
+            float nextTurretAngle = enemies[i].turretAngle;
+            if (tDiff > ENEMY_ROT_SPEED) nextTurretAngle += ENEMY_ROT_SPEED;
+            else if (tDiff < -ENEMY_ROT_SPEED) nextTurretAngle -= ENEMY_ROT_SPEED;
+
+            // Verifica colisão da rotação
+            Enemy futureRot = enemies[i];
+            futureRot.turretAngle = nextTurretAngle;
+            CollisionBox ftr = makeEnemyTurret(&futureRot);
+            CollisionBox fpr = makeEnemyPipe(&futureRot);
+
+            if (!checkCollisionWithWorld(&fpr) && 
+                !checkCollisionWithWorld(&ftr) &&
+                !wouldCollideEnemyTurret(i, nextTurretAngle)) {
+                 enemies[i].turretAngle = nextTurretAngle;
+            }
         } else {
             enemies[i].turretAngle *= 0.90f;
         }
 
-        // 5. MOVIMENTO
-        // Só aplica movimento se a flag shouldMove for verdadeira
+        // MOVIMENTO
         if (shouldMove) {
             float rad = enemies[i].hullAngle * RADIAN_FACTOR;
-            nextX -= sinf(rad) * currentMoveSpeed;
-            nextZ -= cosf(rad) * currentMoveSpeed;
+            
+            // LÓGICA DE SENSOR (DISTÂNCIA SEGURA)
+            float probeX = enemies[i].x - sinf(rad) * ENEMY_OBSTACLE_SAFE_DIST;
+            float probeZ = enemies[i].z - cosf(rad) * ENEMY_OBSTACLE_SAFE_DIST;
+            
+            Enemy probeEnemy = enemies[i];
+            probeEnemy.x = probeX;
+            probeEnemy.z = probeZ;
+            
+            CollisionBox probeBox = makeEnemyHull(&probeEnemy);
+            
+            // Se o sensor sentir a parede, ativa o MODO MANOBRAR
+            if (checkCollisionWithWorld(&probeBox)) {
+                shouldMove = 0;
+                enemies[i].targetWanderAngle += 180.0f; // Vira para o outro lado
+                enemies[i].stuckTimer = ENEMY_STUCK_TIME; // Ativa a ré por X frames
+            }
+            
 
-            float oldX = enemies[i].x;
-            float oldZ = enemies[i].z;
-            
-            enemies[i].x = nextX;
-            enemies[i].z = nextZ;
-            
-            if (wouldCollideEnemyTurret(i, enemies[i].turretAngle)) {
-                enemies[i].x = oldX;
-                enemies[i].z = oldZ;
-                if (!seesPlayer) {
-                    enemies[i].targetWanderAngle += 180.0f; 
+            if (shouldMove) {
+                nextX -= sinf(rad) * currentMoveSpeed;
+                nextZ -= cosf(rad) * currentMoveSpeed;
+
+                float oldX = enemies[i].x;
+                float oldZ = enemies[i].z;
+                
+                Enemy futureEnemy = enemies[i];
+                futureEnemy.x = nextX;
+                futureEnemy.z = nextZ;
+                
+                CollisionBox realFh = makeEnemyHull(&futureEnemy);
+                CollisionBox realFt = makeEnemyTurret(&futureEnemy);
+                CollisionBox realFp = makeEnemyPipe(&futureEnemy);
+                
+                // Hard Collision (Segurança final)
+                int hitWorld = checkCollisionWithWorld(&realFh) || 
+                               checkCollisionWithWorld(&realFt) || 
+                               checkCollisionWithWorld(&realFp);
+
+                if (hitWorld) {
+                    // Se mesmo com o sensor ele bateu (ex: spawnou perto),
+                    // Ativa o modo manobrar imediatamente.
+                    enemies[i].x = oldX; 
+                    enemies[i].z = oldZ;
+                    enemies[i].stuckTimer = ENEMY_STUCK_TIME; 
+                } else {
+                    enemies[i].x = nextX;
+                    enemies[i].z = nextZ;
+                    
+                    if (wouldCollideEnemyTurret(i, enemies[i].turretAngle)) {
+                        enemies[i].x = oldX;
+                        enemies[i].z = oldZ;
+                        if (!seesPlayer) enemies[i].targetWanderAngle += 180.0f; 
+                        enemies[i].hullAngle += 5.0f; 
+                    }
                 }
-                enemies[i].hullAngle += 5.0f; 
             }
         }
     }

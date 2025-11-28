@@ -1,6 +1,7 @@
 #include "collision.h"
 #include "tank.h"
-#include "enemy.h"
+#include "enemy.h" 
+#include "map.h"   
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
@@ -13,6 +14,15 @@
 Point3D add(Point3D a, Point3D b) { return (Point3D){a.x + b.x, a.y + b.y, a.z + b.z}; }
 Point3D sub(Point3D a, Point3D b) { return (Point3D){a.x - b.x, a.y - b.y, a.z - b.z}; }
 float dot(Point3D a, Point3D b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+
+// Produto Vetorial para os eixos das arestas
+Point3D crossProduct3D(Point3D a, Point3D b) {
+    return (Point3D){
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x
+    };
+}
 
 Point3D normalizeVector(Point3D v) {
     float len = sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
@@ -57,7 +67,6 @@ CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz,
     cb.halfSize[2] = length / 2.0f;
 
     float localCenterY = (yMinFixed + yMaxFixed) / 2.0f;
-    
     // Encontrar a posição local do centro da caixa
     // Basicamente, ele pega a média entre o mínimo e o máximo (o meio) e aplica a escala.
     Point3D localPos = {
@@ -68,7 +77,7 @@ CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz,
     // Lógica de colisão OBB (Oriented Bounding Box, ou Caixa Delimitadora Orientada)
     // Orientada pois ela segue a orientação do tank
     Point3D axisBase[3] = { {1,0,0}, {0,1,0}, {0,0,1} };
-    //A ideia é calcular a orientação dos eixos da caixa aplicando as rotações necessárias.
+    // A ideia é calcular a orientação dos eixos da caixa aplicando as rotações necessárias.
     for(int i=0; i<3; i++) {
         Point3D tmp = axisBase[i];
         // Pega os vetores base originais e aplica as rotações anglePitch (inclinação)
@@ -110,6 +119,8 @@ CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz,
 // Uma maneira de fazer isso é olhar para eles de um ângulo específico (um eixo) e ver se as "sombras" (projeções) deles se sobrepõem.
 // Se você encontrar pelo menos um ângulo onde as sombras não se tocam, você tem certeza absoluta de que os objetos não estão colidindo.
 int getSeparation(CollisionBox *a, CollisionBox *b, Point3D axis) {
+    if (dot(axis, axis) < 0.00001f) return 0; 
+
     float minA = FLT_MAX, maxA = -FLT_MAX;
     float minB = FLT_MAX, maxB = -FLT_MAX;
 
@@ -117,7 +128,6 @@ int getSeparation(CollisionBox *a, CollisionBox *b, Point3D axis) {
         // Recebe um axis (um vetor de direção). Comprime a caixa 3D inteira em cima dessa única linha.
         // Calcula onde os cantos da caixa "caem" nessa linha (axis).
         float p = dot(a->corners[i], axis);
-        // Encontra o mínimo e máximo dessa projeção para a caixa A
         if(p < minA) minA = p;
         if(p > maxA) maxA = p;
     }
@@ -145,42 +155,112 @@ int checkCollisionOBB(CollisionBox *a, CollisionBox *b) {
     if(getSeparation(a, b, b->axis[1])) return 0;
     if(getSeparation(a, b, b->axis[2])) return 0;
 
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            Point3D axis = crossProduct3D(a->axis[i], b->axis[j]);
+            if(getSeparation(a, b, axis)) return 0;
+        }
+    }
+
     return 1;
 }
 
-// HELPERS
+// Verifica colisão de uma caixa dinâmica contra todos os objetos estáticos do mapa
+int checkCollisionWithWorld(CollisionBox *dynamicBox) {
+    for (int i = 0; i < staticColliderCount; i++) {
+        if (checkCollisionOBB(dynamicBox, &staticColliders[i])) {
+            return 1; 
+        }
+    }
+    return 0;
+}
+
+// ALGORITMO DE RAYCASTING (VISÃO)
+// Retorna 1 se o raio NÃO bater em nada (visão livre).
+// Retorna 0 se o raio bater em alguma CollisionBox do mundo (visão obstruída).
+int checkLineOfSight(Point3D start, Point3D end) {
+    // Vetor direção do raio
+    Point3D dir = sub(end, start);
+    float maxDist = sqrt(dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
+    dir = normalizeVector(dir);
+
+    // Percorre todos os prédios
+    for (int i = 0; i < staticColliderCount; i++) {
+        CollisionBox *box = &staticColliders[i];
+
+        // Transforma o raio para o espaço local da caixa (Slabs Method OBB)
+        Point3D diff = sub(box->center, start); // Vetor do inicio do raio ao centro da caixa
+        
+        float tMin = -100000.0f;
+        float tMax = 100000.0f;
+
+        // Testa interseção nos 3 eixos da caixa
+        for (int j = 0; j < 3; j++) {
+            float e = dot(box->axis[j], diff);
+            float f = dot(box->axis[j], dir);
+
+            if (fabs(f) > 0.001f) {
+                float t1 = (e + box->halfSize[j]) / f; // Plano near
+                float t2 = (e - box->halfSize[j]) / f; // Plano far
+                
+                if (t1 > t2) { float tmp=t1; t1=t2; t2=tmp; } // Swap
+                if (t1 > tMin) tMin = t1;
+                if (t2 < tMax) tMax = t2;
+                
+                if (tMin > tMax) goto next_box; // Sem interseção neste eixo
+                if (tMax < 0) goto next_box;    // Caixa está atrás do raio
+            } else {
+                // Raio paralelo ao plano. Se a origem do raio não estiver dentro da "fatia", não acerta.
+                if (-e - box->halfSize[j] > 0 || -e + box->halfSize[j] < 0) goto next_box;
+            }
+        }
+
+        // Se chegou aqui, houve interseção com a caixa 'i'
+        if (tMin < maxDist && tMin > 0) {
+            return 0; // Bloqueado! Bateu num prédio antes de chegar no player.
+        }
+
+        next_box:; 
+    }
+
+    return 1; // Livre
+}
+
+// (HELPERS)
 // Pegam as medidas exatas de cada uma dessas partes (que já estão definidas em variáveis globais ou constantes 
 // como SCALE_HULL_W, hullModel.box) e preparam a caixa certa.
 // Dado um corpo na posição (x, z) com ângulo 'angle', retorna a CollisionBox correta. 
 // Ela preenche todo o resto (altura, largura, modelo 3D).
-CollisionBox makeHull(float x, float z, float angle) {
+// Helpers do PLAYER
+CollisionBox makePlayerHull(float x, float z, float angle) {
     return getCollisionBox(&hullModel.box, x, tankY, z, angle, 0.0f, SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
 }
-CollisionBox makeTurret(float x, float z, float angle) {
+CollisionBox makePlayerTurret(float x, float z, float angle) {
     return getCollisionBox(&turretModel.box, x, tankY, z, angle, 0.0f, SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
 }
-CollisionBox makePipe(float x, float z, float tAngle, float pAngle) {
+CollisionBox makePlayerPipe(float x, float z, float tAngle, float pAngle) {
     return getCollisionBox(&pipeModel.box, x, tankY, z, tAngle, pAngle, SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
 }
 
-CollisionBox makeEnemyHull(Enemy *e) {
+// Helpers do INIMIGO
+CollisionBox makeEnemyHull(struct Enemy *e) {
     return getCollisionBox(&enemyHullModel.box, e->x, tankY, e->z, e->hullAngle, 0.0f, ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
 }
-CollisionBox makeEnemyTurret(Enemy *e) {
+CollisionBox makeEnemyTurret(struct Enemy *e) {
     float angle = e->hullAngle + e->turretAngle;
     return getCollisionBox(&enemyTurretModel.box, e->x, tankY, e->z, angle, 0.0f, ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
 }
-CollisionBox makeEnemyPipe(Enemy *e) {
+CollisionBox makeEnemyPipe(struct Enemy *e) {
     float angle = e->hullAngle + e->turretAngle;
     return getCollisionBox(&enemyPipeModel.box, e->x, tankY, e->z, angle, 0.0f, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
 }
 
-// FUNÇÕES PRINCIPAIS
+// FUNÇÕES PRINCIPAIS DE COLISÃO DO JOGO
 
 int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg) {
-    CollisionBox pHull = makeHull(nextX, nextZ, hullAngleDeg);
-    CollisionBox pTurret = makeTurret(nextX, nextZ, turretAngle);
-    CollisionBox pPipe = makePipe(nextX, nextZ, turretAngle, pipeAngle);
+    CollisionBox pHull = makePlayerHull(nextX, nextZ, hullAngleDeg);
+    CollisionBox pTurret = makePlayerTurret(nextX, nextZ, turretAngle);
+    CollisionBox pPipe = makePlayerPipe(nextX, nextZ, turretAngle, pipeAngle);
 
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
@@ -197,9 +277,9 @@ int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg) {
 }
 
 int wouldCollideTurret(float nextTurretAngle) {
-    CollisionBox pHull = makeHull(tankX, tankZ, hullAngle);
-    CollisionBox pTurret = makeTurret(tankX, tankZ, nextTurretAngle);
-    CollisionBox pPipe = makePipe(tankX, tankZ, nextTurretAngle, pipeAngle);
+    CollisionBox pHull = makePlayerHull(tankX, tankZ, hullAngle);
+    CollisionBox pTurret = makePlayerTurret(tankX, tankZ, nextTurretAngle);
+    CollisionBox pPipe = makePlayerPipe(tankX, tankZ, nextTurretAngle, pipeAngle);
 
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
@@ -214,7 +294,6 @@ int wouldCollideTurret(float nextTurretAngle) {
     }
     return 0;
 }
-
 // Esta função verifica se o inimigo 'enemyIndex', ao girar para 'nextTurretAngle',
 // colide com o PLAYER ou com OUTROS INIMIGOS.
 int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle) {
@@ -225,16 +304,14 @@ int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle) {
     CollisionBox eHull = makeEnemyHull(&temp);
     CollisionBox eTurret = makeEnemyTurret(&temp);
     CollisionBox ePipe = makeEnemyPipe(&temp);
-
     // Verifica Colisão contra o PLAYER
-    CollisionBox pHull = makeHull(tankX, tankZ, hullAngle);
-    CollisionBox pTurret = makeTurret(tankX, tankZ, turretAngle);
-    CollisionBox pPipe = makePipe(tankX, tankZ, turretAngle, pipeAngle);
+    CollisionBox pHull = makePlayerHull(tankX, tankZ, hullAngle);
+    CollisionBox pTurret = makePlayerTurret(tankX, tankZ, turretAngle);
+    CollisionBox pPipe = makePlayerPipe(tankX, tankZ, turretAngle, pipeAngle);
 
     if (checkCollisionOBB(&eHull, &pPipe) || checkCollisionOBB(&eTurret, &pPipe) || checkCollisionOBB(&ePipe, &pPipe)) return 1;
     if (checkCollisionOBB(&eTurret, &pHull) || checkCollisionOBB(&eTurret, &pTurret)) return 1;
     if (checkCollisionOBB(&ePipe, &pHull) || checkCollisionOBB(&ePipe, &pTurret)) return 1;
-
     // VERIFICAÇÃO INIMIGO vs INIMIGO
     for(int i = 0; i < MAX_ENEMIES; i++) {
         // Não checar contra si mesmo e nem contra inimigos mortos
@@ -243,15 +320,12 @@ int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle) {
         CollisionBox otherHull = makeEnemyHull(&enemies[i]);
         CollisionBox otherTurret = makeEnemyTurret(&enemies[i]);
         CollisionBox otherPipe = makeEnemyPipe(&enemies[i]);
-
         // Verifica se minhas partes (e...) batem nas partes do outro (other...)
         
         // Minha Torre bate no outro?
         if (checkCollisionOBB(&eTurret, &otherHull) || checkCollisionOBB(&eTurret, &otherTurret) || checkCollisionOBB(&eTurret, &otherPipe)) return 1;
-        
         // Meu Cano bate no outro?
         if (checkCollisionOBB(&ePipe, &otherHull) || checkCollisionOBB(&ePipe, &otherTurret) || checkCollisionOBB(&ePipe, &otherPipe)) return 1;
-        
         if (checkCollisionOBB(&eHull, &otherHull) || checkCollisionOBB(&eHull, &otherTurret) || checkCollisionOBB(&eHull, &otherPipe)) return 1;
     }
 
@@ -264,7 +338,7 @@ void drawDebugBox(CollisionBox b) {
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
     glLineWidth(2.0f);
-    glColor3f(1.0f, 0.0f, 0.0f); // VERMELHO
+    glColor3f(1.0f, 0.0f, 0.0f); 
 
     glBegin(GL_LINES);
     // Base
@@ -272,13 +346,11 @@ void drawDebugBox(CollisionBox b) {
     glVertex3f(b.corners[1].x, b.corners[1].y, b.corners[1].z); glVertex3f(b.corners[3].x, b.corners[3].y, b.corners[3].z);
     glVertex3f(b.corners[3].x, b.corners[3].y, b.corners[3].z); glVertex3f(b.corners[2].x, b.corners[2].y, b.corners[2].z);
     glVertex3f(b.corners[2].x, b.corners[2].y, b.corners[2].z); glVertex3f(b.corners[0].x, b.corners[0].y, b.corners[0].z);
-    
     // Topo
     glVertex3f(b.corners[4].x, b.corners[4].y, b.corners[4].z); glVertex3f(b.corners[5].x, b.corners[5].y, b.corners[5].z);
     glVertex3f(b.corners[5].x, b.corners[5].y, b.corners[5].z); glVertex3f(b.corners[7].x, b.corners[7].y, b.corners[7].z);
     glVertex3f(b.corners[7].x, b.corners[7].y, b.corners[7].z); glVertex3f(b.corners[6].x, b.corners[6].y, b.corners[6].z);
     glVertex3f(b.corners[6].x, b.corners[6].y, b.corners[6].z); glVertex3f(b.corners[4].x, b.corners[4].y, b.corners[4].z);
-    
     // Laterais
     glVertex3f(b.corners[0].x, b.corners[0].y, b.corners[0].z); glVertex3f(b.corners[4].x, b.corners[4].y, b.corners[4].z);
     glVertex3f(b.corners[1].x, b.corners[1].y, b.corners[1].z); glVertex3f(b.corners[5].x, b.corners[5].y, b.corners[5].z);
@@ -290,9 +362,9 @@ void drawDebugBox(CollisionBox b) {
 }
 
 void debugDrawPlayerCollision() {
-    drawDebugBox(makeHull(tankX, tankZ, hullAngle));
-    drawDebugBox(makeTurret(tankX, tankZ, turretAngle));
-    drawDebugBox(makePipe(tankX, tankZ, turretAngle, pipeAngle));
+    drawDebugBox(makePlayerHull(tankX, tankZ, hullAngle));
+    drawDebugBox(makePlayerTurret(tankX, tankZ, turretAngle));
+    drawDebugBox(makePlayerPipe(tankX, tankZ, turretAngle, pipeAngle));
 }
 
 void debugDrawEnemyCollision() {
@@ -301,5 +373,11 @@ void debugDrawEnemyCollision() {
         drawDebugBox(makeEnemyHull(&enemies[i]));
         drawDebugBox(makeEnemyTurret(&enemies[i]));
         drawDebugBox(makeEnemyPipe(&enemies[i]));
+    }
+}
+
+void debugDrawWorldCollisions() {
+    for (int i = 0; i < staticColliderCount; i++) {
+        drawDebugBox(staticColliders[i]);
     }
 }

@@ -21,6 +21,7 @@ void display() {
 
     debugDrawPlayerCollision();
     debugDrawEnemyCollision();
+    debugDrawWorldCollisions();
 
 
     // HUD

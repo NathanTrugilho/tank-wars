@@ -1,4 +1,6 @@
-#include <tank.h>
+#include "tank.h"
+#include "collision.h" // Inclui para usar CollisionBox, macros de escala e a função getCollisionBox
+#include "map.h"       // Inclui para usar checkCollisionWithWorld
 
 int mapCellX = INITIAL_TANK_CELL_X;
 int mapCellZ = INITIAL_TANK_CELL_Z;
@@ -22,21 +24,17 @@ void drawTank() {
         glPushMatrix();
             glRotatef(hullAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&hullModel); 
-            //drawBox(hullModel.box); // Hitbox da base
         glPopMatrix();
 
         glPushMatrix();
             glRotatef(turretAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&turretModel);
-            //drawBox(turretModel.box); //Hitbox da torreta
             glRotatef(pipeAngle, 1.0f, 0.0f, 0.0f); // Em x
             drawModel(&pipeModel);
-            //drawBox(pipeModel.box); //Hitbox do cano
         glPopMatrix();
     glPopMatrix();
-    glDisable(GL_TEXTURE_2D); // Tem que desativar se não fica tudo escuro pq as outras coisas n têm textura
+    glDisable(GL_TEXTURE_2D); 
 }
-
 void updateTank() {
     if (freeCameraMode) {
         glutPostRedisplay();
@@ -46,8 +44,7 @@ void updateTank() {
     float nextZ = tankZ;
     float nextHullAngle = hullAngle;
     
-    // --- 1. Lógica de Movimento do Corpo (W/S/A/D) ---
-    
+    // inputs de movimento do tanque
     if (keyStates['w'] || keyStates['W']) {
         nextX -= sinf(hullAngle * RADIAN_FACTOR) * TANK_MOVEMENT_SPEED;
         nextZ -= cosf(hullAngle * RADIAN_FACTOR) * TANK_MOVEMENT_SPEED;
@@ -59,17 +56,36 @@ void updateTank() {
     if (keyStates['a'] || keyStates['A']) nextHullAngle += TANK_ROT_SPEED;
     if (keyStates['d'] || keyStates['D']) nextHullAngle -= TANK_ROT_SPEED;
 
-    // Verificação Unificada:
-    // Se eu me mover para nextX/nextZ ou girar o corpo para nextHullAngle,
-    // alguma parte do meu tanque (base OU cano) vai bater?
-    // Nota: A função wouldCollideTank usa a 'turretAngle' global atual.
-    // Como a torre anda junto com o tanque, se o tanque anda e o cano bate, wouldCollideTank retorna 1.
-    if (!wouldCollideTank(nextX, nextZ, nextHullAngle)) {
+    // Verificação de colisão antes de aplicar o movimento
+    
+    // Gera as caixas hipotéticas de TODAS as partes na nova posição (nextX, nextZ)
+    CollisionBox nextHullBox = getCollisionBox(&hullModel.box, nextX, tankY, nextZ, 
+                                               nextHullAngle, 0.0f, 
+                                               SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
+
+    // A torre e o cano giram com 'turretAngle', mas se movem para 'nextX/nextZ'
+    CollisionBox nextTurretBox = getCollisionBox(&turretModel.box, nextX, tankY, nextZ, 
+                                                 turretAngle, 0.0f, 
+                                                 SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
+                                                 
+    CollisionBox nextPipeBox = getCollisionBox(&pipeModel.box, nextX, tankY, nextZ, 
+                                               turretAngle, pipeAngle, 
+                                               SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
+
+    // Verifica colisão com o MUNDO ESTÁTICO (Prédios, etc)
+    // Se a base, OU a torre, OU o cano baterem, o movimento é bloqueado.
+    int hitWorld = checkCollisionWithWorld(&nextHullBox) || 
+                   checkCollisionWithWorld(&nextTurretBox) || 
+                   checkCollisionWithWorld(&nextPipeBox);
+
+    // Verifica colisão com INIMIGOS e aplica movimento se livre
+    if (!hitWorld && !wouldCollideTank(nextX, nextZ, nextHullAngle)) {
         tankX = nextX;
         tankZ = nextZ;
         hullAngle = nextHullAngle;
     } 
     
+    // Lógica da Torre
     float nextTurretAngle = turretAngle;
 
     if (specialKeyStates[GLUT_KEY_LEFT]) nextTurretAngle += TANK_ROT_SPEED;
@@ -77,8 +93,20 @@ void updateTank() {
 
     // Se houve tentativa de girar a torre
     if (nextTurretAngle != turretAngle) {
-        // Verifica se SOMENTE girar a torre causaria colisão
-        if (!wouldCollideTurret(nextTurretAngle)) {
+        // Gera caixa hipotética da torre no novo angulo (mas posição atual tankX/tankZ)
+        CollisionBox rotTurretBox = getCollisionBox(&turretModel.box, tankX, tankY, tankZ, 
+                                                     nextTurretAngle, 0.0f, 
+                                                     SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
+        
+        CollisionBox rotPipeBox = getCollisionBox(&pipeModel.box, tankX, tankY, tankZ, 
+                                                   nextTurretAngle, pipeAngle, 
+                                                   SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
+
+        // Verifica inimigos E mapa
+        int colidiuInimigo = wouldCollideTurret(nextTurretAngle);
+        int colidiuMapa = checkCollisionWithWorld(&rotTurretBox) || checkCollisionWithWorld(&rotPipeBox);
+
+        if (!colidiuInimigo && !colidiuMapa) {
             turretAngle = nextTurretAngle;
         }
     }
@@ -98,7 +126,6 @@ void updateTank() {
 }
 
 void updateMapCellPos(){
-
     int posX_A = mapCells[mapCellZ][mapCellX].A.x;
     int posZ_A = mapCells[mapCellZ][mapCellX].A.z;
     int posX_D = mapCells[mapCellZ][mapCellX].D.x;
@@ -109,14 +136,9 @@ void updateMapCellPos(){
 
     if(tankZ < posZ_A && mapCellZ > 0) mapCellZ--;
     else if(tankX > posZ_D && mapCellZ < 49) mapCellZ++;
-
-    // Para fazer debug
-    //printf("Celula %d %d \n", mapCellZ, mapCellX);
-
 }
 
 void initTank(){
-
     if (loadOBJ("objects/turret.obj", "objects/turret.mtl", &turretModel)) {
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo da torreta.\n");
@@ -134,4 +156,3 @@ void initTank(){
     tankZ = mapCells[mapCellZ][mapCellX].C.z;
     tankY = 0.5f;
 }
-
