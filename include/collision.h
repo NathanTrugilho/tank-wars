@@ -3,7 +3,9 @@
 
 #include "mybib.h"
 
-// AJUSTE FINO
+// Forward Declaration para evitar loop de include
+struct Enemy; 
+
 // WIDTH: Quanto menor, mais "fino" fica o colisor (evita bater girando)
 // LENGTH: Quanto maior, mais longe ele alcança (corrige bater de frente)
 
@@ -21,7 +23,7 @@
 #define SCALE_PIPE_L   1.0f 
 
 // AJUSTE DE ALTURA (Y-RANGE)
-// Defina onde começa (MIN) e termina (MAX) cada parte no eixo Y do mundo.
+// Define onde começa (MIN) e termina (MAX) cada parte no eixo Y do mundo.
 #define HULL_Y_MIN 0.6f
 #define HULL_Y_MAX 1.5f
 
@@ -53,14 +55,35 @@ CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz,
 
 int checkCollisionOBB(CollisionBox *a, CollisionBox *b);
 
+// Verifica colisão de uma caixa dinâmica contra todos os objetos estáticos do mapa
+int checkCollisionWithWorld(CollisionBox *dynamicBox);
+
+// Verifica se existe uma linha de visão livre entre dois pontos (Raycast)
+// Com isso se o jogador se esconder atrás de um objeto o inimigo perde a visão dele
+// Retorna 1 se estiver livre, 0 se houver um prédio no caminho.
+int checkLineOfSight(Point3D start, Point3D end);
+
 // Funções do Jogo
 int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg);
 int wouldCollideTurret(float nextTurretAngle);
 int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle);
 
 // Debug Visual
-void drawDebugBox(CollisionBox b); // Substitui drawDebugHitbox
+void drawDebugBox(CollisionBox b); 
 void debugDrawPlayerCollision();
 void debugDrawEnemyCollision();
+void debugDrawWorldCollisions();
+
+// (HELPERS)
+
+// Player (Usa variáveis globais do tank.c)
+CollisionBox makePlayerHull(float x, float z, float angle);
+CollisionBox makePlayerTurret(float x, float z, float angle);
+CollisionBox makePlayerPipe(float x, float z, float tAngle, float pAngle);
+
+// Enemy (Usa a struct Enemy)
+CollisionBox makeEnemyHull(struct Enemy *e);
+CollisionBox makeEnemyTurret(struct Enemy *e);
+CollisionBox makeEnemyPipe(struct Enemy *e);
 
 #endif

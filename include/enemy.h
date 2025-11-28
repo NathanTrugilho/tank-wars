@@ -5,7 +5,6 @@
 
 #define MAX_ENEMIES 2
 
-// AJUSTE FINO
 // WIDTH: Quanto menor, mais "fino" fica o colisor (evita bater girando)
 // LENGTH: Quanto maior, mais longe ele alcança (corrige bater de frente)
 // Esse é para as dimensões dos inimigos
@@ -39,27 +38,29 @@
 #define ENEMY_SHOOT_DELAY 1000 
 
 // GRAU DE PREVISÃO/INTUIÇÃO (0.0 a 1.0)
-// Isso auxilia na hora de escolher a direção de patrulha (wander).
-// 0.0 = Totalmente aleatório
-// 1.0 = Sempre mira diretamente para o jogador
 #define ENEMY_TRACKING_BIAS 0.2f    
 
-// DISTÂNCIA MÍNIMA DE COMBATE
-// Se o inimigo estiver mais perto que isso, ele para de andar e só atira.
-// Evita colisão física e bugs de "girar".
+// DISTÂNCIA MÍNIMA DE COMBATE (Para o Jogador)
 #define ENEMY_MIN_COMBAT_DIST 6.0f 
 
-typedef struct {
+// Distância segura para o MAPA
+#define ENEMY_OBSTACLE_SAFE_DIST 4.5f
+
+// Tempo (em frames) que o inimigo fica dando ré se bater
+#define ENEMY_STUCK_TIME 40 
+
+typedef struct Enemy { 
     int alive;
     float x, z;
     float hullAngle; 
-    float turretAngle; // O pipe gira junto com a torre
+    float turretAngle; 
     
-    // Controle de estado para patrulha (Wander)
-    int wanderTimer;      // Tempo até mudar de direção aleatória
-    float targetWanderAngle; // Ângulo alvo aleatório quando não vê o player
-    // Controle de Tiro
-    long lastShootTime; // Tempo do último disparo (em ms)
+    int wanderTimer;      
+    float targetWanderAngle; 
+    long lastShootTime; 
+    
+    // Contador para lógica de "Manobrar"
+    int stuckTimer; 
 } Enemy;
 
 extern Enemy enemies[MAX_ENEMIES];
@@ -71,4 +72,6 @@ extern ObjModel enemyPipeModel;
 void initEnemies();
 void updateEnemies(float playerX, float playerZ); 
 void drawEnemies();
+void drawEnemyTank(Enemy *e);
+
 #endif
