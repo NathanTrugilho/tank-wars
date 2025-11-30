@@ -21,6 +21,10 @@ void display() {
     drawBullet();
     //drawSnowFlake();
     drawExplosion();
+    //drawAmmo();
+    //drawHermesShoes();
+    //drawFist();
+    drawHealthPack();
 
     // HUD
     updateHUDTime();
@@ -93,5 +97,5 @@ void init() {
     initEnemies();
     initTank();
     initBullet();
-    //initPowerUps();
+    initPowerUps();
 }

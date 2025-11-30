@@ -26,12 +26,12 @@ void drawHealthPack();
 void heal();
 
 // ------------- INSTA KILL -------------
-void drawSkull();
+void drawFist();
 
 void increaseDmg();
 
 // ------------- SPEED -------------
-void drawMarioStar();
+void drawHermesShoes();
 
 void increaseSpeed();
 

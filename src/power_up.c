@@ -16,10 +16,22 @@ void testePowerUp() {
 }
 
 // ------------- INIT -------------
-ObjModel snowFlake;
+ObjModel snowFlake, hermesShoes, fist, healthPack; //Ammo é carregado em projectile.c
 
 void initPowerUps() {
-    if (loadOBJ("objects/SnowflakePintado.obj", "objects/snowflake.mtl", &snowFlake)) {
+    if (loadOBJ("objects/snowFlake.obj", "objects/snowFlake.mtl", &snowFlake)) {
+    } else {
+        printf("ERRO: Nao foi possivel carregar o modelo da neve.\n");
+    }
+    if (loadOBJ("objects/hermesShoes.obj", "objects/hermesShoes.mtl", &hermesShoes)) {
+    } else {
+        printf("ERRO: Nao foi possivel carregar o modelo da neve.\n");
+    }
+    if (loadOBJ("objects/fist.obj", "objects/fist.mtl", &fist)) {
+    } else {
+        printf("ERRO: Nao foi possivel carregar o modelo da neve.\n");
+    }
+    if (loadOBJ("objects/healthPack.obj", "objects/healthPack.mtl", &healthPack)) {
     } else {
         printf("ERRO: Nao foi possivel carregar o modelo da neve.\n");
     }
@@ -27,25 +39,18 @@ void initPowerUps() {
 
 // ------------- FREEZE -------------
 void drawSnowFlake() {
+    float x = 30, y = 1, z = 13;
     float modelScale = 0.2f;
-    float estimatedModelRadius = 5.0f; // Raio aproximado do seu modelo em unidades locais
-    float worldRadius = estimatedModelRadius * modelScale;
     
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
-        glTranslatef(20, 1, 40);
+        glTranslatef(x, y, z);
         glScalef(modelScale, modelScale, modelScale);
         drawModel(&snowFlake);
+        drawBox(snowFlake.box);
     glPopMatrix();
     glDisable(GL_TEXTURE_2D);
-    
-    // Esfera com raio calculado
-    glPushMatrix();
-        glTranslatef(20, 1, 40);
-        glColor3f(0.0f, 1.0f, 1.0f); // Ciano
-        glutWireSphere(worldRadius, 16, 12);
-    glPopMatrix();
 }
 
 void freeze() {
@@ -54,7 +59,18 @@ void freeze() {
 
 // ------------- AMMO -------------
 void drawAmmo() {
-
+    float x = 30, y = 1, z = 13;
+    float modelScale = 0.35f;
+    
+    // Modelo
+    glEnable(GL_TEXTURE_2D);
+    glPushMatrix();
+        glTranslatef(x, y, z);
+        glScalef(modelScale, modelScale, modelScale);
+        glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+        drawModel(&shellModel);
+    glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
 }
 
 void addAmmo() {
@@ -63,16 +79,38 @@ void addAmmo() {
 
 // ------------- HEALTH -------------
 void drawHealthPack() {
-
+    float x = 30, y = 1, z = 13;
+    float modelScale = 0.09f;
+    
+    // Modelo
+    glEnable(GL_TEXTURE_2D);
+    glPushMatrix();
+        glTranslatef(x, y, z);
+        glScalef(modelScale, modelScale, modelScale);
+        glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
+        drawModel(&healthPack);
+    glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
 }
 
 void heal() {
     player.health += 30;
 }
 
-// ------------- INSTA KILL -------------
-void drawSkull() {
-
+// ------------- DMG UPGRADE -------------
+void drawFist() {
+    float x = 30, y = 1, z = 13;
+    float modelScale = 0.1f;
+    
+    // Modelo
+    glEnable(GL_TEXTURE_2D);
+    glPushMatrix();
+        glTranslatef(x, y, z);
+        glScalef(modelScale, modelScale, modelScale);
+        glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+        drawModel(&fist);
+    glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
 }
 
 void increaseDmg() {
@@ -80,8 +118,19 @@ void increaseDmg() {
 }
 
 // ------------- SPEED -------------
-void drawMarioStar() {
+void drawHermesShoes() {
+    float x = 30, y = 1, z = 13;
+    float modelScale = 0.2f;
     
+    // Modelo
+    glEnable(GL_TEXTURE_2D);
+    glPushMatrix();
+        glTranslatef(x, y, z);
+        glScalef(modelScale, modelScale, modelScale);
+        //glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+        drawModel(&hermesShoes);
+    glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
 }
 
 void increaseSpeed() {
@@ -89,5 +138,3 @@ void increaseSpeed() {
     player.tankRotSpeed += 0.1;
     player.turretRotSpeed += 0.15;
 }
-
-// ------------- SHIELD -------------
