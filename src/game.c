@@ -71,6 +71,11 @@ void reshape(GLsizei w, GLsizei h) {
     if (h == 0) h = 1;
     ratio = (GLfloat)w/(GLfloat)h;
     glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0, (float)w / h, 0.1, 2000);
+
+    glMatrixMode(GL_MODELVIEW);
     updateCamera();
 
     windowW = w;
@@ -90,7 +95,10 @@ void timer(int value) {
 
 // Inicialização
 void init() {
-    glEnable(GL_NORMALIZE); 
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_NORMALIZE);
+    glShadeModel(GL_SMOOTH);
+    glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
     setupLighting();
     initMapCells();
     calcularNormaisDoMapa();
