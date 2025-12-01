@@ -19,6 +19,8 @@ void reshape(int w, int h);
 // Animação
 void idle();
 
+void timer(int value);
+
 // Inicialização
 void startGame();
 

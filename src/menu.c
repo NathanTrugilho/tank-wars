@@ -1,8 +1,9 @@
 #include <GL/glut.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "menu.h"
-#include "game.h"
+#include <menu.h>
+#include <game.h>
+#include <string.h>
 
 extern int currentState; // declarado na main
 GLuint menuBackgroundTex;
@@ -87,7 +88,7 @@ void keyboardMenu(unsigned char key, int x, int y)
         startGame();
         glutDisplayFunc(display);
         glutReshapeFunc(reshape);
-        glutIdleFunc(idle);
+        glutTimerFunc(16, timer, 0);
         glutKeyboardFunc(keyDown);
         glutKeyboardUpFunc(keyUp);
         break;
