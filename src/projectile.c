@@ -61,6 +61,8 @@ void shootBullet()
 {
     unsigned long now = glutGet(GLUT_ELAPSED_TIME);
 
+    player.ammo -= 1;
+
     player.flagReloadCircle = 1; // TRUE
 
     // Serve pra botar um cooldown antes de atirar dnv
