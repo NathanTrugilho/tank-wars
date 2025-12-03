@@ -19,13 +19,17 @@ typedef enum {
 typedef struct {
     PowerUpType type;
     float x, y, z;
-    float scale;
+    //float scale;
     int active;
-    float spawnTime;
-    float duration;  // Para powerups temporários (speed, dmg...)
 } PowerUpInstance;
 
 extern PowerUpInstance powerUps[MAX_POWER_UPS];
+
+PowerUpType getRandomPowerUp();
+
+float getScale(PowerUpType type);
+
+void spawnPowerUp();
 
 void testePowerUp();
 

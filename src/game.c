@@ -19,13 +19,14 @@ void display() {
     drawEnemies();
     drawTank();
     drawBullet();
-    //drawSnowFlake();
     drawExplosion();
+    drawEnemyBullets();
+    //drawSnowFlake();
     //drawAmmo();
     //drawHermesShoes();
     //drawFist();
-    drawHealthPack();
-    drawEnemyBullets();
+    //drawHealthPack();
+    spawnPowerUp();
 
     debugDrawPlayerCollision();
     debugDrawEnemyCollision();
@@ -115,7 +116,6 @@ void init() {
     calcularNormaisDoMapa();
     initEnemies();
     initTank();
-    initBullet();
     initPowerUps();
     initBullet(); // Isso já chama initEnemyBullets dentro do projectile.c atualizado
     initChurch();
