@@ -1,4 +1,6 @@
-#include <tank.h>
+#include "tank.h"
+#include "collision.h" // Inclui para usar CollisionBox, macros de escala e a função getCollisionBox
+#include "map.h"       // Inclui para usar checkCollisionWithWorld
 
 Tank player;   // Agora tudo é centralizado aqui
 
@@ -26,23 +28,21 @@ void drawTank() {
 
             glRotatef(player.pipeAngle, 1.0f, 0.0f, 0.0f);
             drawModel(&pipeModel);
-            //drawBox(pipeModel.box); //Hitbox do cano
         glPopMatrix();
 
     glPopMatrix();
     glDisable(GL_TEXTURE_2D);
 }
-
 void updateTank() {
-
-    float nextX = player.x;
-    float nextZ = player.z;
-    float nextHullAngle = player.hullAngle;
-
-    // ---------------------------
-    //  MOVIMENTO DO HULL (W/S/A/D)
-    // ---------------------------
-
+    if (freeCameraMode) {
+        glutPostRedisplay();
+        return;
+    }
+    float nextX = tankX;
+    float nextZ = tankZ;
+    float nextHullAngle = hullAngle;
+    
+    // inputs de movimento do tanque
     if (keyStates['w'] || keyStates['W']) {
         nextX -= sinf(player.hullAngle * RADIAN_FACTOR) * player.moveSpeed;
         nextZ -= cosf(player.hullAngle * RADIAN_FACTOR) * player.moveSpeed;
@@ -51,36 +51,65 @@ void updateTank() {
         nextX += sinf(player.hullAngle * RADIAN_FACTOR) * player.moveSpeed;
         nextZ += cosf(player.hullAngle * RADIAN_FACTOR) * player.moveSpeed;
     }
-    if (keyStates['a'] || keyStates['A']) nextHullAngle += player.tankRotSpeed;
-    if (keyStates['d'] || keyStates['D']) nextHullAngle -= player.tankRotSpeed;
+    if (keyStates['a'] || keyStates['A']) nextHullAngle += TANK_ROT_SPEED;
+    if (keyStates['d'] || keyStates['D']) nextHullAngle -= TANK_ROT_SPEED;
 
-    if (!wouldCollideTank(nextX, nextZ, nextHullAngle)) {
-        player.x = nextX;
-        player.z = nextZ;
-        player.hullAngle = nextHullAngle;
-    }
+    // Verificação de colisão antes de aplicar o movimento
+    
+    // Gera as caixas hipotéticas de TODAS as partes na nova posição (nextX, nextZ)
+    CollisionBox nextHullBox = getCollisionBox(&hullModel.box, nextX, tankY, nextZ, 
+                                               nextHullAngle, 0.0f, 
+                                               SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
 
-    // ---------------------------
-    //  GIRO DA TORRETA
-    // ---------------------------
-    float nextTurretAngle = player.turretAngle;
+    // A torre e o cano giram com 'turretAngle', mas se movem para 'nextX/nextZ'
+    CollisionBox nextTurretBox = getCollisionBox(&turretModel.box, nextX, tankY, nextZ, 
+                                                 turretAngle, 0.0f, 
+                                                 SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
+                                                 
+    CollisionBox nextPipeBox = getCollisionBox(&pipeModel.box, nextX, tankY, nextZ, 
+                                               turretAngle, pipeAngle, 
+                                               SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
 
-    if (specialKeyStates[GLUT_KEY_LEFT])
-        nextTurretAngle += player.tankRotSpeed; //turretRotSpeed?
+    // Verifica colisão com o MUNDO ESTÁTICO (Prédios, etc)
+    // Se a base, OU a torre, OU o cano baterem, o movimento é bloqueado.
+    int hitWorld = checkCollisionWithWorld(&nextHullBox) || 
+                   checkCollisionWithWorld(&nextTurretBox) || 
+                   checkCollisionWithWorld(&nextPipeBox);
 
-    if (specialKeyStates[GLUT_KEY_RIGHT])
-        nextTurretAngle -= player.tankRotSpeed; //turretRotSpeed?
+    // Verifica colisão com INIMIGOS e aplica movimento se livre
+    if (!hitWorld && !wouldCollideTank(nextX, nextZ, nextHullAngle)) {
+        tankX = nextX;
+        tankZ = nextZ;
+        hullAngle = nextHullAngle;
+    } 
+    
+    // Lógica da Torre
+    float nextTurretAngle = turretAngle;
 
-    if (nextTurretAngle != player.turretAngle) {
-        if (!wouldCollideTurret(nextTurretAngle)) {
-            player.turretAngle = nextTurretAngle;
+    if (specialKeyStates[GLUT_KEY_LEFT]) nextTurretAngle += TANK_ROT_SPEED;
+    if (specialKeyStates[GLUT_KEY_RIGHT]) nextTurretAngle -= TANK_ROT_SPEED;
+
+    // Se houve tentativa de girar a torre
+    if (nextTurretAngle != turretAngle) {
+        // Gera caixa hipotética da torre no novo angulo (mas posição atual tankX/tankZ)
+        CollisionBox rotTurretBox = getCollisionBox(&turretModel.box, tankX, tankY, tankZ, 
+                                                     nextTurretAngle, 0.0f, 
+                                                     SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
+        
+        CollisionBox rotPipeBox = getCollisionBox(&pipeModel.box, tankX, tankY, tankZ, 
+                                                   nextTurretAngle, pipeAngle, 
+                                                   SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
+
+        // Verifica inimigos E mapa
+        int colidiuInimigo = wouldCollideTurret(nextTurretAngle);
+        int colidiuMapa = checkCollisionWithWorld(&rotTurretBox) || checkCollisionWithWorld(&rotPipeBox);
+
+        if (!colidiuInimigo && !colidiuMapa) {
+            turretAngle = nextTurretAngle;
         }
     }
 
-    // ---------------------------
-    //  INCLINAÇÃO DO CANO
-    // ---------------------------
-
+    // Inclinação do Cano (Cima/Baixo)
     if (specialKeyStates[GLUT_KEY_UP]) {
         player.pipeAngle += player.pipeInclineSpeed;
         if (player.pipeAngle > MAX_PIPE_ANGLE)

@@ -25,6 +25,12 @@ void display() {
     //drawHermesShoes();
     //drawFist();
     drawHealthPack();
+    drawEnemyBullets();
+
+    debugDrawPlayerCollision();
+    debugDrawEnemyCollision();
+    debugDrawWorldCollisions();
+
 
     // HUD
     updateHUDTime();
@@ -88,6 +94,7 @@ void timer(int value) {
     updateBullets();
     //testePowerUp();
     updateExplosion();
+    updateEnemyBullets();
 
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0); 
@@ -99,6 +106,11 @@ void init() {
     glEnable(GL_NORMALIZE);
     glShadeModel(GL_SMOOTH);
     glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
+    glEnable(GL_NORMALIZE); 
+
+    glEnable(GL_COLOR_MATERIAL); 
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
     setupLighting();
     initMapCells();
     calcularNormaisDoMapa();
@@ -106,4 +118,9 @@ void init() {
     initTank();
     initBullet();
     initPowerUps();
+    initBullet(); // Isso já chama initEnemyBullets dentro do projectile.c atualizado
+    initChurch();
+    initHouse();
+    initGasStation();
+    initStore();
 }

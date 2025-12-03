@@ -1,5 +1,14 @@
-#include <map.h>
-//#include <stdio.h>
+#include "map.h"
+#include <stdio.h>
+#include <mybib.h>
+#include <math.h>
+#include "collision.h" 
+
+#define MAX_STATIC_COLLIDERS 100
+
+// Array global que armazena todas as caixas de colisão de prédios, árvores, etc.
+CollisionBox staticColliders[MAX_STATIC_COLLIDERS];
+int staticColliderCount = 0;
 
 square mapCells[MAP_SIZE][MAP_SIZE];
 
@@ -7,34 +16,146 @@ float heightMatrix[VERTEX_NUM][VERTEX_NUM];
 
 vertex vertexNormals[VERTEX_NUM][VERTEX_NUM];
 
-void initHeightMatrix(){
+ObjModel churchModel;
+ObjModel houseModel;
+ObjModel gasStationModel;
+ObjModel storeModel;
 
+// Função auxiliar interna para registrar um objeto estático no sistema de colisão
+void addStaticCollider(ObjModel *model, float x, float y, float z, float scale, float rotAngleY) {
+    if (staticColliderCount >= MAX_STATIC_COLLIDERS) {
+        printf("AVISO: Limite de colisores estaticos (MAX_STATIC_COLLIDERS) atingido.\n");
+        return;
+    }
+
+    // Fundação infinita (-50.0f)
+    // Isso garante que o tanque e o pipe batam na parede independente do relevo.
+    // O teto (yMax) continua respeitando a altura do modelo para não bater no ar.
+    
+    float yMin = -50.0f; 
+    float yMax = y + (model->box.maxY * scale);
+
+    // Gera a CollisionBox 
+    CollisionBox cb = getCollisionBox(&model->box, x, y, z, 
+                                      rotAngleY, 0.0f, 
+                                      scale, scale, 
+                                      yMin, yMax);
+    
+    staticColliders[staticColliderCount] = cb;
+    staticColliderCount++;
+}
+
+void addHill(float centerX, float centerZ, float radius, float height) {
     for (int z = 0; z < VERTEX_NUM; z++) {
         for (int x = 0; x < VERTEX_NUM; x++) {
-            heightMatrix[z][x] = 0;
+            float dx = x - centerX;
+            float dz = z - centerZ;
+            float distance = sqrt(dx * dx + dz * dz);
+            
+            if (distance < radius) {
+                float factor = (cos(distance / radius * 3.14159f) + 1.0f) / 2.0f;
+                heightMatrix[z][x] += height * factor;
+            }
         }
-    }
-
-    // Simulando alguma altura
-    for (int x = 0; x < VERTEX_NUM; x++) {
-        heightMatrix[0][x] = 5.0f;
-    }
-
-    for (int x = 0; x < VERTEX_NUM; x++) {
-        heightMatrix[50][x] = 5.0f;
-    }
-
-    for (int z = 0; z < VERTEX_NUM; z++) {
-        heightMatrix[z][0] = 5.0f;
-    }
-
-    for (int z = 0; z < VERTEX_NUM; z++) {
-        heightMatrix[z][50] = 5.0f;
     }
 }
 
-void initMapCells(){
+void initHeightMatrix(){
+    // Primeiro, deixa tudo plano (altura 0)
+    for (int z = 0; z < VERTEX_NUM; z++) {
+        for (int x = 0; x < VERTEX_NUM; x++) {
+            heightMatrix[z][x] = 0.0f;
+        }
+    }
 
+    //PAREDES
+    for (int x = 0; x < VERTEX_NUM; x++) {
+        heightMatrix[0][x] = 5.0f;
+    }
+    
+    for (int x = 0; x < VERTEX_NUM; x++) {
+        heightMatrix[50][x] = 5.0f;
+    }
+    
+    for (int z = 0; z < VERTEX_NUM; z++) {
+        heightMatrix[z][0] = 5.0f;
+    }
+    
+    for (int z = 0; z < VERTEX_NUM; z++) {
+        heightMatrix[z][50] = 5.0f;
+    }
+
+    //ELEVAÇÕES - x, z, raio, altura
+    addHill(40, 25, 5.0f, 1.0f);  // colina
+    addHill(25, 26, 5.0f, -0.9f);  // buraco
+    addHill(10, 27, 5.0f, 1.0f); // colina
+}
+
+void initChurch() {
+    loadOBJ("objects/igreja.obj", "objects/igreja.mtl", &churchModel);
+    
+    // Adiciona colisor da Igreja
+    int cellX = (int)CHURCH_X;
+    int cellZ = (int)CHURCH_Z;
+    float y = mapCells[cellZ][cellX].A.y;
+    addStaticCollider(&churchModel, CHURCH_X, y, CHURCH_Z, 1.0f, 180.0f);
+}
+
+void initHouse() {
+    loadOBJ("objects/house.obj", "objects/house.mtl", &houseModel);
+
+    // Casa 1
+    int h1X = (int)HOUSE_X;
+    int h1Z = (int)HOUSE_Z;
+    float h1Y = mapCells[h1Z][h1X].A.y;
+    addStaticCollider(&houseModel, HOUSE_X, h1Y, HOUSE_Z, 1.0f, 0.0f);
+
+    // Casa 2
+    int h2X = (int)HOUSE2_X;
+    int h2Z = (int)HOUSE2_Z;
+    float h2Y = mapCells[h2Z][h2X].A.y;
+    addStaticCollider(&houseModel, HOUSE2_X, h2Y, HOUSE2_Z, 1.0f, 180.0f);
+}
+
+void initGasStation() {
+    loadOBJ("objects/gasStation.obj", "objects/gasStation.mtl", &gasStationModel);
+
+    // Posto 1
+    int g1X = (int)GASSTATION_X;
+    int g1Z = (int)GASSTATION_Z;
+    float g1Y = mapCells[g1Z][g1X].A.y;
+    addStaticCollider(&gasStationModel, GASSTATION_X, g1Y, GASSTATION_Z, 0.7f, 0.0f);
+
+    // Posto 2
+    int g2X = (int)GASSTATION2_X;
+    int g2Z = (int)GASSTATION2_Z;
+    float g2Y = mapCells[g2Z][g2X].A.y;
+    addStaticCollider(&gasStationModel, GASSTATION2_X, g2Y, GASSTATION2_Z, 0.7f, 0.0f);
+
+    // Posto 3
+    int g3X = (int)GASSTATION3_X;
+    int g3Z = (int)GASSTATION3_Z;
+    float g3Y = mapCells[g3Z][g3X].A.y;
+    addStaticCollider(&gasStationModel, GASSTATION3_X, g3Y, GASSTATION3_Z, 0.7f, 180.0f);
+
+    // Posto 4
+    int g4X = (int)GASSTATION4_X;
+    int g4Z = (int)GASSTATION4_Z;
+    float g4Y = mapCells[g4Z][g4X].A.y;
+    addStaticCollider(&gasStationModel, GASSTATION4_X, g4Y, GASSTATION4_Z, 0.7f, 180.0f);
+}
+
+void initStore() {
+    loadOBJ("objects/store.obj", "objects/store.mtl", &storeModel);
+
+    // Loja
+    int sX = (int)STORE_X;
+    int sZ = (int)STORE_Z;
+    float sY = mapCells[sZ][sX].A.y;
+    addStaticCollider(&storeModel, STORE_X, sY, STORE_Z, 1.0f, 180.0f);
+}
+
+void initMapCells(){
     initHeightMatrix();
 
     float coordZ = 0;
@@ -44,87 +165,126 @@ void initMapCells(){
         for (int x = 0; x < MAP_SIZE; x++) {
             mapCells[z][x].A.x = coordX;
             mapCells[z][x].A.z = coordZ;
-            
             mapCells[z][x].B.x = coordX;
             mapCells[z][x].B.z = coordZ + 1;
-
             mapCells[z][x].C.x = coordX + 1;
             mapCells[z][x].C.z = coordZ;
-
             mapCells[z][x].D.x = coordX + 1;
             mapCells[z][x].D.z = coordZ + 1;
-
             coordX += 1;
         }
         coordZ += 1;
         coordX = 0;
     }
 
-    // Bota as coordenadas y nos pontos A's.
+    // Atualiza Ys
     for (int z = 0; z < MAP_SIZE; z++) {
         for (int x = 0; x < MAP_SIZE; x++){
             mapCells[z][x].A.y = heightMatrix[z][x];
-        }
-    }
-
-    // Mesma coisa pro B
-    for (int z = 0; z < MAP_SIZE; z++) {
-        for (int x = 0; x < MAP_SIZE; x++){
             mapCells[z][x].B.y = heightMatrix[z + 1][x];
-        }
-    }
-
-    // Mesma coisa pro C
-    for (int z = 0; z < MAP_SIZE; z++) {
-        for (int x = 0; x < MAP_SIZE; x++){
             mapCells[z][x].C.y = heightMatrix[z][x + 1];
-        }
-    }
-
-    // Mesma coisa pro D
-    for (int z = 0; z < MAP_SIZE; z++) {
-        for (int x = 0; x < MAP_SIZE; x++){
             mapCells[z][x].D.y = heightMatrix[z + 1][x + 1];
         }
     }
 }
 
 void drawMap() {
-    glColor3f(0.1f, 0.6f, 0.1f);
-
-    // Loop para percorrer cada linha do mapa no eixo Z
     for (int z = 0; z < MAP_SIZE; z++) {
-        
-        // Loop para percorrer cada coluna do mapa no eixo X
         for (int x = 0; x < MAP_SIZE; x++) {
             
+            float avgHeight = (mapCells[z][x].A.y + mapCells[z][x].B.y + mapCells[z][x].C.y + mapCells[z][x].D.y) / 4.0f;
+            float normalizedHeight = fmax(0.0f, fmin(avgHeight, 10.0f)); 
+            float minFactor = 0.5f; 
+            float maxVariation = 1.0f; 
+            float colorFactor = minFactor + (normalizedHeight / 10.0f) * maxVariation;
+            
+            glColor3f(0.1f * colorFactor, 0.6f * colorFactor, 0.1f * colorFactor);
+            
             glBegin(GL_TRIANGLE_STRIP);
-
-            // Vértice A
             vertex normalA = vertexNormals[z][x];
             glNormal3f(normalA.x, normalA.y, normalA.z);
             glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
-            //printf("A: %f, %f, %f \n ", normalA.x, normalA.y, normalA.z);
-        
-            // Vértice B
             vertex normalB = vertexNormals[z+1][x];
             glNormal3f(normalB.x, normalB.y, normalB.z);
             glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);
-            //printf("B: %f, %f, %f \n ", normalB.x, normalB.y, normalB.z);
-
-            // Vértice C
             vertex normalC = vertexNormals[z][x+1];
             glNormal3f(normalC.x, normalC.y, normalC.z);
             glVertex3f(mapCells[z][x].C.x, mapCells[z][x].C.y, mapCells[z][x].C.z);
-            //printf("C: %f, %f, %f \n ", normalC.x, normalC.y, normalC.z);
-
-            // Vértice D
             vertex normalD = vertexNormals[z+1][x+1];
             glNormal3f(normalD.x, normalD.y, normalD.z);
             glVertex3f(mapCells[z][x].D.x, mapCells[z][x].D.y, mapCells[z][x].D.z);
-            //printf("D: %f, %f, %f \n ", normalD.x, normalD.y, normalD.z);
-
             glEnd();
         }
     }
+
+    glEnable(GL_TEXTURE_2D); 
+
+    glPushMatrix();
+        int cellX = (int)CHURCH_X; int cellZ = (int)CHURCH_Z;
+        float churchY = mapCells[cellZ][cellX].A.y; 
+        glTranslatef(CHURCH_X, churchY, CHURCH_Z); 
+        glScalef(1.0f, 1.0f, 1.0f);
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+        if (churchModel.faceCount > 0) drawModel(&churchModel);
+    glPopMatrix();
+
+    glPushMatrix();
+        int h1X = (int)HOUSE_X; int h1Z = (int)HOUSE_Z;
+        float houseY = mapCells[h1Z][h1X].A.y; 
+        glTranslatef(HOUSE_X, houseY, HOUSE_Z); 
+        glScalef(1.0f, 1.0f, 1.0f);
+        if (houseModel.faceCount > 0) drawModel(&houseModel);
+    glPopMatrix();
+
+    glPushMatrix();
+        int h2X = (int)HOUSE2_X; int h2Z = (int)HOUSE2_Z;
+        float house2Y = mapCells[h2Z][h2X].A.y; 
+        glTranslatef(HOUSE2_X, house2Y, HOUSE2_Z); 
+        glScalef(1.0f, 1.0f, 1.0f);
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); 
+        if (houseModel.faceCount > 0) drawModel(&houseModel);
+    glPopMatrix();
+
+    glPushMatrix();
+        int g1X = (int)GASSTATION_X; int g1Z = (int)GASSTATION_Z;
+        float g1Y = mapCells[g1Z][g1X].A.y; 
+        glTranslatef(GASSTATION_X, g1Y, GASSTATION_Z); 
+        glScalef(0.7f, 0.7f, 0.7f);
+        if (gasStationModel.faceCount > 0) drawModel(&gasStationModel);
+    glPopMatrix();
+
+    glPushMatrix();
+        int g2X = (int)GASSTATION2_X; int g2Z = (int)GASSTATION2_Z;
+        float g2Y = mapCells[g2Z][g2X].A.y; 
+        glTranslatef(GASSTATION2_X, g2Y, GASSTATION2_Z); 
+        glScalef(0.7f, 0.7f, 0.7f);
+        if (gasStationModel.faceCount > 0) drawModel(&gasStationModel);
+    glPopMatrix();
+
+    glPushMatrix();
+        int g3X = (int)GASSTATION3_X; int g3Z = (int)GASSTATION3_Z;
+        float g3Y = mapCells[g3Z][g3X].A.y; 
+        glTranslatef(GASSTATION3_X, g3Y, GASSTATION3_Z); 
+        glScalef(0.7f, 0.7f, 0.7f);
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); 
+        if (gasStationModel.faceCount > 0) drawModel(&gasStationModel);
+    glPopMatrix();
+
+    glPushMatrix();
+        int g4X = (int)GASSTATION4_X; int g4Z = (int)GASSTATION4_Z;
+        float g4Y = mapCells[g4Z][g4X].A.y; 
+        glTranslatef(GASSTATION4_X, g4Y, GASSTATION4_Z); 
+        glScalef(0.7f, 0.7f, 0.7f);
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); 
+        if (gasStationModel.faceCount > 0) drawModel(&gasStationModel);
+    glPopMatrix();
+
+    glPushMatrix();
+        int sX = (int)STORE_X; int sZ = (int)STORE_Z;
+        float storeY = mapCells[sZ][sX].A.y; 
+        glTranslatef(STORE_X, storeY, STORE_Z); 
+        glScalef(1.0f, 1.0f, 1.0f);
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); 
+        if (storeModel.faceCount > 0) drawModel(&storeModel);
+    glPopMatrix();
 }
