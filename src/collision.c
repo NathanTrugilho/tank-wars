@@ -233,34 +233,34 @@ int checkLineOfSight(Point3D start, Point3D end) {
 // Ela preenche todo o resto (altura, largura, modelo 3D).
 // Helpers do PLAYER
 CollisionBox makePlayerHull(float x, float z, float angle) {
-    return getCollisionBox(&hullModel.box, x, tankY, z, angle, 0.0f, SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
+    return getCollisionBox(&hullModel.box, x, player.y, z, angle, 0.0f, SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
 }
 CollisionBox makePlayerTurret(float x, float z, float angle) {
-    return getCollisionBox(&turretModel.box, x, tankY, z, angle, 0.0f, SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
+    return getCollisionBox(&turretModel.box, x, player.y, z, angle, 0.0f, SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
 }
 CollisionBox makePlayerPipe(float x, float z, float tAngle, float pAngle) {
-    return getCollisionBox(&pipeModel.box, x, tankY, z, tAngle, pAngle, SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
+    return getCollisionBox(&pipeModel.box, x, player.y, z, tAngle, pAngle, SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
 }
 
 // Helpers do INIMIGO
 CollisionBox makeEnemyHull(struct Enemy *e) {
-    return getCollisionBox(&enemyHullModel.box, e->x, tankY, e->z, e->hullAngle, 0.0f, ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
+    return getCollisionBox(&enemyHullModel.box, e->x, player.y, e->z, e->hullAngle, 0.0f, ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
 }
 CollisionBox makeEnemyTurret(struct Enemy *e) {
     float angle = e->hullAngle + e->turretAngle;
-    return getCollisionBox(&enemyTurretModel.box, e->x, tankY, e->z, angle, 0.0f, ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
+    return getCollisionBox(&enemyTurretModel.box, e->x, player.y, e->z, angle, 0.0f, ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
 }
 CollisionBox makeEnemyPipe(struct Enemy *e) {
     float angle = e->hullAngle + e->turretAngle;
-    return getCollisionBox(&enemyPipeModel.box, e->x, tankY, e->z, angle, 0.0f, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
+    return getCollisionBox(&enemyPipeModel.box, e->x, player.y, e->z, angle, 0.0f, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
 }
 
 // FUNÇÕES PRINCIPAIS DE COLISÃO DO JOGO
 
 int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg) {
     CollisionBox pHull = makePlayerHull(nextX, nextZ, hullAngleDeg);
-    CollisionBox pTurret = makePlayerTurret(nextX, nextZ, turretAngle);
-    CollisionBox pPipe = makePlayerPipe(nextX, nextZ, turretAngle, pipeAngle);
+    CollisionBox pTurret = makePlayerTurret(nextX, nextZ, player.turretAngle);
+    CollisionBox pPipe = makePlayerPipe(nextX, nextZ, player.turretAngle, player.pipeAngle);
 
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
@@ -277,9 +277,9 @@ int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg) {
 }
 
 int wouldCollideTurret(float nextTurretAngle) {
-    CollisionBox pHull = makePlayerHull(tankX, tankZ, hullAngle);
-    CollisionBox pTurret = makePlayerTurret(tankX, tankZ, nextTurretAngle);
-    CollisionBox pPipe = makePlayerPipe(tankX, tankZ, nextTurretAngle, pipeAngle);
+    CollisionBox pHull = makePlayerHull(player.x, player.z, player.hullAngle);
+    CollisionBox pTurret = makePlayerTurret(player.x, player.z, nextTurretAngle);
+    CollisionBox pPipe = makePlayerPipe(player.x, player.z, nextTurretAngle, player.pipeAngle);
 
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
@@ -305,9 +305,9 @@ int wouldCollideEnemyTurret(int enemyIndex, float nextTurretAngle) {
     CollisionBox eTurret = makeEnemyTurret(&temp);
     CollisionBox ePipe = makeEnemyPipe(&temp);
     // Verifica Colisão contra o PLAYER
-    CollisionBox pHull = makePlayerHull(tankX, tankZ, hullAngle);
-    CollisionBox pTurret = makePlayerTurret(tankX, tankZ, turretAngle);
-    CollisionBox pPipe = makePlayerPipe(tankX, tankZ, turretAngle, pipeAngle);
+    CollisionBox pHull = makePlayerHull(player.x, player.z, player.hullAngle);
+    CollisionBox pTurret = makePlayerTurret(player.x, player.z, player.turretAngle);
+    CollisionBox pPipe = makePlayerPipe(player.x, player.z, player.turretAngle, player.pipeAngle);
 
     if (checkCollisionOBB(&eHull, &pPipe) || checkCollisionOBB(&eTurret, &pPipe) || checkCollisionOBB(&ePipe, &pPipe)) return 1;
     if (checkCollisionOBB(&eTurret, &pHull) || checkCollisionOBB(&eTurret, &pTurret)) return 1;
@@ -362,9 +362,9 @@ void drawDebugBox(CollisionBox b) {
 }
 
 void debugDrawPlayerCollision() {
-    drawDebugBox(makePlayerHull(tankX, tankZ, hullAngle));
-    drawDebugBox(makePlayerTurret(tankX, tankZ, turretAngle));
-    drawDebugBox(makePlayerPipe(tankX, tankZ, turretAngle, pipeAngle));
+    drawDebugBox(makePlayerHull(player.x, player.z, player.hullAngle));
+    drawDebugBox(makePlayerTurret(player.x, player.z, player.turretAngle));
+    drawDebugBox(makePlayerPipe(player.x, player.z, player.turretAngle, player.pipeAngle));
 }
 
 void debugDrawEnemyCollision() {

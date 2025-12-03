@@ -10,8 +10,6 @@ int specialKeyStates[256] = {0};
 void keyDown(unsigned char key, int x, int y) {
     keyStates[key] = 1;
     if (key == ' ' && player.ammo > 0) shootBullet();
-    
-    if (key == ' ') shootBullet();
 
     // Alternar Câmera (L ou l)
     if (key == 'l' || key == 'L') {
@@ -20,9 +18,9 @@ void keyDown(unsigned char key, int x, int y) {
         if (freeCameraMode) {
             // Ao entrar no modo livre, teletransporta a câmera para cima do tanque
             // para a transição ser suave
-            fcX = tankX;
-            fcY = tankY + 5.0f; // Um pouco acima
-            fcZ = tankZ + 5.0f; // Um pouco atrás
+            fcX = player.x;
+            fcY = player.y + 5.0f; // Um pouco acima
+            fcZ = player.z + 5.0f; // Um pouco atrás
             fcAngleH = 180.0f;  // Olhando pra trás 
             fcAngleV = -20.0f;  // Olhando levemente para baixo
         }

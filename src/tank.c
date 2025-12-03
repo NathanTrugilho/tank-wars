@@ -38,9 +38,9 @@ void updateTank() {
         glutPostRedisplay();
         return;
     }
-    float nextX = tankX;
-    float nextZ = tankZ;
-    float nextHullAngle = hullAngle;
+    float nextX = player.x;
+    float nextZ = player.z;
+    float nextHullAngle = player.hullAngle;
     
     // inputs de movimento do tanque
     if (keyStates['w'] || keyStates['W']) {
@@ -57,17 +57,17 @@ void updateTank() {
     // Verificação de colisão antes de aplicar o movimento
     
     // Gera as caixas hipotéticas de TODAS as partes na nova posição (nextX, nextZ)
-    CollisionBox nextHullBox = getCollisionBox(&hullModel.box, nextX, tankY, nextZ, 
+    CollisionBox nextHullBox = getCollisionBox(&hullModel.box, nextX, player.y, nextZ, 
                                                nextHullAngle, 0.0f, 
                                                SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
 
     // A torre e o cano giram com 'turretAngle', mas se movem para 'nextX/nextZ'
-    CollisionBox nextTurretBox = getCollisionBox(&turretModel.box, nextX, tankY, nextZ, 
-                                                 turretAngle, 0.0f, 
+    CollisionBox nextTurretBox = getCollisionBox(&turretModel.box, nextX, player.y, nextZ, 
+                                                 player.turretAngle, 0.0f, 
                                                  SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
                                                  
-    CollisionBox nextPipeBox = getCollisionBox(&pipeModel.box, nextX, tankY, nextZ, 
-                                               turretAngle, pipeAngle, 
+    CollisionBox nextPipeBox = getCollisionBox(&pipeModel.box, nextX, player.y, nextZ, 
+                                               player.turretAngle, player.pipeAngle, 
                                                SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
 
     // Verifica colisão com o MUNDO ESTÁTICO (Prédios, etc)
@@ -78,26 +78,26 @@ void updateTank() {
 
     // Verifica colisão com INIMIGOS e aplica movimento se livre
     if (!hitWorld && !wouldCollideTank(nextX, nextZ, nextHullAngle)) {
-        tankX = nextX;
-        tankZ = nextZ;
-        hullAngle = nextHullAngle;
+        player.x = nextX;
+        player.z = nextZ;
+        player.hullAngle = nextHullAngle;
     } 
     
     // Lógica da Torre
-    float nextTurretAngle = turretAngle;
+    float nextTurretAngle = player.turretAngle;
 
     if (specialKeyStates[GLUT_KEY_LEFT]) nextTurretAngle += TANK_ROT_SPEED;
     if (specialKeyStates[GLUT_KEY_RIGHT]) nextTurretAngle -= TANK_ROT_SPEED;
 
     // Se houve tentativa de girar a torre
-    if (nextTurretAngle != turretAngle) {
-        // Gera caixa hipotética da torre no novo angulo (mas posição atual tankX/tankZ)
-        CollisionBox rotTurretBox = getCollisionBox(&turretModel.box, tankX, tankY, tankZ, 
+    if (nextTurretAngle != player.turretAngle) {
+        // Gera caixa hipotética da torre no novo angulo (mas posição atual player.x/player.z)
+        CollisionBox rotTurretBox = getCollisionBox(&turretModel.box, player.x, player.y, player.z, 
                                                      nextTurretAngle, 0.0f, 
                                                      SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
         
-        CollisionBox rotPipeBox = getCollisionBox(&pipeModel.box, tankX, tankY, tankZ, 
-                                                   nextTurretAngle, pipeAngle, 
+        CollisionBox rotPipeBox = getCollisionBox(&pipeModel.box, player.x, player.y, player.z, 
+                                                   nextTurretAngle, player.pipeAngle, 
                                                    SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
 
         // Verifica inimigos E mapa
@@ -105,7 +105,7 @@ void updateTank() {
         int colidiuMapa = checkCollisionWithWorld(&rotTurretBox) || checkCollisionWithWorld(&rotPipeBox);
 
         if (!colidiuInimigo && !colidiuMapa) {
-            turretAngle = nextTurretAngle;
+            player.turretAngle = nextTurretAngle;
         }
     }
 
