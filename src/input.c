@@ -9,6 +9,7 @@ int specialKeyStates[256] = {0};
 // Teclado
 void keyDown(unsigned char key, int x, int y) {
     keyStates[key] = 1;
+    if (key == ' ' && player.ammo > 0) shootBullet();
     
     if (key == ' ') shootBullet();
 

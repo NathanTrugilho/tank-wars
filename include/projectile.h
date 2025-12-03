@@ -27,6 +27,17 @@ typedef struct {
     float vertical_angle;
 } Bullet;
 
+typedef struct {
+    float x, y, z;
+    float radius;
+    float maxRadius;
+    int active;
+
+    float startTime;
+} Explosion;
+
+extern Explosion explosion;
+
 extern Bullet player_bullet;
 extern Bullet enemy_bullets[MAX_ENEMY_BULLETS]; // Array de balas inimigas
 
@@ -49,5 +60,11 @@ void shootBullet();
 
 // Desenha bullet do jogador
 void drawBullet();
+
+void startExplosion(float x, float y, float z);
+
+void updateExplosion();
+
+void drawExplosion();
 
 #endif

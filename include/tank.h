@@ -31,19 +31,31 @@
 
 extern const double RADIAN_FACTOR; // Pra converter de graus pra radiano
 
-// Posição e orientação do tanque
-extern float tankX;
-extern float tankY;
-extern float tankZ;
-
-extern float hullAngle;
-extern float turretAngle;
-extern float pipeAngle;
-
-extern int mapCellX;
-extern int mapCellZ;
-
 extern ObjModel turretModel, pipeModel, hullModel;
+
+typedef struct {
+    float x, y, z;
+    int mapCellX, mapCellY, mapCellZ; 
+
+    float hullAngle;
+    float turretAngle;
+    float pipeAngle;
+
+    float moveSpeed;
+    float tankRotSpeed;
+    float turretRotSpeed;
+    float pipeInclineSpeed;
+    
+    int alive;
+    int health;
+    int ammo;
+    int bulletDmg;
+    unsigned long lastShootTime;
+    int reloadTime;
+    int flagReloadCircle;
+} Tank;
+
+extern Tank player;
 
 void drawTank();
 

@@ -7,4 +7,7 @@ void drawHUD();
 // Função que atualiza o tempo decorrido (chame a cada frame)
 void updateHUDTime();
 
+// Desenha círculo de reload
+void drawReloadCircle(int boolean);
+
 #endif

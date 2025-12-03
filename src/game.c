@@ -1,5 +1,7 @@
 #include <game.h>
 #include <hud.h>
+#include <power_up.h>
+#include <projectile.h>
 
 float ratio;
 
@@ -17,6 +19,12 @@ void display() {
     drawEnemies();
     drawTank();
     drawBullet();
+    //drawSnowFlake();
+    drawExplosion();
+    //drawAmmo();
+    //drawHermesShoes();
+    //drawFist();
+    drawHealthPack();
     drawEnemyBullets();
 
     debugDrawPlayerCollision();
@@ -69,6 +77,11 @@ void reshape(GLsizei w, GLsizei h) {
     if (h == 0) h = 1;
     ratio = (GLfloat)w/(GLfloat)h;
     glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0, (float)w / h, 0.1, 2000);
+
+    glMatrixMode(GL_MODELVIEW);
     updateCamera();
 
     windowW = w;
@@ -77,8 +90,10 @@ void reshape(GLsizei w, GLsizei h) {
 
 void timer(int value) {
     updateTank();
-    updateEnemies(tankX, tankZ);
+    updateEnemies(player.x, player.z);
     updateBullets();
+    //testePowerUp();
+    updateExplosion();
     updateEnemyBullets();
 
     glutPostRedisplay();
@@ -87,6 +102,10 @@ void timer(int value) {
 
 // Inicialização
 void init() {
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_NORMALIZE);
+    glShadeModel(GL_SMOOTH);
+    glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
     glEnable(GL_NORMALIZE); 
 
     glEnable(GL_COLOR_MATERIAL); 
@@ -97,6 +116,8 @@ void init() {
     calcularNormaisDoMapa();
     initEnemies();
     initTank();
+    initBullet();
+    initPowerUps();
     initBullet(); // Isso já chama initEnemyBullets dentro do projectile.c atualizado
     initChurch();
     initHouse();
