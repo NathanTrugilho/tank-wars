@@ -2,7 +2,7 @@
 #include <collision.h> 
 #include <enemy.h>     
 #include <game.h>      
-#include <tank.h> // Necessário para acessar tankX, tankZ, hullModel etc.
+#include <tank.h> // Necessário para acessar player.x, player.z, hullModel etc.
 
 Bullet player_bullet;
 Bullet enemy_bullets[MAX_ENEMY_BULLETS]; // Pool de balas inimigas
@@ -15,6 +15,8 @@ ObjModel shellModel;
 #ifndef RADIAN_FACTOR
 #define RADIAN_FACTOR (3.14159265359 / 180.0)
 #endif
+
+Explosion explosion;
 
 // --- FUNÇÕES DO JOGADOR (MANTIDAS IGUAIS) ---
 
@@ -54,17 +56,17 @@ void updateBullets() {
         float eGlobA = eHullA + eTurretA;        
 
         // Recria caixas do inimigo para checagem
-        // Nota: Assumindo tankY para inimigos também (chão plano)
+        // Nota: Assumindo player.y para inimigos também (chão plano)
         CollisionBox eHull = getCollisionBox(
-            &enemyHullModel.box, ex, tankY, ez, eHullA, 0.0f, 
+            &enemyHullModel.box, ex, player.y, ez, eHullA, 0.0f, 
             ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX
         );
         CollisionBox eTurret = getCollisionBox(
-            &enemyTurretModel.box, ex, tankY, ez, eGlobA, 0.0f,
+            &enemyTurretModel.box, ex, player.y, ez, eGlobA, 0.0f,
             ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX
         );
         CollisionBox ePipe = getCollisionBox(
-            &enemyPipeModel.box, ex, tankY, ez, eGlobA, 0.0f,
+            &enemyPipeModel.box, ex, player.y, ez, eGlobA, 0.0f,
             ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX
         );
 
@@ -124,15 +126,15 @@ void updateEnemyBullets() {
     // Gera as caixas de colisão do PLAYER uma única vez por frame
     // para testar contra todas as balas
     CollisionBox pHull = getCollisionBox(
-        &hullModel.box, tankX, tankY, tankZ, hullAngle, 0.0f, 
+        &hullModel.box, player.x, player.y, player.z, player.hullAngle, 0.0f, 
         SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX
     );
     CollisionBox pTurret = getCollisionBox(
-        &turretModel.box, tankX, tankY, tankZ, turretAngle, 0.0f, 
+        &turretModel.box, player.x, player.y, player.z, player.turretAngle, 0.0f, 
         SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX
     );
     CollisionBox pPipe = getCollisionBox(
-        &pipeModel.box, tankX, tankY, tankZ, turretAngle, pipeAngle, 
+        &pipeModel.box, player.x, player.y, player.z, player.turretAngle, player.pipeAngle, 
         SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX
     );
 

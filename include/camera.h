@@ -2,7 +2,7 @@
 #define CAMERA_H
 
 #include <GL/glut.h>
-#include <tank.h> // Para pegar tankX, tankZ quando alternar
+#include <tank.h> // Para pegar player.x, player.z quando alternar
 #include <math.h>
 #include <game.h>
 // #include <game.h> // Evitar include circular se possível, mas ok se necessário
