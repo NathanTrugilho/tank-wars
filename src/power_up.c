@@ -2,6 +2,10 @@
 #include <tank.h>
 #include <input.h>
 
+PowerUpInstance powerUps[MAX_POWER_UPS];
+
+//static int powerUpIndex = 0;
+
 // ------------- TESTE --------------
 void testePowerUp() {
     if (keyStates['m'] || keyStates['M']) {
@@ -14,6 +18,17 @@ void testePowerUp() {
         increaseSpeed();
     }
 }
+
+// ------------- SPAWN POWER UP -------------
+
+void spawnPowerUp() {
+    srand(time(NULL));
+    powerUps->x = (rand() % 50) - 25; // Exemplo: posição aleatória entre -25 e 25
+    powerUps->y = 1;
+    powerUps->z = (rand() % 50) - 25; // Exemplo: posição aleatória entre -25 e 25
+}
+
+// ------------- Random Power Up -------------
 
 // ------------- INIT -------------
 ObjModel snowFlake, hermesShoes, fist, healthPack; //Ammo é carregado em projectile.c

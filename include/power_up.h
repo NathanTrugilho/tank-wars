@@ -4,7 +4,28 @@
 #include <mybib.h>
 #include <input.h>
 
-extern ObjModel snowFlake;
+#define MAX_POWER_UPS 256
+
+extern ObjModel snowFlake, hermesShoes, fist, healthPack; //Ammo é carregado em projectile.c
+
+typedef enum {
+    PU_AMMO,
+    PU_HEALTH,
+    PU_SPEED,
+    PU_DMG,
+    PU_FREEZE
+} PowerUpType;
+
+typedef struct {
+    PowerUpType type;
+    float x, y, z;
+    float scale;
+    int active;
+    float spawnTime;
+    float duration;  // Para powerups temporários (speed, dmg...)
+} PowerUpInstance;
+
+extern PowerUpInstance powerUps[MAX_POWER_UPS];
 
 void testePowerUp();
 

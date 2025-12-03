@@ -43,6 +43,9 @@ void drawHUD()
 
     glDisable(GL_DEPTH_TEST); // HUD deve ficar por cima do 3D
 
+    glDisable(GL_LIGHTING);
+    glDisable(GL_LIGHT0);
+
     // 🔹 Tempo decorrido formatado
     int minutes = (int)(elapsedTime / 60);
     int seconds = (int)elapsedTime % 60;
@@ -64,6 +67,9 @@ void drawHUD()
     drawText(10, 520, timeText);
 
     drawReloadCircle(player.flagReloadCircle);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
 
     // Restaura estado original
     glEnable(GL_DEPTH_TEST);
