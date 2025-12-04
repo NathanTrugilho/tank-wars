@@ -35,20 +35,28 @@ void updateCamera()
     // Lógica dos 3 Modos de Câmera de Jogo
     switch (currentCameraMode) {
 
-        case CAM_FIRST_PERSON: // --- MODO 1: PRIMEIRA PESSOA ---
+        case CAM_FIRST_PERSON: 
         {
             float h_rad = player.turretAngle * RADIAN_FACTOR;
             float v_rad = player.pipeAngle * RADIAN_FACTOR;
-            float horizontal_dist = cosf(v_rad) * PIPE_LENGTH;
+
+            // --- AQUI ESTÁ O TRUQUE ---
+            // Definimos uma distância extra para a câmera não ficar "dentro" do cano.
+            // Podes aumentar ou diminuir o 0.8f se ainda estiver clipando.
+            float cameraDist = PIPE_LENGTH + 0.8f; 
+
+            // Usamos 'cameraDist' em vez de PIPE_LENGTH nos cálculos abaixo
+            float horizontal_dist = cosf(v_rad) * cameraDist;
+            
             float right_x = cosf(h_rad);
             float right_z = -sinf(h_rad);
 
-            // Olho na ponta do cano
+            // Calcula a posição do olho um pouco mais à frente
             float eyeX = player.x - sinf(h_rad) * horizontal_dist - (right_x * BULLET_SIDE_CORRECTION);
             float eyeZ = player.z - cosf(h_rad) * horizontal_dist - (right_z * BULLET_SIDE_CORRECTION);
-            float eyeY = (player.y + PIPE_HEIGHT) + sinf(v_rad) * PIPE_LENGTH;
+            float eyeY = (player.y + PIPE_HEIGHT) + sinf(v_rad) * cameraDist;
 
-            // Olhando para frente
+            // O ponto para onde olhamos continua a ser projetado à frente dessa nova posição
             float lookX = eyeX - sinf(h_rad) * cosf(v_rad);
             float lookY = eyeY + sinf(v_rad);
             float lookZ = eyeZ - cosf(h_rad) * cosf(v_rad);
@@ -57,7 +65,7 @@ void updateCamera()
             drawSun();
         }
         break;
-
+        
         case POSITIONAL_CAM: // --- MODO 2: CÂMERA EXTRA (Vista de cima) ---
         {
             gluLookAt(player.x, player.y + 30.0f, player.z,
