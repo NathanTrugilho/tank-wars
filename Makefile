@@ -29,10 +29,10 @@ ifdef IS_WINDOWS
     # Configurações para Windows
     TARGET      := tankwars.exe
     LIBS        := -lfreeglut -lopengl32 -lglu32 -lm
-    RM          := del /Q /F
-    # Comando para remover diretório recursivamente no Windows
-    RM_DIR      := rmdir /S /Q
-    MKDIR_CMD   := if not exist $(OBJDIR) mkdir $(OBJDIR)
+    RM          := rm -f
+    # Comando para remover diretório recursivamente no Linux
+    RM_DIR      := rm -rf
+    MKDIR_CMD   := mkdir -p $(OBJDIR)
 else
     # Configurações para Linux/Unix
     TARGET      := tankwars

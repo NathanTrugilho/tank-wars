@@ -5,6 +5,8 @@
 
 void drawSun();
 
+void drawMapSun();
+
 void setupLighting();
 
 #endif
