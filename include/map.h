@@ -53,6 +53,9 @@ void drawMap();
 void initMapCells();
 void initHeightMatrix();
 
+// NOVA FUNÇÃO: Pega a altura do terreno em qualquer ponto (x, z)
+float getTerrainHeight(float x, float z);
+
 void initChurch();
 void initHouse();
 void initGasStation();

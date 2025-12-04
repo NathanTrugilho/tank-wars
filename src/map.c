@@ -45,6 +45,46 @@ void addStaticCollider(ObjModel *model, float x, float y, float z, float scale, 
     staticColliderCount++;
 }
 
+// ==========================================================
+// NOVA FUNÇÃO: Interpolação Bilinear para altura do terreno
+// ==========================================================
+float getTerrainHeight(float x, float z) {
+    // Verifica limites do mapa
+    if (x < 0 || x >= MAP_SIZE || z < 0 || z >= MAP_SIZE) {
+        return 0.0f; // Fora do mapa retorna 0
+    }
+
+    int cellX = (int)x;
+    int cellZ = (int)z;
+
+    // Garante que não estoure o array
+    if (cellX >= MAP_SIZE) cellX = MAP_SIZE - 1;
+    if (cellZ >= MAP_SIZE) cellZ = MAP_SIZE - 1;
+
+    // Pega a diferença decimal (0.0 a 1.0) dentro da célula
+    float dx = x - (float)cellX;
+    float dz = z - (float)cellZ;
+
+    // Alturas dos 4 cantos da célula atual
+    // Estrutura square: A=(x,z), B=(x,z+1), C=(x+1,z), D=(x+1,z+1)
+    // Mas no initMapCells:
+    // A=(x,z), B=(x,z+1), C=(x+1,z), D=(x+1,z+1)
+    
+    float hA = mapCells[cellZ][cellX].A.y; // Top-Left
+    float hC = mapCells[cellZ][cellX].C.y; // Top-Right (X+1)
+    float hB = mapCells[cellZ][cellX].B.y; // Bottom-Left (Z+1)
+    float hD = mapCells[cellZ][cellX].D.y; // Bottom-Right (X+1, Z+1)
+
+    // Interpolação no eixo X (Cima e Baixo)
+    float heightTop = hA * (1.0f - dx) + hC * dx;
+    float heightBottom = hB * (1.0f - dx) + hD * dx;
+
+    // Interpolação no eixo Z (Final)
+    float finalHeight = heightTop * (1.0f - dz) + heightBottom * dz;
+
+    return finalHeight;
+}
+
 void addHill(float centerX, float centerZ, float radius, float height) {
     for (int z = 0; z < VERTEX_NUM; z++) {
         for (int x = 0; x < VERTEX_NUM; x++) {

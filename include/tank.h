@@ -26,6 +26,9 @@
 #define PIPE_LENGTH 3.2
 #define PIPE_HEIGHT 1.12
 
+// Altura que o tank deve ficar do chão
+#define TANK_GROUND_DISTANCE 0.05f
+
 #define TRUE 1
 #define FALSE 0
 

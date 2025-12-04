@@ -114,10 +114,6 @@ CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz,
 }
 
 // COLISÃO SAT 3D (Separating Axis Theorem ou Teorema do Eixo Separador)
-// Resumo:
-// Imagine que você quer saber se dois objetos colidiram, mas eles estão girados no espaço. 
-// Uma maneira de fazer isso é olhar para eles de um ângulo específico (um eixo) e ver se as "sombras" (projeções) deles se sobrepõem.
-// Se você encontrar pelo menos um ângulo onde as sombras não se tocam, você tem certeza absoluta de que os objetos não estão colidindo.
 int getSeparation(CollisionBox *a, CollisionBox *b, Point3D axis) {
     if (dot(axis, axis) < 0.00001f) return 0; 
 
@@ -176,8 +172,6 @@ int checkCollisionWithWorld(CollisionBox *dynamicBox) {
 }
 
 // ALGORITMO DE RAYCASTING (VISÃO)
-// Retorna 1 se o raio NÃO bater em nada (visão livre).
-// Retorna 0 se o raio bater em alguma CollisionBox do mundo (visão obstruída).
 int checkLineOfSight(Point3D start, Point3D end) {
     // Vetor direção do raio
     Point3D dir = sub(end, start);
@@ -233,6 +227,7 @@ int checkLineOfSight(Point3D start, Point3D end) {
 // Ela preenche todo o resto (altura, largura, modelo 3D).
 // Helpers do PLAYER
 CollisionBox makePlayerHull(float x, float z, float angle) {
+    // Usa player.y pois é para o player
     return getCollisionBox(&hullModel.box, x, player.y, z, angle, 0.0f, SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
 }
 CollisionBox makePlayerTurret(float x, float z, float angle) {
@@ -243,16 +238,17 @@ CollisionBox makePlayerPipe(float x, float z, float tAngle, float pAngle) {
 }
 
 // Helpers do INIMIGO
+// CORREÇÃO AQUI: Usar e->y em vez de player.y
 CollisionBox makeEnemyHull(struct Enemy *e) {
-    return getCollisionBox(&enemyHullModel.box, e->x, player.y, e->z, e->hullAngle, 0.0f, ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
+    return getCollisionBox(&enemyHullModel.box, e->x, e->y, e->z, e->hullAngle, 0.0f, ENEMY_SCALE_HULL_W, ENEMY_SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
 }
 CollisionBox makeEnemyTurret(struct Enemy *e) {
     float angle = e->hullAngle + e->turretAngle;
-    return getCollisionBox(&enemyTurretModel.box, e->x, player.y, e->z, angle, 0.0f, ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
+    return getCollisionBox(&enemyTurretModel.box, e->x, e->y, e->z, angle, 0.0f, ENEMY_SCALE_TURRET_W, ENEMY_SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
 }
 CollisionBox makeEnemyPipe(struct Enemy *e) {
     float angle = e->hullAngle + e->turretAngle;
-    return getCollisionBox(&enemyPipeModel.box, e->x, player.y, e->z, angle, 0.0f, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
+    return getCollisionBox(&enemyPipeModel.box, e->x, e->y, e->z, angle, 0.0f, ENEMY_SCALE_PIPE_W, ENEMY_SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
 }
 
 // FUNÇÕES PRINCIPAIS DE COLISÃO DO JOGO

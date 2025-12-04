@@ -49,9 +49,13 @@
 // Tempo (em frames) que o inimigo fica dando ré se bater
 #define ENEMY_STUCK_TIME 40 
 
+// Altura que o tank deve ficar do chão
+#define ENEMY_TANK_GROUND_DISTANCE 0.1f
+
 typedef struct Enemy { 
     int alive;
     float x, z;
+    float y; // NOVA PROPRIEDADE
     float hullAngle; 
     float turretAngle; 
     
