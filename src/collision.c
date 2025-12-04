@@ -384,16 +384,14 @@ void debugDrawWorldCollisions() {
 }
 
 // FUNÇÕES DE COLISÃO COM POWER UP
-/*
-1 - getCollisionBox(&snowFlake.box, )
-*/
 
 int checkTankPowerUpCollision(PowerUpInstance *p)
 {
     //if (!p->active) return 0;  // ignorar PUs já coletados
     ObjModel pu = getObjModel(*p);
 
-    CollisionBox puBox = getCollisionBox(&pu.box, p->x, p->y, p->z, 0.0f, 0.0f, p->scale, p->scale, 0.5, 0.5);
+    float halfHeight = 0.5f; //metade de p->y
+    CollisionBox puBox = getCollisionBox(&pu.box, p->x, p->y, p->z, 0.0f, 0.0f, p->scale, p->scale, p->y - halfHeight, p->y + halfHeight);
     
     // colisão com o tanque (carcaça do player)
     CollisionBox tankHull = makePlayerHull(player.x, player.z, player.hullAngle);
