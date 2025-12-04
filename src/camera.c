@@ -70,7 +70,8 @@ void updateCamera()
         {
             gluLookAt(player.x, player.y + 20.0f, player.z,
                       player.x, player.y, player.z,         
-                      0.0f, 0.0f, -1.0f);                   
+                      0.0f, 0.0f, -1.0f);   
+            drawSun();                
         }
         break;
 
