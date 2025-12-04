@@ -65,10 +65,10 @@ void updateCamera()
             drawSun();
         }
         break;
-        
+
         case POSITIONAL_CAM: // --- MODO 2: CÂMERA EXTRA (Vista de cima) ---
         {
-            gluLookAt(player.x, player.y + 30.0f, player.z,
+            gluLookAt(player.x, player.y + 20.0f, player.z,
                       player.x, player.y, player.z,         
                       0.0f, 0.0f, -1.0f);                   
         }
