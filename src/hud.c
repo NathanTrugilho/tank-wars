@@ -72,27 +72,27 @@ void drawHUD()
     glDisable(GL_LIGHTING);
     glDisable(GL_LIGHT0);
 
-    // 🔹 Tempo decorrido formatado
     int minutes = (int)(elapsedTime / 60);
     int seconds = (int)elapsedTime % 60;
     int millis = (int)((elapsedTime - (int)elapsedTime) * 1000);
     char timeText[32];
     snprintf(timeText, sizeof(timeText), "Tempo: %02d:%02d:%02d", minutes, seconds, millis / 10);
 
-    // 🔹 Informações de HUD
     char vidaText[32];
     snprintf(vidaText, sizeof(vidaText), "Vida: %d", player.health);
 
     char ammoText[32];
     snprintf(ammoText, sizeof(ammoText), "Ammo: %d", player.ammo);
 
-    // 🔹 Desenha textos
+    char cameraText[32];
+    snprintf(cameraText, sizeof(cameraText), "Camera: %d", currentCameraMode);
+
     glColor3f(1, 1, 1); // Branco
     drawText(10, 570, vidaText);
     drawText(10, 545, ammoText);
     drawText(10, 520, timeText);
+    drawText(10, 495, cameraText);
 
-    // 🔹 Desenha a Mira
     drawCrosshair();
 
     drawReloadCircle(player.flagReloadCircle);
