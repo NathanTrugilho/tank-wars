@@ -26,7 +26,9 @@ void display() {
     //drawHermesShoes();
     //drawFist();
     //drawHealthPack();
-    spawnPowerUp();
+    spawnPowerUp();   // checa se deve gerar um novo
+    drawPowerUps();   // desenha todos os existentes
+
 
     debugDrawPlayerCollision();
     debugDrawEnemyCollision();

@@ -4,7 +4,7 @@
 #include <mybib.h>
 #include <input.h>
 
-#define MAX_POWER_UPS 256
+#define MAX_POWER_UPS 250
 
 extern ObjModel snowFlake, hermesShoes, fist, healthPack; //Ammo é carregado em projectile.c
 
@@ -19,13 +19,19 @@ typedef enum {
 typedef struct {
     PowerUpType type;
     float x, y, z;
-    //float scale;
+    float scale;
     int active;
 } PowerUpInstance;
 
 extern PowerUpInstance powerUps[MAX_POWER_UPS];
 
 PowerUpType getRandomPowerUp();
+
+ObjModel getObjModel(PowerUpInstance p);
+
+void applyPowerUpEffect(PowerUpType type);
+
+void drawPowerUps();
 
 float getScale(PowerUpType type);
 
@@ -36,27 +42,27 @@ void testePowerUp();
 void initPowerUps();
 
 // ------------- FREEZE -------------
-void drawSnowFlake();
+void drawSnowFlake(int index);
 
 void freeze();
 
 // ------------- AMMO -------------
-void drawAmmo();
+void drawAmmo(int index);
 
 void addAmmo();
 
 // ------------- HEALTH -------------
-void drawHealthPack();
+void drawHealthPack(int index);
 
 void heal();
 
 // ------------- INSTA KILL -------------
-void drawFist();
+void drawFist(int index);
 
 void increaseDmg();
 
 // ------------- SPEED -------------
-void drawHermesShoes();
+void drawHermesShoes(int index);
 
 void increaseSpeed();
 

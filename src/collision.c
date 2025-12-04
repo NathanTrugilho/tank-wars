@@ -6,6 +6,7 @@
 #include <float.h>
 #include <stdio.h>
 #include <GL/glut.h>
+#include <power_up.h>
 
 #define RADIAN_FACTOR (3.14159265359 / 180.0)
 
@@ -380,4 +381,39 @@ void debugDrawWorldCollisions() {
     for (int i = 0; i < staticColliderCount; i++) {
         drawDebugBox(staticColliders[i]);
     }
+}
+
+// FUNÇÕES DE COLISÃO COM POWER UP
+/*
+1 - getCollisionBox(&snowFlake.box, )
+*/
+
+int checkTankPowerUpCollision(PowerUpInstance *p)
+{
+    //if (!p->active) return 0;  // ignorar PUs já coletados
+    ObjModel pu = getObjModel(*p);
+
+    CollisionBox puBox = getCollisionBox(&pu.box, p->x, p->y, p->z, 0.0f, 0.0f, p->scale, p->scale, 0.5, 0.5);
+    
+    // colisão com o tanque (carcaça do player)
+    CollisionBox tankHull = makePlayerHull(player.x, player.z, player.hullAngle);
+
+    if (checkCollisionOBB(&tankHull, &puBox))
+        return 1;
+
+    return 0;
+}
+
+
+int checkAllPowerUpCollisions(PowerUpInstance powerUps[])
+{
+    for (int i = 0; i < MAX_POWER_UPS; i++)
+    {
+        if (powerUps[i].active && checkTankPowerUpCollision(&powerUps[i]))
+        {
+            return i;  // retorna o índice do power-up coletado
+        }
+    }
+
+    return -1;  // nenhum power-up tocado
 }

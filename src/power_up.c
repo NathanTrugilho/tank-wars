@@ -27,14 +27,6 @@ void testePowerUp()
     }
 }
 
-// ------------- GET RANDOM POWER UP -------------
-
-PowerUpType getRandomPowerUp()
-{
-    int r = rand() % 5; // cinco tipos no enum
-    return (PowerUpType)r;
-}
-
 // ------------- GET SCALE -------------
 float getScale(PowerUpType type)
 {
@@ -65,42 +57,83 @@ float getScale(PowerUpType type)
     }
 }
 
+// ------------- GET RANDOM POWER UP -------------
+
+PowerUpType getRandomPowerUp()
+{
+    int r = rand() % 5; // cinco tipos no enum
+    return (PowerUpType)r;
+}
+
+// ------------- APPLY EFEITO DO POWER UP -------------
+
+void applyPowerUpEffect(PowerUpType type)
+{
+    switch (type)
+    {
+        case PU_AMMO:
+            addAmmo();
+            break;
+
+        case PU_HEALTH:
+            heal();
+            break;
+
+        case PU_SPEED:
+            increaseSpeed();
+            break;
+
+        case PU_DMG:
+            increaseDmg();
+            break;
+
+        case PU_FREEZE:
+            freeze();
+            break;
+    }
+}
+
+
 // ------------- SPAWN POWER UP -------------
 
 void spawnPowerUp()
 {
     float now = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
-    if (now - lastSpawnTime >= 3.0f)
-    { // 10 segundos
-        printf("%d", powerUps[lastPowerUpIndex].type);
+    if (now - lastSpawnTime >= 5.0f)
+    { // 5 segundos
         lastSpawnTime = now;
-        switch (powerUps[lastPowerUpIndex].type)
+        powerUps[lastPowerUpIndex].active = 1;
+        lastPowerUpIndex += 1;
+    }
+}
+
+// ------------- DRAW ACTIVE POWER UPS -------------
+void drawPowerUps()
+{
+    for (int i = 0; i < MAX_POWER_UPS; i++)
+    {
+        if (!powerUps[i].active)
+            continue;
+
+        switch (powerUps[i].type)
         {
         case PU_AMMO:
-            drawAmmo();
+            drawAmmo(i);
             break;
-
         case PU_HEALTH:
-            drawHealthPack();
+            drawHealthPack(i);
             break;
-
         case PU_SPEED:
-            drawHermesShoes();
+            drawHermesShoes(i);
             break;
-
         case PU_DMG:
-            drawFist();
+            drawFist(i);
             break;
-
         case PU_FREEZE:
-            drawSnowFlake();
-            break;
-
-        default:
+            drawSnowFlake(i);
             break;
         }
     }
-    lastPowerUpIndex += 1;
 }
 
 // ------------- INIT -------------
@@ -108,35 +141,62 @@ ObjModel snowFlake, hermesShoes, fist, healthPack; // Ammo é carregado em proje
 
 void initPowerUps()
 {
-    if (loadOBJ("objects/snowFlake.obj", "objects/snowFlake.mtl", &snowFlake))
-   
-    if (loadOBJ("objects/hermesShoes.obj", "objects/hermesShoes.mtl", &hermesShoes))
-    
-    if (loadOBJ("objects/fist.obj", "objects/fist.mtl", &fist))
-    
-    if (loadOBJ("objects/healthPack.obj", "objects/healthPack.mtl", &healthPack));
-    //srand(time(NULL))
+    if (loadOBJ("objects/snowFlake.obj", "objects/snowFlake.mtl", &snowFlake)) {}
+    else {}
+
+    if (loadOBJ("objects/hermesShoes.obj", "objects/hermesShoes.mtl", &hermesShoes)){}
+    else {}
+
+    if (loadOBJ("objects/fist.obj", "objects/fist.mtl", &fist)){}
+    else {}
+
+    if (loadOBJ("objects/healthPack.obj", "objects/healthPack.mtl", &healthPack)){}
+    else {}
+
     for (int i = 0; i < MAX_POWER_UPS; i++)
     {
-        powerUps->type = getRandomPowerUp();
-        powerUps->x = (rand() % 50) - 25;
-        powerUps->y = 1;
-        powerUps->z = (rand() % 50) - 25;
-        //powerUps->scale = getScale(powerUps->type);
-        powerUps->active = 0;
+        powerUps[i].type = getRandomPowerUp();
+        powerUps[i].x = (rand() % 50) - 25;
+        powerUps[i].y = 1;
+        powerUps[i].z = (rand() % 50) - 25;
+        powerUps[i].scale = getScale(powerUps[i].type);
+        powerUps[i].active = 0;
+    }
+}
+
+// ------------- GET OBJECT MODEL -------------
+
+ObjModel getObjModel(PowerUpInstance p)
+{
+    switch (p.type)
+    {
+    case PU_AMMO:
+        return shellModel;
+        break;
+    case PU_HEALTH:
+        return healthPack;
+        break;
+    case PU_SPEED:
+        return hermesShoes;
+        break;
+    case PU_DMG:
+        return fist;
+        break;
+    case PU_FREEZE:
+        return snowFlake;
+        break;
     }
 }
 
 // ------------- FREEZE -------------
-void drawSnowFlake()
+void drawSnowFlake(int index)
 {
-    float x = 30, y = 1, z = 13;
     float modelScale = 0.2f;
 
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
-    glTranslatef(x, y, z);
+    glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
     glScalef(modelScale, modelScale, modelScale);
     drawModel(&snowFlake);
     drawBox(snowFlake.box);
@@ -149,15 +209,14 @@ void freeze()
 }
 
 // ------------- AMMO -------------
-void drawAmmo()
+void drawAmmo(int index)
 {
-    float x = 30, y = 1, z = 13;
     float modelScale = 0.35f;
 
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
-    glTranslatef(x, y, z);
+    glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
     glScalef(modelScale, modelScale, modelScale);
     glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
     drawModel(&shellModel);
@@ -171,15 +230,14 @@ void addAmmo()
 }
 
 // ------------- HEALTH -------------
-void drawHealthPack()
+void drawHealthPack(int index)
 {
-    float x = 30, y = 1, z = 13;
     float modelScale = 0.09f;
 
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
-    glTranslatef(x, y, z);
+    glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
     glScalef(modelScale, modelScale, modelScale);
     glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
     drawModel(&healthPack);
@@ -193,15 +251,14 @@ void heal()
 }
 
 // ------------- DMG UPGRADE -------------
-void drawFist()
+void drawFist(int index)
 {
-    float x = 30, y = 1, z = 13;
     float modelScale = 0.1f;
 
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
-    glTranslatef(x, y, z);
+    glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
     glScalef(modelScale, modelScale, modelScale);
     glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
     drawModel(&fist);
@@ -215,15 +272,14 @@ void increaseDmg()
 }
 
 // ------------- SPEED -------------
-void drawHermesShoes()
+void drawHermesShoes(int index)
 {
-    float x = 30, y = 1, z = 13;
     float modelScale = 0.2f;
 
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
-    glTranslatef(x, y, z);
+    glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
     glScalef(modelScale, modelScale, modelScale);
     // glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
     drawModel(&hermesShoes);

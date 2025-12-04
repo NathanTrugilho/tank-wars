@@ -2,6 +2,7 @@
 #define COLISION_H
 
 #include "mybib.h"
+#include <power_up.h>
 
 // Forward Declaration para evitar loop de include
 struct Enemy; 
@@ -85,5 +86,8 @@ CollisionBox makePlayerPipe(float x, float z, float tAngle, float pAngle);
 CollisionBox makeEnemyHull(struct Enemy *e);
 CollisionBox makeEnemyTurret(struct Enemy *e);
 CollisionBox makeEnemyPipe(struct Enemy *e);
+
+int checkTankPowerUpCollision(PowerUpInstance *p);
+int checkAllPowerUpCollisions(PowerUpInstance powerUps[]);
 
 #endif
