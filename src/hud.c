@@ -4,9 +4,7 @@
 #include <hud.h>
 #include <tank.h>
 #include <math.h>
-
-#define TRUE 1
-#define FALSE 0
+#include <camera.h> // <--- NECESSÁRIO para acessar currentCameraMode e CAM_FIRST_PERSON
 
 // Controle de tempo
 static clock_t startTime = 0;
@@ -20,6 +18,34 @@ static void drawText(float x, float y, const char *text)
     {
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
     }
+}
+
+// --- NOVA FUNÇÃO: Desenha a Mira (Crosshair) ---
+void drawCrosshair() {
+    // Só desenha se estiver em Primeira Pessoa
+    if (currentCameraMode != CAM_FIRST_PERSON) return;
+
+    float centerX = 400.0f; // Metade de 800
+    float centerY = 300.0f; // Metade de 600
+    float size = 15.0f;     // Tamanho da linha da mira
+
+    glDisable(GL_TEXTURE_2D); // Garante que não aplica textura nas linhas
+    glLineWidth(2.0f);        // Deixa a linha um pouco mais grossa
+
+    glColor3f(0.0f, 1.0f, 0.0f); // Cor Verde brilhante
+
+    glBegin(GL_LINES);
+        // Linha Horizontal
+        glVertex2f(centerX - size, centerY);
+        glVertex2f(centerX + size, centerY);
+
+        // Linha Vertical
+        glVertex2f(centerX, centerY - size);
+        glVertex2f(centerX, centerY + size);
+    glEnd();
+
+    glLineWidth(1.0f); // Retorna a espessura original para não afetar outras coisas
+    glColor3f(1.0f, 1.0f, 1.0f); // Retorna para branco
 }
 
 void updateHUDTime()
@@ -37,12 +63,12 @@ void drawHUD()
     glPushMatrix();
     glLoadIdentity();
     gluOrtho2D(0, 800, 0, 600); // Modo 2D fixo
+    
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
 
     glDisable(GL_DEPTH_TEST); // HUD deve ficar por cima do 3D
-
     glDisable(GL_LIGHTING);
     glDisable(GL_LIGHT0);
 
@@ -65,6 +91,9 @@ void drawHUD()
     drawText(10, 570, vidaText);
     drawText(10, 545, ammoText);
     drawText(10, 520, timeText);
+
+    // 🔹 Desenha a Mira
+    drawCrosshair();
 
     drawReloadCircle(player.flagReloadCircle);
 
@@ -93,28 +122,32 @@ void drawReloadCircle(int shot) {
     float progress = (float)timeSinceLastShot / (float)player.reloadTime;
     
     // Posição fixa na tela (canto superior direito)
-    float circleX = 0.5;  // Coordenada X normalizada
-    float circleY = 0.6f;  // Coordenada Y normalizada  
-    float radius = 0.05f;  // Raio do círculo
+    // Nota: Como o ortho é 0..800, 0..600, vamos converter essas coordenadas normalizadas
+    // A função original usava outra projeção local, vamos respeitar a lógica original dela
+    // pois ela cria a própria projeção internamente.
     
-    // Salva a matriz de projeção atual
+    // ... [O código original de drawReloadCircle mantém-se inalterado] ...
+    // Vou reincluir apenas o início para contexto, mas podes manter a função igualzinha
+    
+    float circleX = 0.5;  
+    float circleY = 0.6f;    
+    float radius = 0.05f;  
+    
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    gluOrtho2D(0, 1, 0, 1); // Coordenadas normalizadas
+    gluOrtho2D(0, 1, 0, 1); 
     
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
     
-    // Desabilita recursos desnecessários para HUD
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
     
-    // Desenha o círculo de fundo (contorno)
-    glColor3f(0.3f, 0.3f, 0.3f); // Cinza escuro
+    glColor3f(0.3f, 0.3f, 0.3f); 
     glBegin(GL_TRIANGLE_FAN);
-    glVertex2f(circleX, circleY); // Centro
+    glVertex2f(circleX, circleY); 
     for (int i = 0; i <= 360; i += 10) {
         float angle = i * RADIAN_FACTOR;
         glVertex2f(circleX + cosf(angle) * radius, 
@@ -122,18 +155,15 @@ void drawReloadCircle(int shot) {
     }
     glEnd();
     
-    // Desenha a parte preenchida progressivamente
     if (progress > 0.0f) {
-        // Cor muda do vermelho para o verde conforme progride
         float r = 1.0f - progress;
         float g = progress;
         float b = 0.0f;
         glColor3f(r, g, b);
         
         glBegin(GL_TRIANGLE_FAN);
-        glVertex2f(circleX, circleY); // Centro
+        glVertex2f(circleX, circleY); 
         
-        // Desenha o arco progressivo
         int segments = (int)(360 * progress);
         for (int i = 0; i <= segments; i += 5) {
             float angle = i * RADIAN_FACTOR;
@@ -141,7 +171,6 @@ void drawReloadCircle(int shot) {
                        circleY + sinf(angle) * radius);
         }
         
-        // Se não estiver completo, fecha o arco com o centro
         if (segments < 360) {
             float finalAngle = segments * RADIAN_FACTOR;
             glVertex2f(circleX + cosf(finalAngle) * radius, 
@@ -150,7 +179,6 @@ void drawReloadCircle(int shot) {
         glEnd();
     }
     
-    // Restaura as configurações
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
     
