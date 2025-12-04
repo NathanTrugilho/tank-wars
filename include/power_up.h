@@ -1,13 +1,6 @@
 #ifndef POWER_UP_H
 #define POWER_UP_H
 
-#include <mybib.h>
-#include <input.h>
-
-#define MAX_POWER_UPS 250
-
-extern ObjModel snowFlake, hermesShoes, fist, healthPack; //Ammo é carregado em projectile.c
-
 typedef enum {
     PU_AMMO,
     PU_HEALTH,
@@ -22,6 +15,13 @@ typedef struct {
     float scale;
     int active;
 } PowerUpInstance;
+
+#include <mybib.h>
+#include <input.h>
+
+#define MAX_POWER_UPS 250
+
+extern ObjModel snowFlake, hermesShoes, fist, healthPack; //Ammo é carregado em projectile.c
 
 extern PowerUpInstance powerUps[MAX_POWER_UPS];
 

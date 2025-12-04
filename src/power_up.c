@@ -34,27 +34,21 @@ float getScale(PowerUpType type)
     {
     case PU_AMMO:
         return 0.35f;
-        break;
 
     case PU_HEALTH:
         return 0.09f;
-        break;
 
     case PU_SPEED:
         return 0.2f;
-        break;
 
     case PU_DMG:
         return 0.1f;
-        break;
 
     case PU_FREEZE:
         return 0.2f;
-        break;
-
-    default:
-        break;
     }
+
+    return 0.1f;
 }
 
 // ------------- GET RANDOM POWER UP -------------
@@ -172,20 +166,17 @@ ObjModel getObjModel(PowerUpInstance p)
     {
     case PU_AMMO:
         return shellModel;
-        break;
     case PU_HEALTH:
         return healthPack;
-        break;
     case PU_SPEED:
         return hermesShoes;
-        break;
     case PU_DMG:
         return fist;
-        break;
     case PU_FREEZE:
         return snowFlake;
-        break;
     }
+
+    return shellModel;
 }
 
 // ------------- FREEZE -------------

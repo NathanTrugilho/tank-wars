@@ -1,6 +1,20 @@
 #ifndef ENEMY_H
 #define ENEMY_H
 
+typedef struct Enemy { 
+    int alive;
+    float x, z;
+    float hullAngle; 
+    float turretAngle; 
+    
+    int wanderTimer;      
+    float targetWanderAngle; 
+    long lastShootTime; 
+    
+    // Contador para lógica de "Manobrar"
+    int stuckTimer; 
+} Enemy;
+
 #include "mybib.h" 
 
 #define MAX_ENEMIES 2
@@ -48,20 +62,6 @@
 
 // Tempo (em frames) que o inimigo fica dando ré se bater
 #define ENEMY_STUCK_TIME 40 
-
-typedef struct Enemy { 
-    int alive;
-    float x, z;
-    float hullAngle; 
-    float turretAngle; 
-    
-    int wanderTimer;      
-    float targetWanderAngle; 
-    long lastShootTime; 
-    
-    // Contador para lógica de "Manobrar"
-    int stuckTimer; 
-} Enemy;
 
 extern Enemy enemies[MAX_ENEMIES];
 

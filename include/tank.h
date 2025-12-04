@@ -1,6 +1,28 @@
 #ifndef TANK_H
 #define TANK_H
 
+typedef struct {
+    float x, y, z;
+    int mapCellX, mapCellY, mapCellZ; 
+
+    float hullAngle;
+    float turretAngle;
+    float pipeAngle;
+
+    float moveSpeed;
+    float tankRotSpeed;
+    float turretRotSpeed;
+    float pipeInclineSpeed;
+    
+    int alive;
+    int health;
+    int ammo;
+    int bulletDmg;
+    unsigned long lastShootTime;
+    int reloadTime;
+    int flagReloadCircle;
+} Tank;
+
 #include <GL/glut.h>
 #include <projectile.h>
 #include <input.h>
@@ -32,28 +54,6 @@
 extern const double RADIAN_FACTOR; // Pra converter de graus pra radiano
 
 extern ObjModel turretModel, pipeModel, hullModel;
-
-typedef struct {
-    float x, y, z;
-    int mapCellX, mapCellY, mapCellZ; 
-
-    float hullAngle;
-    float turretAngle;
-    float pipeAngle;
-
-    float moveSpeed;
-    float tankRotSpeed;
-    float turretRotSpeed;
-    float pipeInclineSpeed;
-    
-    int alive;
-    int health;
-    int ammo;
-    int bulletDmg;
-    unsigned long lastShootTime;
-    int reloadTime;
-    int flagReloadCircle;
-} Tank;
 
 extern Tank player;
 

@@ -1,11 +1,22 @@
 #ifndef COLISION_H
 #define COLISION_H
 
-#include "mybib.h"
-#include <power_up.h>
-
 // Forward Declaration para evitar loop de include
 struct Enemy; 
+
+typedef struct {
+    float x, y, z;
+} Point3D;
+
+typedef struct {
+    Point3D center;      // Centro da caixa no mundo
+    Point3D axis[3];     // Vetores de direção (X, Y, Z rotacionados)
+    float halfSize[3];   // Metade da largura, altura e profundidade
+    Point3D corners[8];  // Os 8 cantos para desenhar o debug
+} CollisionBox;
+
+#include "mybib.h"
+#include <power_up.h>
 
 // WIDTH: Quanto menor, mais "fino" fica o colisor (evita bater girando)
 // LENGTH: Quanto maior, mais longe ele alcança (corrige bater de frente)
@@ -36,17 +47,6 @@ struct Enemy;
 // Importante: Se o PIPE_MIN > HULL_MAX, o cano NUNCA vai bater na base do inimigo!
 #define PIPE_Y_MIN   1.51f
 #define PIPE_Y_MAX   1.7f
-
-typedef struct {
-    float x, y, z;
-} Point3D;
-
-typedef struct {
-    Point3D center;      // Centro da caixa no mundo
-    Point3D axis[3];     // Vetores de direção (X, Y, Z rotacionados)
-    float halfSize[3];   // Metade da largura, altura e profundidade
-    Point3D corners[8];  // Os 8 cantos para desenhar o debug
-} CollisionBox;
 
 // Função principal que gera a caixa 
 CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz, 
