@@ -12,44 +12,45 @@
 #define RADIAN_FACTOR (3.14159265359 / 180.0)
 #endif
 
+// VARIÁVEIS GLOBAIS
 Enemy enemies[MAX_ENEMIES];
 ObjModel enemyHullModel;
 ObjModel enemyTurretModel;
 ObjModel enemyPipeModel;
 
-#define SEPARATION_DIST 4.0f 
+// Distância mínima entre dois inimigos para não entrelaçar canos
+#define SEPARATION_DIST 8.0f 
 
 void initEnemies() {
-    if (!loadOBJ("objects/hull.obj", "objects/hull.mtl", &enemyHullModel)) printf("Erro Hull\n");
-    if (!loadOBJ("objects/turret.obj", "objects/turret.mtl", &enemyTurretModel)) printf("Erro Turret\n");
-    if (!loadOBJ("objects/pipe.obj", "objects/pipe.mtl", &enemyPipeModel)) printf("Erro Pipe\n");
+    if (!loadOBJ("objects/hull.obj", "objects/hull.mtl", &enemyHullModel)) printf("Erro Hull Inimigo\n");
+    if (!loadOBJ("objects/turret.obj", "objects/turret.mtl", &enemyTurretModel)) printf("Erro Turret Inimigo\n");
+    if (!loadOBJ("objects/pipe.obj", "objects/pipe.mtl", &enemyPipeModel)) printf("Erro Pipe Inimigo\n");
 
     srand(time(NULL));
     for (int i = 0; i < MAX_ENEMIES; i++) {
         enemies[i].alive = 1;
         enemies[i].x = (rand() % 50) - 25; 
         enemies[i].z = (rand() % 50) - 25;
-        // Inicializa Y correto
+        
         enemies[i].y = getTerrainHeight(enemies[i].x, enemies[i].z) + ENEMY_TANK_GROUND_DISTANCE;
+        enemies[i].pitch = 0.0f;
         
         enemies[i].hullAngle = rand() % 360;   
         enemies[i].turretAngle = 0.0f;         
         enemies[i].wanderTimer = 0;
         enemies[i].targetWanderAngle = enemies[i].hullAngle;
         enemies[i].lastShootTime = 0; 
-        enemies[i].stuckTimer = 0; // Inicializa zerado
+        enemies[i].stuckTimer = 0; 
     }
 }
 
-// Funções auxiliares no topo
 void drawVisionCone(Enemy *e) {
     glPushAttrib(GL_ENABLE_BIT); 
     float totalAngle = e->hullAngle + e->turretAngle;
     float rad = totalAngle * RADIAN_FACTOR;
     float halfFovRad = (ENEMY_VIEW_ANGLE / 2.0f) * RADIAN_FACTOR;
     
-    // Altura do olho (baseado no Y atual do inimigo)
-    float y = e->y + 1.6f; // +1.6f pra ficar na altura do cano aprox
+    float y = e->y + 1.25f; 
     
     float cx = -sinf(rad) * ENEMY_VIEW_RANGE;
     float cz = -cosf(rad) * ENEMY_VIEW_RANGE;
@@ -94,14 +95,15 @@ void drawEnemyTank(Enemy *e) {
     drawVisionCone(e);
     glColor3f(1.0f, 1.0f, 1.0f); 
     glPushMatrix();
-        // USA O Y DO INIMIGO
         glTranslatef(e->x, e->y, e->z); 
+        glRotatef(e->hullAngle, 0.0f, 1.0f, 0.0f);
+        glRotatef(e->pitch, 1.0f, 0.0f, 0.0f);
+
         glPushMatrix();
-            glRotatef(e->hullAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&enemyHullModel);
         glPopMatrix();
         glPushMatrix();
-            glRotatef(e->hullAngle + e->turretAngle, 0.0f, 1.0f, 0.0f);
+            glRotatef(e->turretAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&enemyTurretModel);
             drawModel(&enemyPipeModel);
         glPopMatrix();
@@ -124,39 +126,31 @@ void updateEnemies(float playerX, float playerZ) {
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
 
-        // Atualiza altura atual (caso ele tenha sido empurrado ou o mapa mude)
+        // Atualiza estado atual
         enemies[i].y = getTerrainHeight(enemies[i].x, enemies[i].z) + ENEMY_TANK_GROUND_DISTANCE;
+        enemies[i].pitch = getTerrainPitch(enemies[i].x, enemies[i].z, enemies[i].hullAngle);
 
-        // LÓGICA DE "Manobrar"
-        // Se o inimigo estiver no estado "Stuck", ele ignora tudo e dá ré.
+        // --- LÓGICA DE MANOBRA (RÉ) ---
         if (enemies[i].stuckTimer > 0) {
             enemies[i].stuckTimer--;
             
-            // Movimento de RÉ (Velocidade Negativa)
             float rad = enemies[i].hullAngle * RADIAN_FACTOR;
-            float backSpeed = ENEMY_SPEED * 0.8f; // Ré um pouco mais lenta
+            float backSpeed = ENEMY_SPEED * 0.8f; 
             
-            float nextX = enemies[i].x + sinf(rad) * backSpeed; // + sen/cos é ré (pois - é frente)
+            float nextX = enemies[i].x + sinf(rad) * backSpeed; // + é ré
             float nextZ = enemies[i].z + cosf(rad) * backSpeed;
+            float nextPitch = getTerrainPitch(nextX, nextZ, enemies[i].hullAngle);
             float nextY = getTerrainHeight(nextX, nextZ) + ENEMY_TANK_GROUND_DISTANCE;
 
-            // Verifica se a ré é segura (não tem parede atrás)
-            Enemy futureBack = enemies[i];
-            futureBack.x = nextX;
-            futureBack.z = nextZ;
-            futureBack.y = nextY;
-            CollisionBox fh = makeEnemyHull(&futureBack);
-            
-            // Se a traseira não bater, aplica a ré
-            if (!checkCollisionWithWorld(&fh)) {
+            // Verifica colisão da ré (Se bater em qualquer coisa, cancela a ré)
+            int collisionType = checkEnemyGhostCollision(i, nextX, nextY, nextZ, enemies[i].hullAngle, enemies[i].turretAngle, nextPitch);
+            if (collisionType == 0) {
                 enemies[i].x = nextX;
                 enemies[i].z = nextZ;
             }
             
-            // Enquanto dá ré, tenta girar o corpo um pouco para mudar a direção de saída
             enemies[i].hullAngle += 2.0f; 
-            
-            continue; // Pula o resto da IA (não atira nem persegue enquanto manobra)
+            continue; 
         }
 
         float nextX = enemies[i].x;
@@ -167,19 +161,23 @@ void updateEnemies(float playerX, float playerZ) {
         
         int seesPlayer = canSeePlayer(&enemies[i], playerX, playerZ);
         
-        // DECISÃO
         if (seesPlayer) {
+            // ATIRAR
             if (now - enemies[i].lastShootTime > ENEMY_SHOOT_DELAY) {
                 shootEnemyBullet(&enemies[i]);
                 enemies[i].lastShootTime = now;
             }
+            
             float dx = playerX - enemies[i].x;
             float dz = playerZ - enemies[i].z;
             float distSq = dx*dx + dz*dz;
+            
             if (distSq < ENEMY_MIN_COMBAT_DIST * ENEMY_MIN_COMBAT_DIST) shouldMove = 0; 
+            
             float targetRad = atan2f(-dx, -dz); 
             targetGlobalAngle = targetRad * (180.0f / 3.14159f);
         } else {
+            // WANDER
             enemies[i].wanderTimer--;
             if (enemies[i].wanderTimer <= 0) {
                 enemies[i].wanderTimer = 60 + (rand() % 120); 
@@ -198,13 +196,14 @@ void updateEnemies(float playerX, float playerZ) {
             targetGlobalAngle = enemies[i].targetWanderAngle;
         }
 
-        // REPULSÃO
+        // --- REPULSÃO ENTRE INIMIGOS ---
         int isAvoiding = 0;
         for (int j = 0; j < MAX_ENEMIES; j++) {
             if (i == j || !enemies[j].alive) continue;
             float dx = enemies[j].x - enemies[i].x;
             float dz = enemies[j].z - enemies[i].z;
             float distSq = dx*dx + dz*dz;
+            
             if (distSq < SEPARATION_DIST * SEPARATION_DIST) {
                 float angleToNeighborRad = atan2f(-dx, -dz);
                 float angleAwayDeg = (angleToNeighborRad * (180.0f / 3.14159f)) + 180.0f;
@@ -215,7 +214,7 @@ void updateEnemies(float playerX, float playerZ) {
             }
         }
 
-        // ROTAÇÃO HULL
+        // --- ROTAÇÃO DO CORPO (HULL) ---
         float hullDiff = targetGlobalAngle - enemies[i].hullAngle;
         while (hullDiff > 180) hullDiff -= 360;
         while (hullDiff < -180) hullDiff += 360;
@@ -227,17 +226,16 @@ void updateEnemies(float playerX, float playerZ) {
         else if (hullDiff < -rotSpeed) nextHullAngle -= rotSpeed;
         else nextHullAngle = targetGlobalAngle; 
 
-        // Verifica colisão da rotação
-        Enemy futureRotHull = enemies[i];
-        futureRotHull.hullAngle = nextHullAngle;
-        CollisionBox fh = makeEnemyHull(&futureRotHull);
-        CollisionBox fp = makeEnemyPipe(&futureRotHull);
-
-        if (!checkCollisionWithWorld(&fh) && !checkCollisionWithWorld(&fp)) {
+        // Checa se a rotação é segura
+        // Se retornar 1 (parede) ou 2 (player), não gira.
+        float futurePitch = getTerrainPitch(enemies[i].x, enemies[i].z, nextHullAngle);
+        int rotCollision = checkEnemyGhostCollision(i, enemies[i].x, enemies[i].y, enemies[i].z, nextHullAngle, enemies[i].turretAngle, futurePitch);
+        
+        if (rotCollision == 0) {
             enemies[i].hullAngle = nextHullAngle;
         }
 
-        // ROTAÇÃO TORRE
+        // --- ROTAÇÃO DA TORRE ---
         if (seesPlayer && !isAvoiding) {
             float dx = playerX - enemies[i].x;
             float dz = playerZ - enemies[i].z;
@@ -251,88 +249,55 @@ void updateEnemies(float playerX, float playerZ) {
             if (tDiff > ENEMY_ROT_SPEED) nextTurretAngle += ENEMY_ROT_SPEED;
             else if (tDiff < -ENEMY_ROT_SPEED) nextTurretAngle -= ENEMY_ROT_SPEED;
 
-            // Verifica colisão da rotação
-            Enemy futureRot = enemies[i];
-            futureRot.turretAngle = nextTurretAngle;
-            CollisionBox ftr = makeEnemyTurret(&futureRot);
-            CollisionBox fpr = makeEnemyPipe(&futureRot);
-
-            if (!checkCollisionWithWorld(&fpr) && 
-                !checkCollisionWithWorld(&ftr) &&
-                !wouldCollideEnemyTurret(i, nextTurretAngle)) {
+            // Checa se a rotação da torre é segura
+            if (checkEnemyGhostCollision(i, enemies[i].x, enemies[i].y, enemies[i].z, enemies[i].hullAngle, nextTurretAngle, enemies[i].pitch) == 0) {
                  enemies[i].turretAngle = nextTurretAngle;
             }
         } else {
             enemies[i].turretAngle *= 0.90f;
         }
 
-        // MOVIMENTO
+        // --- MOVIMENTO ---
         if (shouldMove) {
             float rad = enemies[i].hullAngle * RADIAN_FACTOR;
             
-            // LÓGICA DE SENSOR (DISTÂNCIA SEGURA)
+            // 1. SENSOR DE SEGURANÇA (Para PAREDES)
             float probeX = enemies[i].x - sinf(rad) * ENEMY_OBSTACLE_SAFE_DIST;
             float probeZ = enemies[i].z - cosf(rad) * ENEMY_OBSTACLE_SAFE_DIST;
             float probeY = getTerrainHeight(probeX, probeZ) + ENEMY_TANK_GROUND_DISTANCE;
+            float probePitch = getTerrainPitch(probeX, probeZ, enemies[i].hullAngle);
 
-            Enemy probeEnemy = enemies[i];
-            probeEnemy.x = probeX;
-            probeEnemy.z = probeZ;
-            probeEnemy.y = probeY;
-
-            CollisionBox probeBox = makeEnemyHull(&probeEnemy);
+            int probeCollision = checkEnemyGhostCollision(i, probeX, probeY, probeZ, enemies[i].hullAngle, enemies[i].turretAngle, probePitch);
             
-            // Se o sensor sentir a parede, ativa o MODO MANOBRAR
-            if (checkCollisionWithWorld(&probeBox)) {
+            // SÓ ENTRA EM MODO RÉ SE FOR COLISÃO TIPO 1 (PAREDE)
+            if (probeCollision == 1) {
                 shouldMove = 0;
-                enemies[i].targetWanderAngle += 180.0f; // Vira para o outro lado
-                enemies[i].stuckTimer = ENEMY_STUCK_TIME; // Ativa a ré por X frames
+                enemies[i].targetWanderAngle += 180.0f; 
+                enemies[i].stuckTimer = ENEMY_STUCK_TIME; 
             }
+            // SE FOR TIPO 2 (PLAYER/INIMIGO), NÃO FAZ NADA (APENAS PARA DE ANDAR PELA LÓGICA ABAIXO)
             
-
+            // 2. APLICA MOVIMENTO
             if (shouldMove) {
                 nextX -= sinf(rad) * currentMoveSpeed;
                 nextZ -= cosf(rad) * currentMoveSpeed;
-                float nextY = getTerrainHeight(nextX, nextZ) + ENEMY_TANK_GROUND_DISTANCE; // ALTURA FUTURA
+                float nextY = getTerrainHeight(nextX, nextZ) + ENEMY_TANK_GROUND_DISTANCE; 
+                float nextPitch = getTerrainPitch(nextX, nextZ, enemies[i].hullAngle);
 
-                float oldX = enemies[i].x;
-                float oldZ = enemies[i].z;
-                float oldY = enemies[i].y;
+                // Verifica colisão REAL do movimento
+                int moveCollision = checkEnemyGhostCollision(i, nextX, nextY, nextZ, enemies[i].hullAngle, enemies[i].turretAngle, nextPitch);
 
-                Enemy futureEnemy = enemies[i];
-                futureEnemy.x = nextX;
-                futureEnemy.z = nextZ;
-                futureEnemy.y = nextY; // Usa nova altura para checar colisão
-                
-                CollisionBox realFh = makeEnemyHull(&futureEnemy);
-                CollisionBox realFt = makeEnemyTurret(&futureEnemy);
-                CollisionBox realFp = makeEnemyPipe(&futureEnemy);
-                
-                // Hard Collision (Segurança final)
-                int hitWorld = checkCollisionWithWorld(&realFh) || 
-                               checkCollisionWithWorld(&realFt) || 
-                               checkCollisionWithWorld(&realFp);
-
-                if (hitWorld) {
-                    // Se mesmo com o sensor ele bateu (ex: spawnou perto),
-                    // Ativa o modo manobrar imediatamente.
-                    enemies[i].x = oldX; 
-                    enemies[i].z = oldZ;
-                    enemies[i].y = oldY;
-                    enemies[i].stuckTimer = ENEMY_STUCK_TIME; 
-                } else {
+                if (moveCollision == 0) {
+                    // LIVRE
                     enemies[i].x = nextX;
                     enemies[i].z = nextZ;
                     enemies[i].y = nextY;
-                    
-                    if (wouldCollideEnemyTurret(i, enemies[i].turretAngle)) {
-                        enemies[i].x = oldX;
-                        enemies[i].z = oldZ;
-                        enemies[i].y = oldY;
-                        if (!seesPlayer) enemies[i].targetWanderAngle += 180.0f; 
-                        enemies[i].hullAngle += 5.0f; 
-                    }
-                }
+                    enemies[i].pitch = nextPitch;
+                } else if (moveCollision == 1) {
+                    // BATEU NA PAREDE DE PERTO (Ativa Ré)
+                    enemies[i].stuckTimer = ENEMY_STUCK_TIME;
+                } 
+                // Se moveCollision == 2, não faz nada (não anda, não dá ré) -> Comportamento desejado
             }
         }
     }

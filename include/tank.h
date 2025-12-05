@@ -16,7 +16,7 @@
 #define MAX_PIPE_ANGLE 10
 #define MIN_PIPE_ANGLE -5
 
-#define TANK_MOVEMENT_SPEED 0.5f
+#define TANK_MOVEMENT_SPEED 0.2f
 
 #define TANK_ROT_SPEED 2.0f
 #define TURRET_ROT_SPEED 0.5f
@@ -41,6 +41,7 @@ typedef struct {
     int mapCellX, mapCellY, mapCellZ; 
 
     float hullAngle;
+    float pitch;
     float turretAngle;
     float pipeAngle;
 

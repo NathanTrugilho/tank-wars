@@ -53,8 +53,11 @@ void drawMap();
 void initMapCells();
 void initHeightMatrix();
 
-// NOVA FUNÇÃO: Pega a altura do terreno em qualquer ponto (x, z)
+// Pega a altura do terreno em qualquer ponto (x, z)
 float getTerrainHeight(float x, float z);
+
+// Calcula a inclinação (pitch) do terreno baseada no angulo do objeto
+float getTerrainPitch(float x, float z, float angleYaw);
 
 void initChurch();
 void initHouse();

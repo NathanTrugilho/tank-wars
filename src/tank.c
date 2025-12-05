@@ -13,10 +13,16 @@ void drawTank() {
     glPushMatrix();
         // Usa player.y que agora é dinâmico
         glTranslatef(player.x, player.y, player.z);
+        
+        // ROTAÇÃO DO HULL ANGLE (YAW)
+        glRotatef(player.hullAngle, 0.0f, 1.0f, 0.0f);
+
+        // NOVA ROTAÇÃO DE PITCH (SUBIDA/DESCIDA)
+        glRotatef(player.pitch, 1.0f, 0.0f, 0.0f);
 
         // HULL
         glPushMatrix();
-            glRotatef(player.hullAngle, 0.0f, 1.0f, 0.0f);
+            // Sem glRotate(hull) aqui pois já foi no pai
             drawModel(&hullModel);
         glPopMatrix();
 
@@ -32,6 +38,7 @@ void drawTank() {
     glPopMatrix();
     glDisable(GL_TEXTURE_2D);
 }
+
 void updateTank() {
     if (freeCameraMode) {
         glutPostRedisplay();
@@ -54,24 +61,24 @@ void updateTank() {
     if (keyStates['d'] || keyStates['D']) nextHullAngle -= TANK_ROT_SPEED;
 
     // ============================================
-    // NOVIDADE: Calcular altura na próxima posição
+    // Calcular altura e PITCH na próxima posição
     // ============================================
     float nextY = getTerrainHeight(nextX, nextZ) + TANK_GROUND_DISTANCE;
+    float nextPitch = getTerrainPitch(nextX, nextZ, nextHullAngle);
 
     // Verificação de colisão antes de aplicar o movimento
     
     // Gera as caixas hipotéticas de TODAS as partes na nova posição e NOVA ALTURA
-    CollisionBox nextHullBox = getCollisionBox(&hullModel.box, nextX, nextY, nextZ, 
-                                               nextHullAngle, 0.0f, 
-                                               SCALE_HULL_W, SCALE_HULL_L, HULL_Y_MIN, HULL_Y_MAX);
+    // Nota: Passamos a hierarquia completa agora.
+    
+    // Hull
+    CollisionBox nextHullBox = makePlayerHull(nextX, nextZ, nextHullAngle, nextPitch);
 
-    CollisionBox nextTurretBox = getCollisionBox(&turretModel.box, nextX, nextY, nextZ, 
-                                                 player.turretAngle, 0.0f, 
-                                                 SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
+    // Turret (Na nova posição, com o angulo atual da torre)
+    CollisionBox nextTurretBox = makePlayerTurret(nextX, nextZ, nextHullAngle, nextPitch, player.turretAngle);
                                                  
-    CollisionBox nextPipeBox = getCollisionBox(&pipeModel.box, nextX, nextY, nextZ, 
-                                               player.turretAngle, player.pipeAngle, 
-                                               SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
+    // Pipe
+    CollisionBox nextPipeBox = makePlayerPipe(nextX, nextZ, nextHullAngle, nextPitch, player.turretAngle, player.pipeAngle);
 
     // Verifica colisão com o MUNDO ESTÁTICO (Prédios, etc)
     int hitWorld = checkCollisionWithWorld(&nextHullBox) || 
@@ -79,15 +86,17 @@ void updateTank() {
                    checkCollisionWithWorld(&nextPipeBox);
 
     // Verifica colisão com INIMIGOS e aplica movimento se livre
-    if (!hitWorld && !wouldCollideTank(nextX, nextZ, nextHullAngle)) {
+    // Passamos o nextPitch para a função wouldCollideTank também
+    if (!hitWorld && !wouldCollideTank(nextX, nextZ, nextHullAngle, nextPitch)) {
         player.x = nextX;
         player.z = nextZ;
-        player.y = nextY; // Atualiza a altura
+        player.y = nextY; 
         player.hullAngle = nextHullAngle;
+        player.pitch = nextPitch; // Atualiza o pitch
     } else {
-        // Se bater, ainda atualizamos a altura na posição ATUAL, 
-        // caso o terreno mude abaixo do tanque parado (raro, mas bom garantir)
+        // Se bater, ainda atualizamos a altura e pitch na posição ATUAL
         player.y = getTerrainHeight(player.x, player.z) + TANK_GROUND_DISTANCE;
+        player.pitch = getTerrainPitch(player.x, player.z, player.hullAngle);
     }
     
     // Lógica da Torre
@@ -98,17 +107,15 @@ void updateTank() {
 
     // Se houve tentativa de girar a torre
     if (nextTurretAngle != player.turretAngle) {
-        // Gera caixa hipotética da torre no novo angulo
-        CollisionBox rotTurretBox = getCollisionBox(&turretModel.box, player.x, player.y, player.z, 
-                                                     nextTurretAngle, 0.0f, 
-                                                     SCALE_TURRET_W, SCALE_TURRET_L, TURRET_Y_MIN, TURRET_Y_MAX);
         
-        CollisionBox rotPipeBox = getCollisionBox(&pipeModel.box, player.x, player.y, player.z, 
-                                                   nextTurretAngle, player.pipeAngle, 
-                                                   SCALE_PIPE_W, SCALE_PIPE_L, PIPE_Y_MIN, PIPE_Y_MAX);
-
-        // Verifica inimigos E mapa
+        // Verifica inimigos E mapa usando as funções atualizadas
+        // As funções helper dentro de wouldCollide já usam o player.pitch atualizado acima
         int colidiuInimigo = wouldCollideTurret(nextTurretAngle);
+        
+        // Para o mapa, criamos caixas temporárias
+        CollisionBox rotTurretBox = makePlayerTurret(player.x, player.z, player.hullAngle, player.pitch, nextTurretAngle);
+        CollisionBox rotPipeBox = makePlayerPipe(player.x, player.z, player.hullAngle, player.pitch, nextTurretAngle, player.pipeAngle);
+        
         int colidiuMapa = checkCollisionWithWorld(&rotTurretBox) || checkCollisionWithWorld(&rotPipeBox);
 
         if (!colidiuInimigo && !colidiuMapa) {
@@ -172,7 +179,8 @@ void initTank() {
     player.z = mapCells[player.mapCellZ][player.mapCellX].C.z;
     
     // Inicializa a altura correta
-    player.y = getTerrainHeight(player.x, player.z) + 0.5f;
+    player.y = getTerrainHeight(player.x, player.z) + TANK_GROUND_DISTANCE;
+    player.pitch = getTerrainPitch(player.x, player.z, 0.0f);
 
     player.hullAngle = 0;
     player.turretAngle = 0;
