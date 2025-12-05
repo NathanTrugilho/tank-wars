@@ -205,6 +205,6 @@ void initTank()
     player.bulletDmg = 33;
 
     player.lastShootTime = 0;
-    player.reloadTime = 3000;
+    player.reloadTime = 2750;
     player.flagReloadCircle = 0;
 }

@@ -92,9 +92,10 @@ void applyPowerUpEffect(PowerUpType type)
 
 void spawnPowerUp()
 {
+    int secondsToSpawn = 10;
     float now = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
-    if (now - lastSpawnTime >= 5.0f)
-    { // 5 segundos
+    if (now - lastSpawnTime >= secondsToSpawn)
+    {
         lastSpawnTime = now;
         powerUps[lastPowerUpIndex].active = 1;
         lastPowerUpIndex += 1;
