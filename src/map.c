@@ -35,14 +35,81 @@ void addStaticCollider(ObjModel *model, float x, float y, float z, float scale, 
     float yMin = -50.0f; 
     float yMax = y + (model->box.maxY * scale);
 
-    // Gera a CollisionBox 
-    CollisionBox cb = getCollisionBox(&model->box, x, y, z, 
-                                      rotAngleY, 0.0f, 
-                                      scale, scale, 
-                                      yMin, yMax);
+    // Para objetos estáticos (prédios), não temos Pitch do terreno, nem torre/cano girando.
+    // Então passamos 0.0f nesses parâmetros.
+    CollisionBox cb = createHierarchicalBox(&model->box, x, y, z, 
+                                            scale, scale,       // Escala W e L
+                                            rotAngleY, 0.0f,    // HullYaw, TerrainPitch
+                                            0.0f, 0.0f,         // TurretYaw, PipePitch
+                                            yMin, yMax);
     
     staticColliders[staticColliderCount] = cb;
     staticColliderCount++;
+}
+
+
+// Interpolação Bilinear para altura do terreno
+float getTerrainHeight(float x, float z) {
+    // Verifica limites do mapa
+    if (x < 0 || x >= MAP_SIZE || z < 0 || z >= MAP_SIZE) {
+        return 0.0f; // Fora do mapa retorna 0
+    }
+
+    int cellX = (int)x;
+    int cellZ = (int)z;
+
+    // Garante que não estoure o array
+    if (cellX >= MAP_SIZE) cellX = MAP_SIZE - 1;
+    if (cellZ >= MAP_SIZE) cellZ = MAP_SIZE - 1;
+
+    // Pega a diferença decimal (0.0 a 1.0) dentro da célula
+    float dx = x - (float)cellX;
+    float dz = z - (float)cellZ;
+
+    // Alturas dos 4 cantos da célula atual
+    float hA = mapCells[cellZ][cellX].A.y; // Top-Left
+    float hC = mapCells[cellZ][cellX].C.y; // Top-Right (X+1)
+    float hB = mapCells[cellZ][cellX].B.y; // Bottom-Left (Z+1)
+    float hD = mapCells[cellZ][cellX].D.y; // Bottom-Right (X+1, Z+1)
+
+    // Interpolação no eixo X (Cima e Baixo)
+    float heightTop = hA * (1.0f - dx) + hC * dx;
+    float heightBottom = hB * (1.0f - dx) + hD * dx;
+
+    // Interpolação no eixo Z (Final)
+    float finalHeight = heightTop * (1.0f - dz) + heightBottom * dz;
+
+    return finalHeight;
+}
+
+// ==========================================================
+// NOVA FUNÇÃO: Calcula inclinação (Pitch)
+// ==========================================================
+float getTerrainPitch(float x, float z, float angleYaw) {
+    float rad = angleYaw * (3.14159f / 180.0f);
+    
+    // Distância de amostragem (quanto maior, mais suave, mas pode atravessar picos agudos)
+    float sampleDist = 0.8f; 
+
+    // O tanque anda "para trás" no eixo Z quando o angulo é 0?
+    // Baseado no input: nextX -= sin(ang), nextZ -= cos(ang)
+    // Isso significa que o vetor "Frente" é (-sin, -cos)
+    
+    float frontX = x - sinf(rad) * sampleDist;
+    float frontZ = z - cosf(rad) * sampleDist;
+    
+    float backX = x + sinf(rad) * sampleDist;
+    float backZ = z + cosf(rad) * sampleDist;
+
+    float hFront = getTerrainHeight(frontX, frontZ);
+    float hBack = getTerrainHeight(backX, backZ);
+
+    float dy = hFront - hBack;
+    float dist = sampleDist * 2.0f;
+
+    // atan2 retorna radianos. Convertemos para graus.
+    // Se a frente é mais alta, o pitch deve ser positivo (nariz pra cima)
+    return atan2f(dy, dist) * (180.0f / 3.14159f);
 }
 
 void addHill(float centerX, float centerZ, float radius, float height) {
