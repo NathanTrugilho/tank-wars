@@ -26,23 +26,18 @@ endif
 
 # --- Configuração Específica do Sistema Operacional ---
 ifdef IS_WINDOWS
-    # Configurações para Windows
     TARGET      := tankwars.exe
     LIBS        := -lfreeglut -lopengl32 -lglu32 -lm
-    RM          := del /Q /F
-    # Comando para remover diretório recursivamente no Windows
+    RM          := del /Q
     RM_DIR      := rmdir /S /Q
-    MKDIR_CMD   := if not exist $(OBJDIR) mkdir $(OBJDIR)
+    MKDIR_CMD   := if not exist "$(OBJDIR)" mkdir "$(OBJDIR)"
 else
-    # Configurações para Linux/Unix
     TARGET      := tankwars
     LIBS        := -lGL -lGLU -lglut -lm
     RM          := rm -f
-    # Comando para remover diretório recursivamente no Linux
     RM_DIR      := rm -rf
     MKDIR_CMD   := mkdir -p $(OBJDIR)
 endif
-
 
 # --- Regras de Compilação ---
 

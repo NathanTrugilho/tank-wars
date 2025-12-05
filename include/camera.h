@@ -6,6 +6,11 @@
 #include <math.h>
 #include <game.h>
 
+#define CAM_THIRD_PERSON 0
+#define CAM_FIRST_PERSON 1
+#define POSITIONAL_CAM   2 
+
+// Constantes da Câmera do Tanque (Mantive as suas)
 // Constantes da Câmera do Tanque
 #define CAM_FACTOR_X 5.0f
 #define CAM_FACTOR_Y 2.7f
@@ -17,6 +22,7 @@
 
 // Variável de Estado (0 = Tanque, 1 = Livre)
 extern int freeCameraMode;
+extern int currentCameraMode; // 0 = 3rd Person, 1 = 1st Person, 2 = Positional Cam
 
 extern float fcAngleH;
 extern float fcAngleV;
@@ -24,6 +30,7 @@ extern float fcX, fcY, fcZ;
 
 void updateCamera();
 void updateMinimapCamera();
+
 void drawMapSun(); // Caso use lighting
 void CalculateFreeCamNewPosition();
 
