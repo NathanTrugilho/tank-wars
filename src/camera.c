@@ -1,5 +1,5 @@
 #include "camera.h"
-#include "input.h" // Precisamos ler keyStates aqui para mover a câmera
+#include "input.h" 
 #include <stdio.h>
 #include <math.h>
 
@@ -31,31 +31,35 @@ void updateCamera()
         return; // Sai da função, não faz o resto
     }
 
+    // ====================================================================
+    // CÁLCULO DO ÂNGULO REAL
+    // A direção real para onde olhamos é a soma da rotação do Tanque (Hull)
+    // mais a rotação da Torre (Turret).
+    // ====================================================================
+    float totalAngle = player.hullAngle + player.turretAngle;
+
     // Lógica dos 3 Modos de Câmera de Jogo
     switch (currentCameraMode) {
 
         case CAM_FIRST_PERSON: 
         {
-            float h_rad = player.turretAngle * RADIAN_FACTOR;
+            // Alterado: Usamos totalAngle em vez de player.turretAngle
+            float h_rad = totalAngle * RADIAN_FACTOR; 
             float v_rad = player.pipeAngle * RADIAN_FACTOR;
 
-            // --- AQUI ESTÁ O TRUQUE ---
-            // Definimos uma distância extra para a câmera não ficar "dentro" do cano.
-            // Podes aumentar ou diminuir o 0.8f se ainda estiver clipando.
             float cameraDist = PIPE_LENGTH + 0.8f; 
 
-            // Usamos 'cameraDist' em vez de PIPE_LENGTH nos cálculos abaixo
             float horizontal_dist = cosf(v_rad) * cameraDist;
             
             float right_x = cosf(h_rad);
             float right_z = -sinf(h_rad);
 
-            // Calcula a posição do olho um pouco mais à frente
+            // Calcula a posição do olho
             float eyeX = player.x - sinf(h_rad) * horizontal_dist - (right_x * BULLET_SIDE_CORRECTION);
             float eyeZ = player.z - cosf(h_rad) * horizontal_dist - (right_z * BULLET_SIDE_CORRECTION);
             float eyeY = (player.y + PIPE_HEIGHT) + sinf(v_rad) * cameraDist;
 
-            // O ponto para onde olhamos continua a ser projetado à frente dessa nova posição
+            // O ponto para onde olhamos
             float lookX = eyeX - sinf(h_rad) * cosf(v_rad);
             float lookY = eyeY + sinf(v_rad);
             float lookZ = eyeZ - cosf(h_rad) * cosf(v_rad);
@@ -67,6 +71,7 @@ void updateCamera()
 
         case POSITIONAL_CAM: // --- MODO 2: CÂMERA EXTRA (Vista de cima) ---
         {
+            // Esta câmera ignora rotação, fica fixa no topo olhando para baixo
             gluLookAt(player.x, player.y + 20.0f, player.z,
                       player.x, player.y, player.z,         
                       0.0f, 0.0f, -1.0f);   
@@ -75,11 +80,13 @@ void updateCamera()
         break;
 
         case CAM_THIRD_PERSON: // --- MODO 0: TERCEIRA PESSOA (Padrão) ---
-        default:               // Se der ruim, vem pra cá
+        default:               
         {
-            float camX = player.x + sinf(player.turretAngle * RADIAN_FACTOR) * CAM_FACTOR_X;
+            // Alterado: Usamos totalAngle aqui também.
+            // Assim, se o corpo do tanque rodar (A/D), a câmera roda junto.
+            float camX = player.x + sinf(totalAngle * RADIAN_FACTOR) * CAM_FACTOR_X;
             float camY = CAM_FACTOR_Y - (player.pipeAngle * 0.1f);
-            float camZ = player.z + cosf(player.turretAngle * RADIAN_FACTOR) * CAM_FACTOR_Z;
+            float camZ = player.z + cosf(totalAngle * RADIAN_FACTOR) * CAM_FACTOR_Z;
 
             if (camY < 1.0f) camY = 1.0f;
             if (camY > 5.0f) camY = 5.0f;
@@ -117,21 +124,15 @@ void CalculateFreeCamNewPosition(){
     if (specialKeyStates[GLUT_KEY_UP])   fcAngleV += FREE_CAM_ROT_SPEED;
     if (specialKeyStates[GLUT_KEY_DOWN]) fcAngleV -= FREE_CAM_ROT_SPEED;
 
-    // Limita o olhar para cima/baixo
     if (fcAngleV > 89.0f) fcAngleV = 89.0f;
     if (fcAngleV < -89.0f) fcAngleV = -89.0f;
 
     float radH = fcAngleH * 3.14159f / 180.0f;
     float radV = fcAngleV * 3.14159f / 180.0f;
 
-    // Vetor "Frente" (para onde estou olhando)
-    // No OpenGL o Z é 'para fora', então invertemos algumas coisas dependendo da lógica
     dirX = sinf(radH) * cosf(radV);
     dirY = sinf(radV);
     dirZ = -cosf(radH) * cosf(radV);
-
-    // Controles de Movimento (W/A/S/D + Q/E para subir/descer)
-    // W/S andam na direção que se olha (exceto Y, para andar no plano como FPS, ou full 3D)
 
     if (keyStates['w'] || keyStates['W']) {
         fcX += dirX * FREE_CAM_SPEED;
@@ -144,7 +145,6 @@ void CalculateFreeCamNewPosition(){
         fcZ -= dirZ * FREE_CAM_SPEED;
     }
 
-    // Strafe (andar de lado) - Vetor perpendicular
     float rightX = sinf(radH - 3.14159f/2.0f);
     float rightZ = -cosf(radH - 3.14159f/2.0f);
 
@@ -156,7 +156,6 @@ void CalculateFreeCamNewPosition(){
         fcX += rightX * FREE_CAM_SPEED;
         fcZ += rightZ * FREE_CAM_SPEED;
     }
-    // Q e E para subir e descer verticalmente absoluto
     if (keyStates['q'] || keyStates['Q']) fcY -= FREE_CAM_SPEED;
     if (keyStates['e'] || keyStates['E']) fcY += FREE_CAM_SPEED;
 }
