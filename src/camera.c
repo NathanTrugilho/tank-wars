@@ -12,6 +12,27 @@ float fcAngleV;
 float fcX, fcY, fcZ;
 
 float dirX, dirY, dirZ;
+typedef struct { float x, y, z; } Vec3;
+
+// Rotaciona um vetor em torno do eixo X (Pitch)
+Vec3 camRotateX(Vec3 v, float angleDeg) {
+    float rad = angleDeg * RADIAN_FACTOR;
+    float c = cosf(rad);
+    float s = sinf(rad);
+    return (Vec3){ v.x, v.y * c - v.z * s, v.y * s + v.z * c };
+}
+
+// Rotaciona um vetor em torno do eixo Y (Yaw)
+Vec3 camRotateY(Vec3 v, float angleDeg) {
+    float rad = angleDeg * RADIAN_FACTOR;
+    float c = cosf(rad);
+    float s = sinf(rad);
+    return (Vec3){ v.x * c + v.z * s, v.y, -v.x * s + v.z * c };
+}
+
+// ==========================================
+// ATUALIZAÇÃO DA CÂMARA
+// ==========================================
 
 void updateCamera()
 {
@@ -28,50 +49,59 @@ void updateCamera()
         gluLookAt(fcX, fcY, fcZ,
                   fcX + dirX, fcY + dirY, fcZ + dirZ,
                   0.0f, 1.0f, 0.0f);
-        return; // Sai da função, não faz o resto
+        return; // Sai da função
     }
 
     // ====================================================================
     // CÁLCULO DO ÂNGULO REAL
-    // A direção real para onde olhamos é a soma da rotação do Tanque (Hull)
-    // mais a rotação da Torre (Turret).
     // ====================================================================
     float totalAngle = player.hullAngle + player.turretAngle;
 
-    // Lógica dos 3 Modos de Câmera de Jogo
     switch (currentCameraMode) {
 
         case CAM_FIRST_PERSON: 
         {
-            // Alterado: Usamos totalAngle em vez de player.turretAngle
-            float h_rad = totalAngle * RADIAN_FACTOR; 
-            float v_rad = player.pipeAngle * RADIAN_FACTOR;
 
-            float cameraDist = PIPE_LENGTH + 0.8f; 
-
-            float horizontal_dist = cosf(v_rad) * cameraDist;
+            float dist = PIPE_LENGTH + 0.8f; 
             
-            float right_x = cosf(h_rad);
-            float right_z = -sinf(h_rad);
+            Vec3 offset = { 0.0f, 0.0f, -dist };
 
-            // Calcula a posição do olho
-            float eyeX = player.x - sinf(h_rad) * horizontal_dist - (right_x * BULLET_SIDE_CORRECTION);
-            float eyeZ = player.z - cosf(h_rad) * horizontal_dist - (right_z * BULLET_SIDE_CORRECTION);
-            float eyeY = (player.y + PIPE_HEIGHT) + sinf(v_rad) * cameraDist;
+            offset = camRotateX(offset, player.pipeAngle);
 
-            // O ponto para onde olhamos
-            float lookX = eyeX - sinf(h_rad) * cosf(v_rad);
-            float lookY = eyeY + sinf(v_rad);
-            float lookZ = eyeZ - cosf(h_rad) * cosf(v_rad);
+            offset = camRotateY(offset, player.turretAngle);
 
-            gluLookAt(eyeX, eyeY, eyeZ, lookX, lookY, lookZ, 0.0f, 1.0f, 0.0f);
+            offset.y += PIPE_HEIGHT;
+
+            offset = camRotateX(offset, player.pitch);
+
+            offset = camRotateY(offset, player.hullAngle);
+
+            float eyeX = player.x + offset.x;
+            float eyeY = player.y + offset.y; 
+            float eyeZ = player.z + offset.z;
+
+            Vec3 forward = { 0.0f, 0.0f, -1.0f }; // Vetor frente base
+            forward = camRotateX(forward, player.pipeAngle);
+            forward = camRotateY(forward, player.turretAngle);
+
+            forward = camRotateX(forward, player.pitch); // A direção roda com a rampa
+            forward = camRotateY(forward, player.hullAngle);
+
+            float lookX = eyeX + forward.x;
+            float lookY = eyeY + forward.y;
+            float lookZ = eyeZ + forward.z;
+
+            Vec3 up = { 0.0f, 1.0f, 0.0f };
+            up = camRotateX(up, player.pitch); // O vetor UP inclina com o tanque
+            up = camRotateY(up, player.hullAngle);
+
+            gluLookAt(eyeX, eyeY, eyeZ, lookX, lookY, lookZ, up.x, up.y, up.z);
             drawSun();
         }
         break;
 
         case POSITIONAL_CAM: // --- MODO 2: CÂMERA EXTRA (Vista de cima) ---
         {
-            // Esta câmera ignora rotação, fica fixa no topo olhando para baixo
             gluLookAt(player.x, player.y + 20.0f, player.z,
                       player.x, player.y, player.z,         
                       0.0f, 0.0f, -1.0f);   
@@ -82,8 +112,6 @@ void updateCamera()
         case CAM_THIRD_PERSON: // --- MODO 0: TERCEIRA PESSOA (Padrão) ---
         default:               
         {
-            // Alterado: Usamos totalAngle aqui também.
-            // Assim, se o corpo do tanque rodar (A/D), a câmera roda junto.
             float camX = player.x + sinf(totalAngle * RADIAN_FACTOR) * CAM_FACTOR_X;
             float camY = CAM_FACTOR_Y - (player.pipeAngle * 0.1f);
             float camZ = player.z + cosf(totalAngle * RADIAN_FACTOR) * CAM_FACTOR_Z;
