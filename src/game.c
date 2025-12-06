@@ -27,9 +27,9 @@ void display() {
     drawHealthPack();
     drawEnemyBullets();
 
-    //debugDrawPlayerCollision();
-    //debugDrawEnemyCollision();
-    //debugDrawWorldCollisions();
+    debugDrawPlayerCollision();
+    debugDrawEnemyCollision();
+    debugDrawWorldCollisions();
 
 
     // HUD
