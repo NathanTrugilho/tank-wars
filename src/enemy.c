@@ -29,8 +29,8 @@ void initEnemies() {
     srand(time(NULL));
     for (int i = 0; i < MAX_ENEMIES; i++) {
         enemies[i].alive = 1;
-        enemies[i].x = (rand() % 50) - 25; 
-        enemies[i].z = (rand() % 50) - 25;
+        enemies[i].x = (rand() % 100); 
+        enemies[i].z = (rand() % 100);
         
         enemies[i].y = getTerrainHeight(enemies[i].x, enemies[i].z) + ENEMY_TANK_GROUND_DISTANCE;
         enemies[i].pitch = 0.0f;

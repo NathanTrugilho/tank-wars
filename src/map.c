@@ -20,6 +20,7 @@ ObjModel churchModel;
 ObjModel houseModel;
 ObjModel gasStationModel;
 ObjModel storeModel;
+ObjModel wallModel;
 
 // Função auxiliar interna para registrar um objeto estático no sistema de colisão
 void addStaticCollider(ObjModel *model, float x, float y, float z, float scale, float rotAngleY) {
@@ -46,7 +47,6 @@ void addStaticCollider(ObjModel *model, float x, float y, float z, float scale, 
     staticColliders[staticColliderCount] = cb;
     staticColliderCount++;
 }
-
 
 // Interpolação Bilinear para altura do terreno
 float getTerrainHeight(float x, float z) {
@@ -82,9 +82,6 @@ float getTerrainHeight(float x, float z) {
     return finalHeight;
 }
 
-// ==========================================================
-// NOVA FUNÇÃO: Calcula inclinação (Pitch)
-// ==========================================================
 float getTerrainPitch(float x, float z, float angleYaw) {
     float rad = angleYaw * (3.14159f / 180.0f);
     
@@ -135,27 +132,23 @@ void initHeightMatrix(){
         }
     }
 
-    //PAREDES
-    for (int x = 0; x < VERTEX_NUM; x++) {
-        heightMatrix[0][x] = 5.0f;
-    }
-    
-    for (int x = 0; x < VERTEX_NUM; x++) {
-        heightMatrix[50][x] = 5.0f;
-    }
-    
-    for (int z = 0; z < VERTEX_NUM; z++) {
-        heightMatrix[z][0] = 5.0f;
-    }
-    
-    for (int z = 0; z < VERTEX_NUM; z++) {
-        heightMatrix[z][50] = 5.0f;
-    }
-
     //ELEVAÇÕES - x, z, raio, altura
     addHill(40, 25, 5.0f, 1.0f);  // colina
     addHill(25, 26, 5.0f, -0.9f);  // buraco
     addHill(10, 27, 5.0f, 1.0f); // colina
+}
+
+void drawWall(float x, float y, float z, float width, float height, float depth) {
+    
+    glPushMatrix();
+
+    glTranslatef(x, y, z);
+
+    // A escala faz o cubo virar um paralelepipedo
+    glScalef(width, height, depth);
+    glutSolidCube(1.0);
+
+    glPopMatrix();
 }
 
 void initChurch() {
@@ -265,24 +258,32 @@ void drawMap() {
             float maxVariation = 1.0f; 
             float colorFactor = minFactor + (normalizedHeight / 10.0f) * maxVariation;
             
-            glColor3f(0.1f * colorFactor, 0.6f * colorFactor, 0.1f * colorFactor);
+            // Cinza do chão
+            glColor3f(0.55f * colorFactor, 0.55f * colorFactor, 0.55f * colorFactor);
             
             glBegin(GL_TRIANGLE_STRIP);
-            vertex normalA = vertexNormals[z][x];
-            glNormal3f(normalA.x, normalA.y, normalA.z);
-            glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
-            vertex normalB = vertexNormals[z+1][x];
-            glNormal3f(normalB.x, normalB.y, normalB.z);
-            glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);
-            vertex normalC = vertexNormals[z][x+1];
-            glNormal3f(normalC.x, normalC.y, normalC.z);
-            glVertex3f(mapCells[z][x].C.x, mapCells[z][x].C.y, mapCells[z][x].C.z);
-            vertex normalD = vertexNormals[z+1][x+1];
-            glNormal3f(normalD.x, normalD.y, normalD.z);
-            glVertex3f(mapCells[z][x].D.x, mapCells[z][x].D.y, mapCells[z][x].D.z);
+                vertex normalA = vertexNormals[z][x];
+                glNormal3f(normalA.x, normalA.y, normalA.z);
+                glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
+                vertex normalB = vertexNormals[z+1][x];
+                glNormal3f(normalB.x, normalB.y, normalB.z);
+                glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);
+                vertex normalC = vertexNormals[z][x+1];
+                glNormal3f(normalC.x, normalC.y, normalC.z);
+                glVertex3f(mapCells[z][x].C.x, mapCells[z][x].C.y, mapCells[z][x].C.z);
+                vertex normalD = vertexNormals[z+1][x+1];
+                glNormal3f(normalD.x, normalD.y, normalD.z);
+                glVertex3f(mapCells[z][x].D.x, mapCells[z][x].D.y, mapCells[z][x].D.z);
             glEnd();
         }
     }
+
+    // Cor da parede
+    glColor3f(0.70f, 0.30f, 0.10f);
+    drawWall(MAP_SIZE/2,0,0,100,6,2);
+    drawWall(MAP_SIZE/2,0,MAP_SIZE,100,6,2);
+    drawWall(0,0,MAP_SIZE/2,2,6,100);
+    drawWall(MAP_SIZE,0,MAP_SIZE/2,2,6,100);
 
     glEnable(GL_TEXTURE_2D); 
 

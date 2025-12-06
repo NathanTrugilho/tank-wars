@@ -19,8 +19,8 @@ void display() {
     drawEnemies();
     drawTank();
     drawBullet();
-    //drawSnowFlake();
     drawExplosion();
+    //drawSnowFlake();
     //drawAmmo();
     //drawHermesShoes();
     //drawFist();
@@ -68,7 +68,7 @@ void display() {
     drawTank();
     drawBullet();
     glEnable(GL_LIGHTING); 
-
+    
     glutSwapBuffers();
 }
 
