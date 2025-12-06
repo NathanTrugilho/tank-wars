@@ -20,22 +20,21 @@ void display() {
     drawTank();
     drawBullet();
     //drawSnowFlake();
-    drawExplosion();
     //drawAmmo();
     //drawHermesShoes();
     //drawFist();
     drawHealthPack();
     drawEnemyBullets();
 
-    debugDrawPlayerCollision();
-    debugDrawEnemyCollision();
-    debugDrawWorldCollisions();
+    //debugDrawPlayerCollision();
+    //debugDrawEnemyCollision();
+    //debugDrawWorldCollisions();
 
 
     // HUD
     updateHUDTime();
     drawHUD();
-    
+    /*
     // ====================================
     // MINIMAPA 
     // ====================================
@@ -68,7 +67,7 @@ void display() {
     drawTank();
     drawBullet();
     glEnable(GL_LIGHTING); 
-
+    */
     glutSwapBuffers();
 }
 
