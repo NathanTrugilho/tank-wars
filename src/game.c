@@ -19,6 +19,7 @@ void display() {
     drawEnemies();
     drawTank();
     drawBullet();
+    drawExplosion();
     //drawSnowFlake();
     //drawAmmo();
     //drawHermesShoes();
@@ -34,7 +35,7 @@ void display() {
     // HUD
     updateHUDTime();
     drawHUD();
-    /*
+    
     // ====================================
     // MINIMAPA 
     // ====================================
@@ -67,7 +68,7 @@ void display() {
     drawTank();
     drawBullet();
     glEnable(GL_LIGHTING); 
-    */
+    
     glutSwapBuffers();
 }
 

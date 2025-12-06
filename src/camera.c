@@ -111,8 +111,8 @@ void updateMinimapCamera()
     glLoadIdentity();
     
     // Câmera estática no centro do mapa
-    gluLookAt(25.0f, 30.0f, 25.0f, 
-              25.0f, 0.0f, 25.0f,
+    gluLookAt(50.0f, 50.0f, 50.0f, 
+              50.0f, 0.0f, 50.0f,
               0.0f, 0.0f, -1.0f); 
 
     drawMapSun();
