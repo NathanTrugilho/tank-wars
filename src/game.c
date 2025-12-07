@@ -21,13 +21,10 @@ void display() {
     drawBullet();
     drawExplosion();
     drawEnemyBullets(); //prestar atenção aqui pós merge
-    //drawSnowFlake();
-    //drawAmmo();
-    //drawHermesShoes();
-    //drawFist();
-    //drawHealthPack();
     spawnPowerUp();   // checa se deve gerar um novo
     drawPowerUps();   // desenha todos os existentes
+
+    updateFreezeLighting();
 
     if (player.shieldOn) drawPlayerShield();
     //debugDrawPlayerCollision();

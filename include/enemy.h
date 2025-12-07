@@ -71,6 +71,9 @@ typedef struct Enemy {
 // Altura que o tank deve ficar do chão
 #define ENEMY_TANK_GROUND_DISTANCE 0.1f
 
+// Adicionar a declaração da variável de estado de congelamento
+extern long freezeEndTime; // Guarda o tempo (em ms) que o congelamento termina.
+
 extern Enemy enemies[MAX_ENEMIES];
 
 extern ObjModel enemyHullModel;

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include "enemy.h" // Adicionar include para acessar freezeEndTime
 
 PowerUpInstance powerUps[MAX_POWER_UPS];
 
@@ -27,7 +28,7 @@ void testePowerUp()
     }
     if (keyStates['k'] || keyStates['K'])
     {
-        activateShield();
+        freeze();
     }
 }
 
@@ -52,7 +53,7 @@ float getScale(PowerUpType type)
         return 0.2f;
 
     case PU_SHIELD:
-        return 0.04f;
+        return 0.03f;
     }
 
     return 0.1f;
@@ -234,6 +235,10 @@ void drawSnowFlake(int index)
 
 void freeze()
 {
+    unsigned long now = glutGet(GLUT_ELAPSED_TIME);
+    // 5 segundos = 5000 milissegundos
+    freezeEndTime = now + 5000; 
+    printf("Inimigos congelados por 5 segundos!\n"); // Debug opcional
 }
 
 // ------------- AMMO -------------
