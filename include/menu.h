@@ -6,5 +6,6 @@ void displayMenu();
 void keyboardMenu(unsigned char key, int x, int y);
 GLuint loadBMP(const char *filename);
 void drawBackground();
+void drawGameOverScreen();
 
 #endif

@@ -18,6 +18,8 @@ ObjModel enemyHullModel;
 ObjModel enemyTurretModel;
 ObjModel enemyPipeModel;
 
+long freezeEndTime = 0;
+
 // Distância mínima entre dois inimigos para não entrelaçar canos
 #define SEPARATION_DIST 8.0f 
 
@@ -122,6 +124,10 @@ void drawEnemies() {
 
 void updateEnemies(float playerX, float playerZ) {
     unsigned long now = glutGet(GLUT_ELAPSED_TIME);
+
+    if (now < freezeEndTime) {
+        return; 
+    }
 
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].alive) continue;
