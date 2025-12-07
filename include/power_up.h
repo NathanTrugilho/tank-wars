@@ -69,7 +69,7 @@ void increaseSpeed();
 
 // ------------- SHIELD -------------
 
-void drawShield(int index);
+void drawShieldPU(int index);
 
 void activateShield();
 

@@ -52,7 +52,7 @@ float getScale(PowerUpType type)
         return 0.2f;
 
     case PU_SHIELD:
-        return 0.004f;
+        return 0.04f;
     }
 
     return 0.1f;
@@ -138,7 +138,7 @@ void drawPowerUps()
             drawSnowFlake(i);
             break;
         case PU_SHIELD:
-            drawShield(i);
+            drawShieldPU(i);
             break;
         }
     }
@@ -317,14 +317,14 @@ void increaseSpeed()
 }
 
 // ------------- SHIELD -------------
-void drawShield(int index)
+void drawShieldPU(int index)
 {
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
     glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
     glScalef(powerUps[index].scale, powerUps[index].scale, powerUps[index].scale);
-    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+    //glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
     drawModel(&shield);
     glPopMatrix();
     glDisable(GL_TEXTURE_2D);
