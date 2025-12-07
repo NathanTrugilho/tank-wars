@@ -186,10 +186,10 @@ void initPowerUps()
 
     for (int i = 0; i < MAX_POWER_UPS; i++)
     {
-        powerUps[i].type = 5;//getRandomPowerUp();
-        powerUps[i].x = (rand() % 50) - 25;
+        powerUps[i].type = getRandomPowerUp();
+        powerUps[i].x = (rand() % 100); //25
         powerUps[i].y = 1;
-        powerUps[i].z = (rand() % 50) - 25;
+        powerUps[i].z = (rand() % 100); //22
         powerUps[i].scale = getScale(powerUps[i].type);
         powerUps[i].active = 0;
     }

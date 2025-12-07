@@ -56,6 +56,8 @@ CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz,
                              float scaleW, float scaleL, 
                              float yMinFixed, float yMaxFixed); 
 
+int checkCollisionOBBwithPU(CollisionBox *a, CollisionBox *b);
+
 // Função principal que gera a caixa colisora hierárquica
 // A partir de uma caixa local (Box) e várias transformações
 // Retorna uma CollisionBox pronta para checagem de colisão
