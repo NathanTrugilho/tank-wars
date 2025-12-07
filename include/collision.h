@@ -1,8 +1,6 @@
 #ifndef COLISION_H
 #define COLISION_H
 
-#include "mybib.h"
-
 // Forward Declaration
 struct Enemy; 
 
@@ -50,14 +48,6 @@ typedef struct {
 #define PIPE_Y_MIN   1.0f
 #define PIPE_Y_MAX   1.2f
 
-// Função principal que gera a caixa 
-CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz, 
-                             float angleYaw, float anglePitch, 
-                             float scaleW, float scaleL, 
-                             float yMinFixed, float yMaxFixed); 
-
-int checkCollisionOBBwithPU(CollisionBox *a, CollisionBox *b);
-
 // Função principal que gera a caixa colisora hierárquica
 // A partir de uma caixa local (Box) e várias transformações
 // Retorna uma CollisionBox pronta para checagem de colisão
@@ -99,6 +89,13 @@ CollisionBox makeEnemyHull(struct Enemy *e, float terrainPitch);
 CollisionBox makeEnemyTurret(struct Enemy *e, float terrainPitch);
 CollisionBox makeEnemyPipe(struct Enemy *e, float terrainPitch);
 
+// Funções de colisão para POWER UP
+CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz, 
+    float angleYaw, float anglePitch, 
+    float scaleW, float scaleL, 
+    float yMinFixed, float yMaxFixed); 
+
+int checkCollisionOBBwithPU(CollisionBox *a, CollisionBox *b);
 int checkTankPowerUpCollision(PowerUpInstance *p);
 int checkAllPowerUpCollisions(PowerUpInstance powerUps[]);
 

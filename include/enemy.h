@@ -72,7 +72,7 @@ typedef struct Enemy {
 #define ENEMY_TANK_GROUND_DISTANCE 0.1f
 
 // Adicionar a declaração da variável de estado de congelamento
-extern long freezeEndTime; // Guarda o tempo (em ms) que o congelamento termina.
+extern unsigned long freezeEndTime; // Guarda o tempo (em ms) que o congelamento termina.
 
 extern Enemy enemies[MAX_ENEMIES];
 

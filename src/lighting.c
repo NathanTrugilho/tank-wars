@@ -1,7 +1,7 @@
 #include <GL/glut.h> 
 
 // Incluir o header correspondente (se necessário)
-// #include "lighting.h"
+#include "lighting.h"
 
 // --- CONSTANTES GLOBAIS DE ILUMINAÇÃO ---
 // Definidas como 'const static' para escopo de arquivo e evitar modificações acidentais.
@@ -15,9 +15,6 @@ const static GLfloat SKY_COLOR_ORIGINAL[] = { 0.5f, 0.7f, 1.0f, 1.0f }; // Azul 
 const static GLfloat AMBIENT_FROZEN[] = { 0.2f, 0.3f, 0.5f, 1.0f };
 const static GLfloat DIFFUSE_FROZEN[] = { 0.4f, 0.6f, 1.0f, 1.0f }; 
 const static GLfloat SKY_COLOR_FROZEN[] = { 0.2f, 0.3f, 0.7f, 1.0f }; // Azul escuro
-
-// Variável global (assumida) para controle do tempo de congelamento
-extern unsigned long freezeEndTime; 
 
 // -------------------------------------------------------------------
 // 1. INICIALIZAÇÃO E CONFIGURAÇÃO DA ILUMINAÇÃO

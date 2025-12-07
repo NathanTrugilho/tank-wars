@@ -3,7 +3,7 @@
 
 #include <GL/glut.h>
 
-extern long freezeEndTime;
+extern unsigned long freezeEndTime;
 
 void drawSun();
 

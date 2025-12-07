@@ -1,10 +1,4 @@
 #include <power_up.h>
-#include <tank.h>
-#include <input.h>
-#include <stdlib.h>
-#include <time.h>
-#include <stdio.h>
-#include "enemy.h" // Adicionar include para acessar freezeEndTime
 
 PowerUpInstance powerUps[MAX_POWER_UPS];
 

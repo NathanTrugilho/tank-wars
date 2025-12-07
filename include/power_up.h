@@ -20,6 +20,11 @@ typedef struct {
 #include <mybib.h>
 #include <input.h>
 #include <collision.h>
+#include <tank.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
+#include "enemy.h" // Adicionar include para acessar freezeEndTime
 
 #define MAX_POWER_UPS 250
 
