@@ -29,10 +29,10 @@ void display() {
     spawnPowerUp();   // checa se deve gerar um novo
     drawPowerUps();   // desenha todos os existentes
 
-
-    debugDrawPlayerCollision();
-    debugDrawEnemyCollision();
-    debugDrawWorldCollisions();
+    if (player.shieldOn) drawPlayerShield();
+    //debugDrawPlayerCollision();
+    //debugDrawEnemyCollision();
+    //debugDrawWorldCollisions();
 
 
     // HUD
@@ -95,7 +95,7 @@ void timer(int value) {
     updateTank();
     updateEnemies(player.x, player.z);
     updateBullets();
-    //testePowerUp();
+    testePowerUp();
     updateExplosion();
     updateEnemyBullets();
 

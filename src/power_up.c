@@ -334,3 +334,50 @@ void activateShield()
 {
     player.shieldOn = 1;
 }
+
+void drawShield(CollisionBox b)
+{
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glLineWidth(2.0f);
+    glColor3f(0.0f, 0.0f, 1.0f);
+
+    glBegin(GL_LINES);
+    glVertex3f(b.corners[0].x, b.corners[0].y, b.corners[0].z);
+    glVertex3f(b.corners[1].x, b.corners[1].y, b.corners[1].z);
+    glVertex3f(b.corners[1].x, b.corners[1].y, b.corners[1].z);
+    glVertex3f(b.corners[3].x, b.corners[3].y, b.corners[3].z);
+    glVertex3f(b.corners[3].x, b.corners[3].y, b.corners[3].z);
+    glVertex3f(b.corners[2].x, b.corners[2].y, b.corners[2].z);
+    glVertex3f(b.corners[2].x, b.corners[2].y, b.corners[2].z);
+    glVertex3f(b.corners[0].x, b.corners[0].y, b.corners[0].z);
+
+    glVertex3f(b.corners[4].x, b.corners[4].y, b.corners[4].z);
+    glVertex3f(b.corners[5].x, b.corners[5].y, b.corners[5].z);
+    glVertex3f(b.corners[5].x, b.corners[5].y, b.corners[5].z);
+    glVertex3f(b.corners[7].x, b.corners[7].y, b.corners[7].z);
+    glVertex3f(b.corners[7].x, b.corners[7].y, b.corners[7].z);
+    glVertex3f(b.corners[6].x, b.corners[6].y, b.corners[6].z);
+    glVertex3f(b.corners[6].x, b.corners[6].y, b.corners[6].z);
+    glVertex3f(b.corners[4].x, b.corners[4].y, b.corners[4].z);
+
+    glVertex3f(b.corners[0].x, b.corners[0].y, b.corners[0].z);
+    glVertex3f(b.corners[4].x, b.corners[4].y, b.corners[4].z);
+    glVertex3f(b.corners[1].x, b.corners[1].y, b.corners[1].z);
+    glVertex3f(b.corners[5].x, b.corners[5].y, b.corners[5].z);
+    glVertex3f(b.corners[2].x, b.corners[2].y, b.corners[2].z);
+    glVertex3f(b.corners[6].x, b.corners[6].y, b.corners[6].z);
+    glVertex3f(b.corners[3].x, b.corners[3].y, b.corners[3].z);
+    glVertex3f(b.corners[7].x, b.corners[7].y, b.corners[7].z);
+    glEnd();
+
+    glEnable(GL_LIGHTING);
+}
+
+void drawPlayerShield()
+{
+    float pitch = player.pitch;
+    drawShield(makePlayerHull(player.x, player.z, player.hullAngle, pitch));
+    drawShield(makePlayerTurret(player.x, player.z, player.hullAngle, pitch, player.turretAngle));
+    drawShield(makePlayerPipe(player.x, player.z, player.hullAngle, pitch, player.turretAngle, player.pipeAngle));
+}

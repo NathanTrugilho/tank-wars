@@ -226,9 +226,15 @@ void updateEnemyBullets() {
                 
                 startExplosion(b->x, b->y, b->z);
                 b->active = 0; 
+
+                if (player.shieldOn) {
+                    player.shieldOn = 0; // desliga escudo caso for acertado
+                }
+                else {
+                    player.health -= 10;
+                    //printf("Player Hit! HP: %d\n", player.health);
+                }
                 
-                player.health -= 10;
-                printf("Player Hit! HP: %d\n", player.health);
                 if(player.health <= 0) player.alive = 0;
                 
                 collided = 1;

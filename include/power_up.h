@@ -19,6 +19,7 @@ typedef struct {
 
 #include <mybib.h>
 #include <input.h>
+#include <collision.h>
 
 #define MAX_POWER_UPS 250
 
@@ -72,5 +73,9 @@ void increaseSpeed();
 void drawShieldPU(int index);
 
 void activateShield();
+
+void drawShield(CollisionBox b);
+
+void drawPlayerShield();
 
 #endif
