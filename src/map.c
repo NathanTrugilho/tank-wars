@@ -82,9 +82,8 @@ float getTerrainHeight(float x, float z) {
     return finalHeight;
 }
 
-// ==========================================================
-// NOVA FUNÇÃO: Calcula inclinação (Pitch)
-// ==========================================================
+
+// Calcula inclinação (Pitch)
 float getTerrainPitch(float x, float z, float angleYaw) {
     float rad = angleYaw * (3.14159f / 180.0f);
     
