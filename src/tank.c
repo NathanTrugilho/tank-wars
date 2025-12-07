@@ -1,14 +1,16 @@
 #include "tank.h"
-#include "collision.h" 
-#include "map.h"       
+#include "collision.h" // Inclui para usar CollisionBox, macros de escala e a função getCollisionBox
+#include "map.h"       // Inclui para usar checkCollisionWithWorld
+#include <power_up.h>
 
-Tank player;   
+Tank player; // Agora tudo é centralizado aqui
 
 const double RADIAN_FACTOR = 3.14159 / 180.0;
 
 ObjModel turretModel, pipeModel, hullModel;
 
-void drawTank() {
+void drawTank()
+{
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
         // Usa player.y que agora é dinâmico
@@ -31,9 +33,9 @@ void drawTank() {
             glRotatef(player.turretAngle, 0.0f, 1.0f, 0.0f);
             drawModel(&turretModel);
 
-            glRotatef(player.pipeAngle, 1.0f, 0.0f, 0.0f);
-            drawModel(&pipeModel);
-        glPopMatrix();
+    glRotatef(player.pipeAngle, 1.0f, 0.0f, 0.0f);
+    drawModel(&pipeModel);
+    glPopMatrix();
 
     glPopMatrix();
     glDisable(GL_TEXTURE_2D);
@@ -49,16 +51,20 @@ void updateTank() {
     float nextHullAngle = player.hullAngle;
     
     // inputs de movimento do tanque
-    if (keyStates['w'] || keyStates['W']) {
+    if (keyStates['w'] || keyStates['W'])
+    {
         nextX -= sinf(player.hullAngle * RADIAN_FACTOR) * player.moveSpeed;
         nextZ -= cosf(player.hullAngle * RADIAN_FACTOR) * player.moveSpeed;
     }
-    if (keyStates['s'] || keyStates['S']) {
+    if (keyStates['s'] || keyStates['S'])
+    {
         nextX += sinf(player.hullAngle * RADIAN_FACTOR) * player.moveSpeed;
         nextZ += cosf(player.hullAngle * RADIAN_FACTOR) * player.moveSpeed;
     }
-    if (keyStates['a'] || keyStates['A']) nextHullAngle += TANK_ROT_SPEED;
-    if (keyStates['d'] || keyStates['D']) nextHullAngle -= TANK_ROT_SPEED;
+    if (keyStates['a'] || keyStates['A'])
+        nextHullAngle += TANK_ROT_SPEED;
+    if (keyStates['d'] || keyStates['D'])
+        nextHullAngle -= TANK_ROT_SPEED;
 
     // ============================================
     // Calcular altura e PITCH na próxima posição
@@ -102,8 +108,10 @@ void updateTank() {
     // Lógica da Torre
     float nextTurretAngle = player.turretAngle;
 
-    if (specialKeyStates[GLUT_KEY_LEFT]) nextTurretAngle += TANK_ROT_SPEED;
-    if (specialKeyStates[GLUT_KEY_RIGHT]) nextTurretAngle -= TANK_ROT_SPEED;
+    if (specialKeyStates[GLUT_KEY_LEFT])
+        nextTurretAngle += TANK_ROT_SPEED;
+    if (specialKeyStates[GLUT_KEY_RIGHT])
+        nextTurretAngle -= TANK_ROT_SPEED;
 
     // Se houve tentativa de girar a torre
     if (nextTurretAngle != player.turretAngle) {
@@ -124,23 +132,34 @@ void updateTank() {
     }
 
     // Inclinação do Cano (Cima/Baixo)
-    if (specialKeyStates[GLUT_KEY_UP]) {
+    if (specialKeyStates[GLUT_KEY_UP])
+    {
         player.pipeAngle += player.pipeInclineSpeed;
         if (player.pipeAngle > MAX_PIPE_ANGLE)
             player.pipeAngle = MAX_PIPE_ANGLE;
     }
 
-    if (specialKeyStates[GLUT_KEY_DOWN]) {
+    if (specialKeyStates[GLUT_KEY_DOWN])
+    {
         player.pipeAngle -= player.pipeInclineSpeed;
         if (player.pipeAngle < MIN_PIPE_ANGLE)
             player.pipeAngle = MIN_PIPE_ANGLE;
+    }
+
+    // Verifica colisão do tank com POWER UP
+    int puIndex = checkAllPowerUpCollisions(powerUps);
+    if (puIndex != -1)
+    {
+        applyPowerUpEffect(powerUps[puIndex].type);
+        powerUps[puIndex].active = 0; // remove do mapa
     }
 
     updateMapCellPos();
     glutPostRedisplay();
 }
 
-void updateMapCellPos() {
+void updateMapCellPos()
+{
 
     int posX_A = mapCells[player.mapCellZ][player.mapCellX].A.x;
     int posZ_A = mapCells[player.mapCellZ][player.mapCellX].A.z;
@@ -158,7 +177,8 @@ void updateMapCellPos() {
         player.mapCellZ++;
 }
 
-void initTank() {
+void initTank()
+{
 
     if (!loadOBJ("objects/turret.obj", "objects/turret.mtl", &turretModel))
         printf("ERRO ao carregar modelo da torreta.\n");
@@ -199,4 +219,6 @@ void initTank() {
     player.lastShootTime = 0;
     player.reloadTime = 3000;
     player.flagReloadCircle = 0;
+
+    player.shieldOn = 0;
 }

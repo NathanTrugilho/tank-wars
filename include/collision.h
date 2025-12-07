@@ -6,6 +6,20 @@
 // Forward Declaration
 struct Enemy; 
 
+typedef struct {
+    float x, y, z;
+} Point3D;
+
+typedef struct {
+    Point3D center;      // Centro da caixa no mundo
+    Point3D axis[3];     // Vetores de direção (X, Y, Z rotacionados)
+    float halfSize[3];   // Metade da largura, altura e profundidade
+    Point3D corners[8];  // Os 8 cantos para desenhar o debug
+} CollisionBox;
+
+#include "mybib.h"
+#include <power_up.h>
+
 // WIDTH: Quanto menor, mais "fino" fica o colisor (evita bater girando)
 // LENGTH: Quanto maior, mais longe ele alcança (corrige bater de frente)
 
@@ -36,17 +50,13 @@ struct Enemy;
 #define PIPE_Y_MIN   1.0f
 #define PIPE_Y_MAX   1.2f
 
-typedef struct {
-    float x, y, z;
-} Point3D;
+// Função principal que gera a caixa 
+CollisionBox getCollisionBox(const Box *localBox, float tx, float ty, float tz, 
+                             float angleYaw, float anglePitch, 
+                             float scaleW, float scaleL, 
+                             float yMinFixed, float yMaxFixed); 
 
-typedef struct {
-    Point3D center; // Centro da caixa no mundo
-    Point3D axis[3]; // Vetores de direção (X, Y, Z rotacionados)     
-    float halfSize[3]; // Metade da largura, altura e profundidade   
-    Point3D corners[8]; // Os 8 cantos para desenhar o debug  
-} CollisionBox;
-
+int checkCollisionOBBwithPU(CollisionBox *a, CollisionBox *b);
 
 // Função principal que gera a caixa colisora hierárquica
 // A partir de uma caixa local (Box) e várias transformações
@@ -88,5 +98,8 @@ CollisionBox makePlayerPipe(float x, float z, float hullAngle, float terrainPitc
 CollisionBox makeEnemyHull(struct Enemy *e, float terrainPitch);
 CollisionBox makeEnemyTurret(struct Enemy *e, float terrainPitch);
 CollisionBox makeEnemyPipe(struct Enemy *e, float terrainPitch);
+
+int checkTankPowerUpCollision(PowerUpInstance *p);
+int checkAllPowerUpCollisions(PowerUpInstance powerUps[]);
 
 #endif

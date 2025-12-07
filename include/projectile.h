@@ -1,23 +1,7 @@
 #ifndef PROJECTILE_H  
 #define PROJECTILE_H
 
-#include <math.h>
-#include <time.h>
-#include <GL/glut.h>
-#include "mybib.h"
-
-// Defines de configuração
-#define MAX_BULLETS 100
-#define MAX_ENEMY_BULLETS 50 
-#define ENEMY_SHOOT_DELAY 1000 
-
-#define BULLET_SPEED 1.2f
-#define BULLET_SCALE_CORRECTION 0.15f
-#define BULLET_SIDE_CORRECTION 0.07f
-
-// Forward declaration para evitar inclusão circular
-struct Enemy; 
-
+// Estrutura bullets
 typedef struct {
     unsigned char active;
     float x, y, z;
@@ -35,8 +19,26 @@ typedef struct {
     float radius;
     float maxRadius;
     int active;
+
     float startTime;
 } Explosion;
+
+#include <math.h>
+#include <time.h>
+#include <GL/glut.h>
+#include "mybib.h"
+
+// Defines de configuração
+#define MAX_BULLETS 100
+#define MAX_ENEMY_BULLETS 50 
+#define ENEMY_SHOOT_DELAY 1000 
+
+#define BULLET_SPEED 1.2f
+#define BULLET_SCALE_CORRECTION 0.15f
+#define BULLET_SIDE_CORRECTION 0.07f
+
+// Forward declaration para evitar inclusão circular
+struct Enemy; 
 
 extern Explosion explosion;
 extern Bullet player_bullet; 

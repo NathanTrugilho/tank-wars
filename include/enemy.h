@@ -1,6 +1,22 @@
 #ifndef ENEMY_H
 #define ENEMY_H
 
+typedef struct Enemy { 
+    int alive;
+    float x, z;
+    float y; 
+    float pitch; // Inclinação do terreno
+    float hullAngle; 
+    float turretAngle; 
+    
+    int wanderTimer;      
+    float targetWanderAngle; 
+    long lastShootTime; 
+    
+    // Contador para lógica de "Manobrar"
+    int stuckTimer; 
+} Enemy;
+
 #include "mybib.h" 
 
 #define MAX_ENEMIES 2
@@ -54,22 +70,6 @@
 
 // Altura que o tank deve ficar do chão
 #define ENEMY_TANK_GROUND_DISTANCE 0.1f
-
-typedef struct Enemy { 
-    int alive;
-    float x, z;
-    float y; 
-    float pitch; // Inclinação do terreno
-    float hullAngle; 
-    float turretAngle; 
-    
-    int wanderTimer;      
-    float targetWanderAngle; 
-    long lastShootTime; 
-    
-    // Contador para lógica de "Manobrar"
-    int stuckTimer; 
-} Enemy;
 
 extern Enemy enemies[MAX_ENEMIES];
 

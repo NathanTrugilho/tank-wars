@@ -20,12 +20,15 @@ void display() {
     drawTank();
     drawBullet();
     drawExplosion();
+    drawEnemyBullets(); //prestar atenção aqui pós merge
     //drawSnowFlake();
     //drawAmmo();
     //drawHermesShoes();
     //drawFist();
-    drawHealthPack();
-    drawEnemyBullets();
+    //drawHealthPack();
+    spawnPowerUp();   // checa se deve gerar um novo
+    drawPowerUps();   // desenha todos os existentes
+
 
     debugDrawPlayerCollision();
     debugDrawEnemyCollision();
@@ -115,7 +118,6 @@ void init() {
     calcularNormaisDoMapa();
     initEnemies();
     initTank();
-    initBullet();
     initPowerUps();
     initBullet(); // Isso já chama initEnemyBullets dentro do projectile.c atualizado
     initChurch();

@@ -1,6 +1,14 @@
 #ifndef MAP_H
 #define MAP_H
 
+typedef struct vertex {
+    float x, y, z;
+} vertex;
+
+typedef struct square {
+    vertex A, B, C, D;
+} square;
+
 #include <GL/glut.h>
 #include <mybib.h>
 #include "collision.h"
@@ -27,14 +35,6 @@
 #define GASSTATION4_Z 10.0f
 #define STORE_X 38.0f  
 #define STORE_Z 18.0f
-
-typedef struct vertex {
-    float x, y, z;
-} vertex;
-
-typedef struct square {
-    vertex A, B, C, D;
-} square;
 
 extern square mapCells[MAP_SIZE][MAP_SIZE];
 extern float heightMatrix[VERTEX_NUM][VERTEX_NUM];

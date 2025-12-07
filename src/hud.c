@@ -84,14 +84,27 @@ void drawHUD()
     char ammoText[32];
     snprintf(ammoText, sizeof(ammoText), "Ammo: %d", player.ammo);
 
+    char dmgText[32];
+    snprintf(dmgText, sizeof(dmgText), "Dmg: %d", player.bulletDmg);
+
+    char speedText[32];
+    snprintf(speedText, sizeof(speedText), "Speed: %.2f km/h", player.moveSpeed);
+
+    char reloadText[32];
+    snprintf(reloadText, sizeof(reloadText), "Reload Time: %.2fs", ((float)player.reloadTime) / 1000);
+
     char cameraText[32];
     snprintf(cameraText, sizeof(cameraText), "Camera: %d", currentCameraMode);
 
+    // 🔹 Desenha textos
     glColor3f(1, 1, 1); // Branco
     drawText(10, 570, vidaText);
-    drawText(10, 545, ammoText);
-    drawText(10, 520, timeText);
-    drawText(10, 495, cameraText);
+    drawText(10, 550, ammoText);
+    drawText(10, 530, timeText);
+    drawText(10, 510, dmgText);
+    drawText(10, 490, speedText);
+    drawText(10, 470, reloadText);
+    drawText(10, 450, cameraText);
 
     drawCrosshair();
 

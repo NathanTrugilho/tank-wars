@@ -1,19 +1,13 @@
 #ifndef POWER_UP_H
 #define POWER_UP_H
 
-#include <mybib.h>
-#include <input.h>
-
-#define MAX_POWER_UPS 256
-
-extern ObjModel snowFlake, hermesShoes, fist, healthPack; //Ammo é carregado em projectile.c
-
 typedef enum {
     PU_AMMO,
     PU_HEALTH,
     PU_SPEED,
     PU_DMG,
-    PU_FREEZE
+    PU_FREEZE,
+    PU_SHIELD
 } PowerUpType;
 
 typedef struct {
@@ -21,41 +15,62 @@ typedef struct {
     float x, y, z;
     float scale;
     int active;
-    float spawnTime;
-    float duration;  // Para powerups temporários (speed, dmg...)
 } PowerUpInstance;
 
+#include <mybib.h>
+#include <input.h>
+
+#define MAX_POWER_UPS 250
+
+extern ObjModel snowFlake, hermesShoes, fire, healthPack; //Ammo é carregado em projectile.c
+
 extern PowerUpInstance powerUps[MAX_POWER_UPS];
+
+PowerUpType getRandomPowerUp();
+
+ObjModel getObjModel(PowerUpInstance p);
+
+void applyPowerUpEffect(PowerUpType type);
+
+void drawPowerUps();
+
+float getScale(PowerUpType type);
+
+void spawnPowerUp();
 
 void testePowerUp();
 
 void initPowerUps();
 
 // ------------- FREEZE -------------
-void drawSnowFlake();
+void drawSnowFlake(int index);
 
 void freeze();
 
 // ------------- AMMO -------------
-void drawAmmo();
+void drawAmmo(int index);
 
 void addAmmo();
 
 // ------------- HEALTH -------------
-void drawHealthPack();
+void drawHealthPack(int index);
 
 void heal();
 
 // ------------- INSTA KILL -------------
-void drawFist();
+void drawFire(int index);
 
 void increaseDmg();
 
 // ------------- SPEED -------------
-void drawHermesShoes();
+void drawHermesShoes(int index);
 
 void increaseSpeed();
 
 // ------------- SHIELD -------------
+
+void drawShieldPU(int index);
+
+void activateShield();
 
 #endif
