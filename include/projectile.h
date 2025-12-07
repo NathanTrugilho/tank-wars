@@ -5,6 +5,11 @@
 typedef struct {
     unsigned char active;
     float x, y, z;
+    
+    // Adicionado vetores de velocidade para suportar física 3D (tiro inclinado)
+    float vx, vy, vz; 
+
+    // Mantido para desenho
     float horizontal_angle;
     float vertical_angle;
 } Bullet;
@@ -20,51 +25,41 @@ typedef struct {
 
 #include <math.h>
 #include <time.h>
-// Forward declaration para evitar inclusão circular se necessário
-#include <enemy.h> 
-#include <tank.h>
-#include <map.h>
-#include <mybib.h>
+#include <GL/glut.h>
+#include "mybib.h"
 
+// Defines de configuração
 #define MAX_BULLETS 100
-#define MAX_ENEMY_BULLETS 50 // Limite de balas inimigas simultâneas
-
-// Cadência de tiro do inimigo em milissegundos (1s)
+#define MAX_ENEMY_BULLETS 50 
 #define ENEMY_SHOOT_DELAY 1000 
 
-#define BULLET_SPEED 1.0f
+#define BULLET_SPEED 1.2f
 #define BULLET_SCALE_CORRECTION 0.15f
 #define BULLET_SIDE_CORRECTION 0.07f
 
+// Forward declaration para evitar inclusão circular
+struct Enemy; 
+
 extern Explosion explosion;
-
-extern Bullet player_bullet;
-extern Bullet enemy_bullets[MAX_ENEMY_BULLETS]; // Array de balas inimigas
-
+extern Bullet player_bullet; 
+extern Bullet enemy_bullets[MAX_ENEMY_BULLETS]; 
 extern ObjModel shellModel;
 
-// Atualiza bullets do jogador
-void updateBullets();
+// Funções de Bala
+void initBullet();
+void updateBullets(); // Player bullet update
+void shootBullet();   // Player shoot
+void drawBullet();    // Player draw
 
-// Gerenciamento de balas inimigas 
+// Funções de Inimigo
 void initEnemyBullets();
 void updateEnemyBullets();
+void shootEnemyBullet(struct Enemy *e);
 void drawEnemyBullets();
-void shootEnemyBullet(Enemy *e); // Inimigo 'e' atira
 
-// Carrega o obj da bullet e inicializa
-void initBullet();
-
-// Dispara bullet do jogador
-void shootBullet();
-
-// Desenha bullet do jogador
-void drawBullet();
-
-void startExplosion(float x, float y, float z);
-
+// Funções de Explosão
+void startExplosion(float x, float y, float z); 
 void updateExplosion();
-
 void drawExplosion();
 
 #endif

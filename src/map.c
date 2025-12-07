@@ -20,6 +20,7 @@ ObjModel churchModel;
 ObjModel houseModel;
 ObjModel gasStationModel;
 ObjModel storeModel;
+ObjModel wallModel;
 
 // Função auxiliar interna para registrar um objeto estático no sistema de colisão
 void addStaticCollider(ObjModel *model, float x, float y, float z, float scale, float rotAngleY) {
@@ -35,14 +36,77 @@ void addStaticCollider(ObjModel *model, float x, float y, float z, float scale, 
     float yMin = -50.0f; 
     float yMax = y + (model->box.maxY * scale);
 
-    // Gera a CollisionBox 
-    CollisionBox cb = getCollisionBox(&model->box, x, y, z, 
-                                      rotAngleY, 0.0f, 
-                                      scale, scale, 
-                                      yMin, yMax);
+    // Para objetos estáticos (prédios), não temos Pitch do terreno, nem torre/cano girando.
+    // Então passamos 0.0f nesses parâmetros.
+    CollisionBox cb = createHierarchicalBox(&model->box, x, y, z, 
+                                            scale, scale,       // Escala W e L
+                                            rotAngleY, 0.0f,    // HullYaw, TerrainPitch
+                                            0.0f, 0.0f,         // TurretYaw, PipePitch
+                                            yMin, yMax);
     
     staticColliders[staticColliderCount] = cb;
     staticColliderCount++;
+}
+
+// Interpolação Bilinear para altura do terreno
+float getTerrainHeight(float x, float z) {
+    // Verifica limites do mapa
+    if (x < 0 || x >= MAP_SIZE || z < 0 || z >= MAP_SIZE) {
+        return 0.0f; // Fora do mapa retorna 0
+    }
+
+    int cellX = (int)x;
+    int cellZ = (int)z;
+
+    // Garante que não estoure o array
+    if (cellX >= MAP_SIZE) cellX = MAP_SIZE - 1;
+    if (cellZ >= MAP_SIZE) cellZ = MAP_SIZE - 1;
+
+    // Pega a diferença decimal (0.0 a 1.0) dentro da célula
+    float dx = x - (float)cellX;
+    float dz = z - (float)cellZ;
+
+    // Alturas dos 4 cantos da célula atual
+    float hA = mapCells[cellZ][cellX].A.y; // Top-Left
+    float hC = mapCells[cellZ][cellX].C.y; // Top-Right (X+1)
+    float hB = mapCells[cellZ][cellX].B.y; // Bottom-Left (Z+1)
+    float hD = mapCells[cellZ][cellX].D.y; // Bottom-Right (X+1, Z+1)
+
+    // Interpolação no eixo X (Cima e Baixo)
+    float heightTop = hA * (1.0f - dx) + hC * dx;
+    float heightBottom = hB * (1.0f - dx) + hD * dx;
+
+    // Interpolação no eixo Z (Final)
+    float finalHeight = heightTop * (1.0f - dz) + heightBottom * dz;
+
+    return finalHeight;
+}
+
+float getTerrainPitch(float x, float z, float angleYaw) {
+    float rad = angleYaw * (3.14159f / 180.0f);
+    
+    // Distância de amostragem (quanto maior, mais suave, mas pode atravessar picos agudos)
+    float sampleDist = 0.8f; 
+
+    // O tanque anda "para trás" no eixo Z quando o angulo é 0?
+    // Baseado no input: nextX -= sin(ang), nextZ -= cos(ang)
+    // Isso significa que o vetor "Frente" é (-sin, -cos)
+    
+    float frontX = x - sinf(rad) * sampleDist;
+    float frontZ = z - cosf(rad) * sampleDist;
+    
+    float backX = x + sinf(rad) * sampleDist;
+    float backZ = z + cosf(rad) * sampleDist;
+
+    float hFront = getTerrainHeight(frontX, frontZ);
+    float hBack = getTerrainHeight(backX, backZ);
+
+    float dy = hFront - hBack;
+    float dist = sampleDist * 2.0f;
+
+    // atan2 retorna radianos. Convertemos para graus.
+    // Se a frente é mais alta, o pitch deve ser positivo (nariz pra cima)
+    return atan2f(dy, dist) * (180.0f / 3.14159f);
 }
 
 void addHill(float centerX, float centerZ, float radius, float height) {
@@ -68,27 +132,23 @@ void initHeightMatrix(){
         }
     }
 
-    //PAREDES
-    for (int x = 0; x < VERTEX_NUM; x++) {
-        heightMatrix[0][x] = 5.0f;
-    }
-    
-    for (int x = 0; x < VERTEX_NUM; x++) {
-        heightMatrix[50][x] = 5.0f;
-    }
-    
-    for (int z = 0; z < VERTEX_NUM; z++) {
-        heightMatrix[z][0] = 5.0f;
-    }
-    
-    for (int z = 0; z < VERTEX_NUM; z++) {
-        heightMatrix[z][50] = 5.0f;
-    }
-
     //ELEVAÇÕES - x, z, raio, altura
     addHill(40, 25, 5.0f, 1.0f);  // colina
     addHill(25, 26, 5.0f, -0.9f);  // buraco
     addHill(10, 27, 5.0f, 1.0f); // colina
+}
+
+void drawWall(float x, float y, float z, float width, float height, float depth) {
+    
+    glPushMatrix();
+
+    glTranslatef(x, y, z);
+
+    // A escala faz o cubo virar um paralelepipedo
+    glScalef(width, height, depth);
+    glutSolidCube(1.0);
+
+    glPopMatrix();
 }
 
 void initChurch() {
@@ -198,24 +258,32 @@ void drawMap() {
             float maxVariation = 1.0f; 
             float colorFactor = minFactor + (normalizedHeight / 10.0f) * maxVariation;
             
-            glColor3f(0.1f * colorFactor, 0.6f * colorFactor, 0.1f * colorFactor);
+            // Cinza do chão
+            glColor3f(0.55f * colorFactor, 0.55f * colorFactor, 0.55f * colorFactor);
             
             glBegin(GL_TRIANGLE_STRIP);
-            vertex normalA = vertexNormals[z][x];
-            glNormal3f(normalA.x, normalA.y, normalA.z);
-            glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
-            vertex normalB = vertexNormals[z+1][x];
-            glNormal3f(normalB.x, normalB.y, normalB.z);
-            glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);
-            vertex normalC = vertexNormals[z][x+1];
-            glNormal3f(normalC.x, normalC.y, normalC.z);
-            glVertex3f(mapCells[z][x].C.x, mapCells[z][x].C.y, mapCells[z][x].C.z);
-            vertex normalD = vertexNormals[z+1][x+1];
-            glNormal3f(normalD.x, normalD.y, normalD.z);
-            glVertex3f(mapCells[z][x].D.x, mapCells[z][x].D.y, mapCells[z][x].D.z);
+                vertex normalA = vertexNormals[z][x];
+                glNormal3f(normalA.x, normalA.y, normalA.z);
+                glVertex3f(mapCells[z][x].A.x, mapCells[z][x].A.y, mapCells[z][x].A.z);
+                vertex normalB = vertexNormals[z+1][x];
+                glNormal3f(normalB.x, normalB.y, normalB.z);
+                glVertex3f(mapCells[z][x].B.x, mapCells[z][x].B.y, mapCells[z][x].B.z);
+                vertex normalC = vertexNormals[z][x+1];
+                glNormal3f(normalC.x, normalC.y, normalC.z);
+                glVertex3f(mapCells[z][x].C.x, mapCells[z][x].C.y, mapCells[z][x].C.z);
+                vertex normalD = vertexNormals[z+1][x+1];
+                glNormal3f(normalD.x, normalD.y, normalD.z);
+                glVertex3f(mapCells[z][x].D.x, mapCells[z][x].D.y, mapCells[z][x].D.z);
             glEnd();
         }
     }
+
+    // Cor da parede
+    glColor3f(0.70f, 0.30f, 0.10f);
+    drawWall(MAP_SIZE/2,0,0,100,6,2);
+    drawWall(MAP_SIZE/2,0,MAP_SIZE,100,6,2);
+    drawWall(0,0,MAP_SIZE/2,2,6,100);
+    drawWall(MAP_SIZE,0,MAP_SIZE/2,2,6,100);
 
     glEnable(GL_TEXTURE_2D); 
 

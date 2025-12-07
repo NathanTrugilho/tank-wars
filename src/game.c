@@ -20,7 +20,7 @@ void display() {
     drawTank();
     drawBullet();
     drawExplosion();
-    drawEnemyBullets();
+    drawEnemyBullets(); //prestar atenção aqui pós merge
     //drawSnowFlake();
     //drawAmmo();
     //drawHermesShoes();
@@ -71,7 +71,7 @@ void display() {
     drawTank();
     drawBullet();
     glEnable(GL_LIGHTING); 
-
+    
     glutSwapBuffers();
 }
 

@@ -9,20 +9,32 @@ int specialKeyStates[256] = {0};
 // Teclado
 void keyDown(unsigned char key, int x, int y) {
     keyStates[key] = 1;
+    
     if (key == ' ' && player.ammo > 0) shootBullet();
 
-    // Alternar Câmera (L ou l)
+    // L: Alternar Câmera Livre (Debug)
     if (key == 'l' || key == 'L') {
-        freeCameraMode = !freeCameraMode; // Inverte 0 <-> 1
-
+        freeCameraMode = !freeCameraMode;
         if (freeCameraMode) {
-            // Ao entrar no modo livre, teletransporta a câmera para cima do tanque
-            // para a transição ser suave
-            fcX = player.x;
-            fcY = player.y + 5.0f; // Um pouco acima
-            fcZ = player.z + 5.0f; // Um pouco atrás
-            fcAngleH = 180.0f;  // Olhando pra trás 
-            fcAngleV = -20.0f;  // Olhando levemente para baixo
+            // Configurações iniciais da free cam
+            fcX = player.x; fcY = player.y + 5.0f; fcZ = player.z + 5.0f;
+            fcAngleH = 180.0f; fcAngleV = -20.0f;
+        }
+    }
+
+    // C: Alternar entre os 3 modos de câmera (0 -> 1 -> 2 -> 0)
+    if (key == 'c' || key == 'C') {
+        // Se estivermos no modo livre, 'C' desliga o modo livre e volta para a câmera atual
+        if (freeCameraMode) {
+            freeCameraMode = 0;
+        } else {
+            // Incrementa o modo
+            currentCameraMode++; 
+            
+            // Se passar de 2, volta para 0
+            if (currentCameraMode > 2) {
+                currentCameraMode = 0;
+            }
         }
     }
 }

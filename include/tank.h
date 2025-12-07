@@ -6,6 +6,7 @@ typedef struct {
     int mapCellX, mapCellY, mapCellZ; 
 
     float hullAngle;
+    float pitch;
     float turretAngle;
     float pipeAngle;
 
@@ -39,7 +40,7 @@ typedef struct {
 #define MAX_PIPE_ANGLE 10
 #define MIN_PIPE_ANGLE -5
 
-#define TANK_MOVEMENT_SPEED 0.5f
+#define TANK_MOVEMENT_SPEED 0.2f
 
 #define TANK_ROT_SPEED 2.0f
 #define TURRET_ROT_SPEED 0.5f
@@ -48,6 +49,9 @@ typedef struct {
 // Defini isso na mão pq não tenho como saber exatamente onde está o pipe
 #define PIPE_LENGTH 3.2
 #define PIPE_HEIGHT 1.12
+
+// Altura que o tank deve ficar do chão
+#define TANK_GROUND_DISTANCE 0.05f
 
 #define TRUE 1
 #define FALSE 0

@@ -13,7 +13,7 @@ typedef struct square {
 #include <mybib.h>
 #include "collision.h"
 
-#define MAP_SIZE 50
+#define MAP_SIZE 100
 #define VERTEX_NUM MAP_SIZE + 1
 
 #define MAX_STATIC_COLLIDERS 100
@@ -53,6 +53,13 @@ void drawMap();
 void initMapCells();
 void initHeightMatrix();
 
+// Pega a altura do terreno em qualquer ponto (x, z)
+float getTerrainHeight(float x, float z);
+
+// Calcula a inclinação (pitch) do terreno baseada no angulo do objeto
+float getTerrainPitch(float x, float z, float angleYaw);
+
+void drawWall(float x, float y, float z, float width, float height, float depth);
 void initChurch();
 void initHouse();
 void initGasStation();
