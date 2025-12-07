@@ -6,7 +6,8 @@ typedef enum {
     PU_HEALTH,
     PU_SPEED,
     PU_DMG,
-    PU_FREEZE
+    PU_FREEZE,
+    PU_SHIELD
 } PowerUpType;
 
 typedef struct {
@@ -21,7 +22,7 @@ typedef struct {
 
 #define MAX_POWER_UPS 250
 
-extern ObjModel snowFlake, hermesShoes, fist, healthPack; //Ammo é carregado em projectile.c
+extern ObjModel snowFlake, hermesShoes, fire, healthPack; //Ammo é carregado em projectile.c
 
 extern PowerUpInstance powerUps[MAX_POWER_UPS];
 
@@ -57,7 +58,7 @@ void drawHealthPack(int index);
 void heal();
 
 // ------------- INSTA KILL -------------
-void drawFist(int index);
+void drawFire(int index);
 
 void increaseDmg();
 
@@ -67,5 +68,9 @@ void drawHermesShoes(int index);
 void increaseSpeed();
 
 // ------------- SHIELD -------------
+
+void drawShield(int index);
+
+void activateShield();
 
 #endif

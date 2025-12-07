@@ -25,6 +25,10 @@ void testePowerUp()
     {
         increaseSpeed();
     }
+    if (keyStates['k'] || keyStates['K'])
+    {
+        activateShield();
+    }
 }
 
 // ------------- GET SCALE -------------
@@ -39,13 +43,16 @@ float getScale(PowerUpType type)
         return 0.09f;
 
     case PU_SPEED:
-        return 0.2f;
+        return 0.1f;
 
     case PU_DMG:
-        return 0.1f;
+        return 0.001f;
 
     case PU_FREEZE:
         return 0.2f;
+
+    case PU_SHIELD:
+        return 0.004f;
     }
 
     return 0.1f;
@@ -55,7 +62,7 @@ float getScale(PowerUpType type)
 
 PowerUpType getRandomPowerUp()
 {
-    int r = rand() % 5; // cinco tipos no enum
+    int r = rand() % 6; // seis tipos no enum
     return (PowerUpType)r;
 }
 
@@ -65,28 +72,31 @@ void applyPowerUpEffect(PowerUpType type)
 {
     switch (type)
     {
-        case PU_AMMO:
-            addAmmo();
-            break;
+    case PU_AMMO:
+        addAmmo();
+        break;
 
-        case PU_HEALTH:
-            heal();
-            break;
+    case PU_HEALTH:
+        heal();
+        break;
 
-        case PU_SPEED:
-            increaseSpeed();
-            break;
+    case PU_SPEED:
+        increaseSpeed();
+        break;
 
-        case PU_DMG:
-            increaseDmg();
-            break;
+    case PU_DMG:
+        increaseDmg();
+        break;
 
-        case PU_FREEZE:
-            freeze();
-            break;
+    case PU_FREEZE:
+        freeze();
+        break;
+
+    case PU_SHIELD:
+        activateShield();
+        break;
     }
 }
-
 
 // ------------- SPAWN POWER UP -------------
 
@@ -122,35 +132,61 @@ void drawPowerUps()
             drawHermesShoes(i);
             break;
         case PU_DMG:
-            drawFist(i);
+            drawFire(i);
             break;
         case PU_FREEZE:
             drawSnowFlake(i);
+            break;
+        case PU_SHIELD:
+            drawShield(i);
             break;
         }
     }
 }
 
 // ------------- INIT -------------
-ObjModel snowFlake, hermesShoes, fist, healthPack; // Ammo é carregado em projectile.c
+ObjModel snowFlake, hermesShoes, fire, healthPack, shield; // Ammo é carregado em projectile.c
 
 void initPowerUps()
 {
-    if (loadOBJ("objects/snowFlake.obj", "objects/snowFlake.mtl", &snowFlake)) {}
-    else {}
+    if (loadOBJ("objects/snowFlake.obj", "objects/snowFlake.mtl", &snowFlake))
+    {
+    }
+    else
+    {
+    }
 
-    if (loadOBJ("objects/hermesShoes.obj", "objects/hermesShoes.mtl", &hermesShoes)){}
-    else {}
+    if (loadOBJ("objects/hermesShoes.obj", "objects/hermesShoes.mtl", &hermesShoes))
+    {
+    }
+    else
+    {
+    }
 
-    if (loadOBJ("objects/fist.obj", "objects/fist.mtl", &fist)){}
-    else {}
+    if (loadOBJ("objects/fire.obj", "objects/fire.mtl", &fire))
+    {
+    }
+    else
+    {
+    }
 
-    if (loadOBJ("objects/healthPack.obj", "objects/healthPack.mtl", &healthPack)){}
-    else {}
+    if (loadOBJ("objects/healthPack.obj", "objects/healthPack.mtl", &healthPack))
+    {
+    }
+    else
+    {
+    }
+
+    if (loadOBJ("objects/shield.obj", "objects/shield.mtl", &shield))
+    {
+    }
+    else
+    {
+    }
 
     for (int i = 0; i < MAX_POWER_UPS; i++)
     {
-        powerUps[i].type = getRandomPowerUp();
+        powerUps[i].type = 5;//getRandomPowerUp();
         powerUps[i].x = (rand() % 50) - 25;
         powerUps[i].y = 1;
         powerUps[i].z = (rand() % 50) - 25;
@@ -172,9 +208,11 @@ ObjModel getObjModel(PowerUpInstance p)
     case PU_SPEED:
         return hermesShoes;
     case PU_DMG:
-        return fist;
+        return fire;
     case PU_FREEZE:
         return snowFlake;
+    case PU_SHIELD:
+        return shield;
     }
 
     return shellModel;
@@ -183,15 +221,13 @@ ObjModel getObjModel(PowerUpInstance p)
 // ------------- FREEZE -------------
 void drawSnowFlake(int index)
 {
-    float modelScale = 0.2f;
-
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
     glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
-    glScalef(modelScale, modelScale, modelScale);
+    glScalef(powerUps[index].scale, powerUps[index].scale, powerUps[index].scale);
     drawModel(&snowFlake);
-    drawBox(snowFlake.box);
+    // drawBox(snowFlake.box);
     glPopMatrix();
     glDisable(GL_TEXTURE_2D);
 }
@@ -203,13 +239,11 @@ void freeze()
 // ------------- AMMO -------------
 void drawAmmo(int index)
 {
-    float modelScale = 0.35f;
-
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
     glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
-    glScalef(modelScale, modelScale, modelScale);
+    glScalef(powerUps[index].scale, powerUps[index].scale, powerUps[index].scale);
     glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
     drawModel(&shellModel);
     glPopMatrix();
@@ -224,13 +258,11 @@ void addAmmo()
 // ------------- HEALTH -------------
 void drawHealthPack(int index)
 {
-    float modelScale = 0.09f;
-
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
     glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
-    glScalef(modelScale, modelScale, modelScale);
+    glScalef(powerUps[index].scale, powerUps[index].scale, powerUps[index].scale);
     glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
     drawModel(&healthPack);
     glPopMatrix();
@@ -243,17 +275,15 @@ void heal()
 }
 
 // ------------- DMG UPGRADE -------------
-void drawFist(int index)
+void drawFire(int index)
 {
-    float modelScale = 0.1f;
-
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
     glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
-    glScalef(modelScale, modelScale, modelScale);
-    glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
-    drawModel(&fist);
+    glScalef(powerUps[index].scale, powerUps[index].scale, powerUps[index].scale);
+    //glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+    drawModel(&fire);
     glPopMatrix();
     glDisable(GL_TEXTURE_2D);
 }
@@ -266,13 +296,11 @@ void increaseDmg()
 // ------------- SPEED -------------
 void drawHermesShoes(int index)
 {
-    float modelScale = 0.2f;
-
     // Modelo
     glEnable(GL_TEXTURE_2D);
     glPushMatrix();
     glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
-    glScalef(modelScale, modelScale, modelScale);
+    glScalef(powerUps[index].scale, powerUps[index].scale, powerUps[index].scale);
     // glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
     drawModel(&hermesShoes);
     glPopMatrix();
@@ -281,7 +309,28 @@ void drawHermesShoes(int index)
 
 void increaseSpeed()
 {
-    player.moveSpeed += 0.1;
-    player.tankRotSpeed += 0.1;
-    player.turretRotSpeed += 0.15;
+    if (player.reloadTime > 0)
+        player.reloadTime -= 250;
+    player.moveSpeed += 0.2;
+    player.tankRotSpeed += 0.2;
+    player.turretRotSpeed += 0.2;
+}
+
+// ------------- SHIELD -------------
+void drawShield(int index)
+{
+    // Modelo
+    glEnable(GL_TEXTURE_2D);
+    glPushMatrix();
+    glTranslatef(powerUps[index].x, powerUps[index].y, powerUps[index].z);
+    glScalef(powerUps[index].scale, powerUps[index].scale, powerUps[index].scale);
+    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+    drawModel(&shield);
+    glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
+}
+
+void activateShield()
+{
+    player.shieldOn = 1;
 }

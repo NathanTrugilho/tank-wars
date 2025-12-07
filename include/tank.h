@@ -21,6 +21,7 @@ typedef struct {
     unsigned long lastShootTime;
     int reloadTime;
     int flagReloadCircle;
+    int shieldOn;
 } Tank;
 
 #include <GL/glut.h>
