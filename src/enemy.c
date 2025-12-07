@@ -18,7 +18,7 @@ ObjModel enemyHullModel;
 ObjModel enemyTurretModel;
 ObjModel enemyPipeModel;
 
-long freezeEndTime = 0;
+unsigned long freezeEndTime = 0;
 
 // Distância mínima entre dois inimigos para não entrelaçar canos
 #define SEPARATION_DIST 8.0f 
