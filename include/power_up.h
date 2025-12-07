@@ -43,6 +43,8 @@ void testePowerUp();
 
 void initPowerUps();
 
+void morreu(); //testar tela de morte
+
 // ------------- FREEZE -------------
 void drawSnowFlake(int index);
 

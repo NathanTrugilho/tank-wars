@@ -386,3 +386,7 @@ void drawPlayerShield()
     drawShield(makePlayerTurret(player.x, player.z, player.hullAngle, pitch, player.turretAngle));
     drawShield(makePlayerPipe(player.x, player.z, player.hullAngle, pitch, player.turretAngle, player.pipeAngle));
 }
+
+void morreu() {
+    player.alive = 0;
+}

@@ -142,3 +142,45 @@ void initMenu() {
     glutKeyboardFunc(keyboardMenu);
     glutIdleFunc(displayMenu); // Para atualizar sempre
 }
+
+// -----------------------------------------------------------------------------
+// Função principal: desenha tela de game over
+// -----------------------------------------------------------------------------
+void drawGameOverScreen()
+{
+    // Desabilita iluminação para texto 2D
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+
+    // Modo ortográfico (2D)
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(-1, 1, -1, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Fundo preto semi-transparente
+    glColor4f(0.0f, 0.0f, 0.0f, 0.8f);
+    glBegin(GL_QUADS);
+    glVertex2f(-1, -1);
+    glVertex2f(1, -1);
+    glVertex2f(1, 1);
+    glVertex2f(-1, 1);
+    glEnd();
+
+    // Texto principal - GAME OVER
+    glColor3f(1.0f, 0.0f, 0.0f);
+    // Título centralizado
+    drawText(-0.10f, 0.00f, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
+
+    // Restaura matrizes
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_DEPTH_TEST);
+}
