@@ -1,6 +1,7 @@
 #include <power_up.h>
 
 PowerUpInstance powerUps[MAX_POWER_UPS];
+int numPUativos = 0;
 
 static int lastPowerUpIndex = 0;
 static float lastSpawnTime = 0.0f;
@@ -103,6 +104,7 @@ void spawnPowerUp()
     {
         lastSpawnTime = now;
         powerUps[lastPowerUpIndex].active = 1;
+        numPUativos += 1;
         lastPowerUpIndex += 1;
     }
 }
