@@ -32,7 +32,9 @@ void display()
         drawBullet();
         drawExplosion();
         drawEnemyBullets(); // prestar atenção aqui pós merge
-        spawnPowerUp();     // checa se deve gerar um novo
+        if (numPUativos <= 4) {
+            spawnPowerUp();     // checa se deve gerar um novo
+        } 
         drawPowerUps();     // desenha todos os existentes
 
         updateFreezeLighting();

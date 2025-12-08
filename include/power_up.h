@@ -32,6 +32,8 @@ extern ObjModel snowFlake, hermesShoes, fire, healthPack; //Ammo é carregado em
 
 extern PowerUpInstance powerUps[MAX_POWER_UPS];
 
+extern int numPUativos;
+
 PowerUpType getRandomPowerUp();
 
 ObjModel getObjModel(PowerUpInstance p);
