@@ -36,7 +36,11 @@ Point3D normalizeVector(Point3D v)
 }
 
 // ROTAÇÕES
-
+/*
+Yaw	    eixo Y	
+Pitch	eixo X	
+Roll	eixo Z	
+*/
 // Subir e descer em XZ (pitch) Muito usado no pipe
 Point3D rotateX(Point3D p, float angleDeg)
 {
@@ -332,6 +336,7 @@ CollisionBox makeEnemyPipe(struct Enemy *e, float terrainPitch)
 }
 
 // FUNÇÕES PRINCIPAIS DE COLISÃO DO JOGO
+// Verifica se o tanque na próxima posição colidiria com algum inimigo
 int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg, float nextPitch)
 {
     CollisionBox pHull = makePlayerHull(nextX, nextZ, hullAngleDeg, nextPitch);
@@ -342,7 +347,8 @@ int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg, float nextPit
     {
         if (!enemies[i].alive)
             continue;
-
+        // Colisão com o chão para a caixa de colisão do inimig
+        // Isso é necessário para posicionar corretamente a caixa de colisão no terreno e verificar a colisão
         float ePitch = getTerrainPitch(enemies[i].x, enemies[i].z, enemies[i].hullAngle);
         CollisionBox eHull = makeEnemyHull(&enemies[i], ePitch);
         CollisionBox eTurret = makeEnemyTurret(&enemies[i], ePitch);
@@ -357,7 +363,7 @@ int wouldCollideTank(float nextX, float nextZ, float hullAngleDeg, float nextPit
     }
     return 0;
 }
-
+// Verifica se a torre do tanque colidiria com algum inimigo ao girar
 int wouldCollideTurret(float nextTurretAngle)
 {
     float pPitch = player.pitch;
@@ -433,6 +439,7 @@ int checkEnemyGhostCollision(int enemyIndex, float x, float y, float z, float hu
         return 2;
 
     // Checa contra OUTROS INIMIGOS -> Retorna 2 (Parar apenas)
+    // Se eu quiser impedir que eles fiquem parados de alguma forma poderia retornar 1 aqui
     for (int i = 0; i < MAX_ENEMIES; i++)
     {
         if (i == enemyIndex || !enemies[i].alive)
@@ -497,6 +504,7 @@ void drawDebugBox(CollisionBox b)
 
 void debugDrawPlayerCollision()
 {
+    // o player é definido no tank.h
     float pitch = player.pitch;
     drawDebugBox(makePlayerHull(player.x, player.z, player.hullAngle, pitch));
     drawDebugBox(makePlayerTurret(player.x, player.z, player.hullAngle, pitch, player.turretAngle));
@@ -509,6 +517,7 @@ void debugDrawEnemyCollision()
     {
         if (!enemies[i].alive)
             continue;
+        // Colisão com o chão da caixa de colisão de debug do inimigo 
         float pitch = getTerrainPitch(enemies[i].x, enemies[i].z, enemies[i].hullAngle);
         drawDebugBox(makeEnemyHull(&enemies[i], pitch));
         drawDebugBox(makeEnemyTurret(&enemies[i], pitch));

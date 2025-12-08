@@ -49,6 +49,10 @@ void addStaticCollider(ObjModel *model, float x, float y, float z, float scale, 
 }
 
 // Interpolação Bilinear para altura do terreno
+/*
+Basicamente, pegamos a célula do mapa onde o ponto (x, z), o centro do tank inimigo ou alidado, está localizado.
+E calculamos a altura que ele deveria estar baseado na altura dos 4 vértices daquela célula.
+*/
 float getTerrainHeight(float x, float z) {
     // Verifica limites do mapa
     if (x < 0 || x >= MAP_SIZE || z < 0 || z >= MAP_SIZE) {
@@ -63,6 +67,15 @@ float getTerrainHeight(float x, float z) {
     if (cellZ >= MAP_SIZE) cellZ = MAP_SIZE - 1;
 
     // Pega a diferença decimal (0.0 a 1.0) dentro da célula
+    // Isso é importante pois imagine que um quadrado do mapa é formado por 4 vértices
+    /*
+    A-----C
+    |     |
+    |     |
+    B-----D
+    Eu quero saber o quão proximo de A eu estou (dx) e o quão proximo de B eu estou (dz).
+    Assim eu consigo calcular melhor a altura em que o centro do tank deveria estar.
+    */
     float dx = x - (float)cellX;
     float dz = z - (float)cellZ;
 
@@ -82,6 +95,11 @@ float getTerrainHeight(float x, float z) {
     return finalHeight;
 }
 
+/*
+Yaw	    eixo Y	
+Pitch	eixo X	
+Roll	eixo Z	
+*/
 float getTerrainPitch(float x, float z, float angleYaw) {
     float rad = angleYaw * (3.14159f / 180.0f);
     
@@ -106,6 +124,7 @@ float getTerrainPitch(float x, float z, float angleYaw) {
 
     // atan2 retorna radianos. Convertemos para graus.
     // Se a frente é mais alta, o pitch deve ser positivo (nariz pra cima)
+    // Retorno do angulo que deve ser aplicado no pitch do tanque
     return atan2f(dy, dist) * (180.0f / 3.14159f);
 }
 

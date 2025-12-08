@@ -136,7 +136,7 @@ void updateEnemies(float playerX, float playerZ) {
         enemies[i].y = getTerrainHeight(enemies[i].x, enemies[i].z) + ENEMY_TANK_GROUND_DISTANCE;
         enemies[i].pitch = getTerrainPitch(enemies[i].x, enemies[i].z, enemies[i].hullAngle);
 
-        // --- LÓGICA DE MANOBRA (RÉ) ---
+        // LÓGICA DE MANOBRA (RÉ)
         if (enemies[i].stuckTimer > 0) {
             enemies[i].stuckTimer--;
             
@@ -202,7 +202,7 @@ void updateEnemies(float playerX, float playerZ) {
             targetGlobalAngle = enemies[i].targetWanderAngle;
         }
 
-        // --- REPULSÃO ENTRE INIMIGOS ---
+        // REPULSÃO ENTRE INIMIGOS
         int isAvoiding = 0;
         for (int j = 0; j < MAX_ENEMIES; j++) {
             if (i == j || !enemies[j].alive) continue;
@@ -220,7 +220,7 @@ void updateEnemies(float playerX, float playerZ) {
             }
         }
 
-        // --- ROTAÇÃO DO CORPO (HULL) ---
+        // ROTAÇÃO DO CORPO (HULL)
         float hullDiff = targetGlobalAngle - enemies[i].hullAngle;
         while (hullDiff > 180) hullDiff -= 360;
         while (hullDiff < -180) hullDiff += 360;
@@ -240,8 +240,14 @@ void updateEnemies(float playerX, float playerZ) {
         if (rotCollision == 0) {
             enemies[i].hullAngle = nextHullAngle;
         }
+        // Se quiser implementar lógica de stuck aqui, descomente:
+        /*
+            else {
+            enemies[i].stuckTimer = ENEMY_STUCK_TIME;
+        }
+        */
 
-        // --- ROTAÇÃO DA TORRE ---
+        // ROTAÇÃO DA TORRE
         if (seesPlayer && !isAvoiding) {
             float dx = playerX - enemies[i].x;
             float dz = playerZ - enemies[i].z;
@@ -263,11 +269,11 @@ void updateEnemies(float playerX, float playerZ) {
             enemies[i].turretAngle *= 0.90f;
         }
 
-        // --- MOVIMENTO ---
+        // MOVIMENTO
         if (shouldMove) {
             float rad = enemies[i].hullAngle * RADIAN_FACTOR;
             
-            // 1. SENSOR DE SEGURANÇA (Para PAREDES)
+            // SENSOR DE SEGURANÇA (Para PAREDES)
             float probeX = enemies[i].x - sinf(rad) * ENEMY_OBSTACLE_SAFE_DIST;
             float probeZ = enemies[i].z - cosf(rad) * ENEMY_OBSTACLE_SAFE_DIST;
             float probeY = getTerrainHeight(probeX, probeZ) + ENEMY_TANK_GROUND_DISTANCE;
@@ -283,7 +289,7 @@ void updateEnemies(float playerX, float playerZ) {
             }
             // SE FOR TIPO 2 (PLAYER/INIMIGO), NÃO FAZ NADA (APENAS PARA DE ANDAR PELA LÓGICA ABAIXO)
             
-            // 2. APLICA MOVIMENTO
+            // APLICA MOVIMENTO
             if (shouldMove) {
                 nextX -= sinf(rad) * currentMoveSpeed;
                 nextZ -= cosf(rad) * currentMoveSpeed;
